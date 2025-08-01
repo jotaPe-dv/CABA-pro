@@ -1,0 +1,31 @@
+<svg width="200" height="240" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+    <title>Logo CABA Pro</title>
+    <desc>Logotipo minimalista con un balón de baloncesto y una línea de cancha.</desc>
+
+    <path 
+      d="M 15 70 A 40 40 0 0 1 85 70" 
+      fill="none" 
+      stroke="#1a1a1a" 
+      stroke-width="8" 
+      stroke-linecap="round"
+    />
+
+    <circle 
+      cx="50" 
+      cy="50" 
+      r="30" 
+      fill="#FF6700" 
+    />
+
+    <text 
+      x="50" 
+      y="112" 
+      text-anchor="middle" 
+      font-size="18" 
+      fill="#1a1a1a"
+    >
+      <tspan font-weight="bold">CABA</tspan>
+      <tspan font-weight="normal"> Pro</tspan>
+    </text>
+
+</svg>
