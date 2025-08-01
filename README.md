@@ -1,6 +1,6 @@
 # CABA Pro - Sistema de Gestión Integral de Arbitraje
 
-(./docs/images/caba-pro-logo.svg)
+![Logo del Equipo](./docs/images/caba-pro-logo.svg)
 
 ## Descripción del Proyecto
 
