@@ -1,12 +1,12 @@
 // TestController.java - Para probar que todo funciona
 package com.pagina.Caba.controller;
 
-import com.pagina.Caba.Usuario;
-import com.pagina.Caba.Arbitro;
-import com.pagina.Caba.Administrador;
-import com.pagina.Caba.Partido;
-import com.pagina.Caba.Asignacion;
-import com.pagina.Caba.EstadoAsignacion;
+import com.pagina.Caba.model.Usuario;
+import com.pagina.Caba.model.Administrador;
+import com.pagina.Caba.model.Arbitro;
+import com.pagina.Caba.model.Partido;
+import com.pagina.Caba.model.Asignacion;
+import com.pagina.Caba.model.EstadoAsignacion;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDateTime;

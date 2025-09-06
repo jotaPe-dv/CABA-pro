@@ -1,4 +1,6 @@
-package com.pagina.Caba;
+package com.pagina.Caba.model;
+
+import com.pagina.Caba.model.Usuario;
 
 import jakarta.persistence.*;
 

@@ -1,4 +1,4 @@
-package com.pagina.Caba;
+package com.pagina.Caba.model;
 
 import jakarta.persistence.*;
 import java.util.List;
