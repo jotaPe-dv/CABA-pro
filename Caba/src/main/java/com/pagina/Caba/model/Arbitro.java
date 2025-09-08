@@ -1,11 +1,12 @@
 package com.pagina.Caba.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "arbitros")
 @PrimaryKeyJoinColumn(name = "usuario_id")
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class Arbitro extends Usuario {
     
     @Column(name = "foto_url")

@@ -1,10 +1,12 @@
 package com.pagina.Caba.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "partido")
+@JsonIgnoreProperties({"hibernateLazyInitializer","handler"})
 public class Partido {
 
     @Id

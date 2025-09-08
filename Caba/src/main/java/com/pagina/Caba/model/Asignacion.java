@@ -17,27 +17,38 @@ public class Asignacion {
     @Column(nullable = false)
     private EstadoAsignacion estado;
 
-    @Column(name = "pago_calculado", nullable = false)
-    private float pagoCalculado;
-
-    // Relación con Arbitro (Muchas asignaciones pueden pertenecer a un árbitro)
+    // Relaciones con Arbitro y Partido
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "arbitro_id", nullable = false)
+    @JoinColumn(name = "arbitro_id")
     private Arbitro arbitro;
 
-    // =========================
-    // Constructores
-    // =========================
-    public Asignacion() {}
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "partido_id")
+    private Partido partido;
 
-    public Asignacion(String rolEspecifico, float pagoCalculado, EstadoAsignacion estado, Arbitro arbitro) {
+    // ============================
+    // Constructores
+    // ============================
+    public Asignacion() {
+    }
+
+    // Constructor para pruebas sin relaciones
+    public Asignacion(String rolEspecifico, Float pagoCalculado, EstadoAsignacion estado) {
+        this.rolEspecifico = rolEspecifico;
+        this.pagoCalculado = pagoCalculado;
+        this.estado = estado;
+    }
+
+    // Constructor completo
+    public Asignacion(String rolEspecifico, Float pagoCalculado, EstadoAsignacion estado, Arbitro arbitro, Partido partido) {
         this.rolEspecifico = rolEspecifico;
         this.pagoCalculado = pagoCalculado;
         this.estado = estado;
         this.arbitro = arbitro;
+        this.partido = partido;
     }
 
-    // =========================
+    // ============================
     // Métodos de negocio
     // =========================
     public void aceptar() {
@@ -75,14 +86,6 @@ public class Asignacion {
         this.estado = estado;
     }
 
-    public float getPagoCalculado() {
-        return pagoCalculado;
-    }
-
-    public void setPagoCalculado(float pagoCalculado) {
-        this.pagoCalculado = pagoCalculado;
-    }
-
     public Arbitro getArbitro() {
         return arbitro;
     }
@@ -91,14 +94,11 @@ public class Asignacion {
         this.arbitro = arbitro;
     }
 
-    @Override
-    public String toString() {
-        return "Asignacion{" +
-                "id=" + id +
-                ", rolEspecifico='" + rolEspecifico + '\'' +
-                ", estado=" + estado +
-                ", pagoCalculado=" + pagoCalculado +
-                ", arbitro=" + (arbitro != null ? arbitro.getNombre() : "null") +
-                '}';
+    public Partido getPartido() {
+        return partido;
+    }
+
+    public void setPartido(Partido partido) {
+        this.partido = partido;
     }
 }

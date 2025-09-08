@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrador - CABA Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        .admin-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .admin-card .card-body {
+            text-align: center;
+            padding: 2rem;
+        }
+        .admin-card i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .stats-card {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+        .quick-action-btn {
+            border-radius: 25px;
+            padding: 12px 25px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+        .quick-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/admin/dashboard">
+                <i class="fas fa-cogs me-2"></i>
+                CABA Pro - Administrador
+            </a>
+            <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-shield me-2"></i>
+                    Bienvenido, <strong sec:authentication="name"></strong>
+                </span>
+                <form th:action="@{/logout}" method="post" style="display:inline">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sign-out-alt me-2"></i>
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold text-dark">
+                    <i class="fas fa-tachometer-alt me-3"></i>
+                    Dashboard del Administrador
+                </h2>
+                <p class="text-muted">Panel de control principal para la gestión del sistema CABA Pro</p>
+            </div>
+        </div>
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-5">
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-trophy"></i>
+                        <h3 class="fw-bold">5</h3>
+                        <p class="mb-0">Torneos Activos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users"></i>
+                        <h3 class="fw-bold">12</h3>
+                        <p class="mb-0">Árbitros Activos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-calendar-check"></i>
+                        <h3 class="fw-bold">8</h3>
+                        <p class="mb-0">Partidos Hoy</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <i class="fas fa-dollar-sign"></i>
+                        <h3 class="fw-bold">3</h3>
+                        <p class="mb-0">Liquidaciones Pendientes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h3 class="fw-semibold text-dark mb-3">
+                    <i class="fas fa-bolt me-2 text-warning"></i>
+                    Acciones Rápidas
+                </h3>
+            </div>
+        </div>
+        
+        <!-- Management Cards -->
+        <div class="row">
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card admin-card h-100">
+                    <div class="card-body">
+                        <i class="fas fa-trophy"></i>
+                        <h4 class="fw-bold">Torneos</h4>
+                        <p class="mb-3">Gestiona y administra todos los torneos del sistema</p>
+                        <a href="/admin/torneos" class="btn btn-light quick-action-btn">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            Gestionar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card admin-card h-100">
+                    <div class="card-body">
+                        <i class="fas fa-tags"></i>
+                        <h4 class="fw-bold">Tarifas</h4>
+                        <p class="mb-3">Administra las tarifas de arbitraje por categoría</p>
+                        <a href="/admin/tarifas" class="btn btn-light quick-action-btn">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            Gestionar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card admin-card h-100">
+                    <div class="card-body">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <h4 class="fw-bold">Liquidaciones</h4>
+                        <p class="mb-3">Procesa y gestiona las liquidaciones de árbitros</p>
+                        <a href="/admin/liquidaciones" class="btn btn-light quick-action-btn">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            Gestionar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card admin-card h-100">
+                    <div class="card-body">
+                        <i class="fas fa-users"></i>
+                        <h4 class="fw-bold">Árbitros</h4>
+                        <p class="mb-3">Administra el registro y datos de árbitros</p>
+                        <a href="/admin/arbitros" class="btn btn-light quick-action-btn">
+                            <i class="fas fa-arrow-right me-2"></i>
+                            Gestionar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h3 class="fw-semibold text-dark mb-3">
+                    <i class="fas fa-clock me-2 text-info"></i>
+                    Actividad Reciente
+                </h3>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 class="text-dark">Últimas Asignaciones</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Juan Pérez</strong> - Partido A vs B
+                                            <br><small class="text-muted">Hace 2 horas</small>
+                                        </div>
+                                        <span class="badge bg-success rounded-pill">Aceptada</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>María García</strong> - Partido C vs D
+                                            <br><small class="text-muted">Hace 4 horas</small>
+                                        </div>
+                                        <span class="badge bg-warning rounded-pill">Pendiente</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Carlos López</strong> - Partido E vs F
+                                            <br><small class="text-muted">Hace 6 horas</small>
+                                        </div>
+                                        <span class="badge bg-danger rounded-pill">Rechazada</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5 class="text-dark">Próximos Partidos</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <strong>Equipo Alpha vs Beta</strong>
+                                        <br><small class="text-muted">Mañana 15:00 - Gimnasio Central</small>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Equipo Gamma vs Delta</strong>
+                                        <br><small class="text-muted">Mañana 17:30 - Polideportivo Norte</small>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <strong>Equipo Epsilon vs Zeta</strong>
+                                        <br><small class="text-muted">Pasado mañana 14:00 - Club Deportivo</small>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
+</body>
+</html>
