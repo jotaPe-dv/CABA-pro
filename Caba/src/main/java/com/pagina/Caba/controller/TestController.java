@@ -16,10 +16,9 @@ import java.util.List;
 @RestController
 public class TestController {
 
-    @GetMapping("/")
+    @GetMapping("/test")
     public String home() {
-        return "✅ La aplicación Spring Boot está funcionando correctamente. " +
-               "Fecha: " + LocalDateTime.now();
+        return "index";
     }
 
     @GetMapping("/test-arbitro")
