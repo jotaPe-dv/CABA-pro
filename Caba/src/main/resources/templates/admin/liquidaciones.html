@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Liquidaciones - CABA Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">CABA Pro Admin</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/admin/torneos">Torneos</a>
+                <a class="nav-link" href="/admin/tarifas">Tarifas</a>
+                <a class="nav-link active" href="/admin/liquidaciones">Liquidaciones</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1>Gestión de Liquidaciones</h1>
+        
+        <!-- Botón para crear nueva liquidación -->
+        <button class="btn btn-primary mb-3" onclick="mostrarFormularioCrear()">
+            Nueva Liquidación
+        </button>
+        
+        <!-- Formulario para crear/editar liquidación (inicialmente oculto) -->
+        <div id="formularioLiquidacion" class="card mb-3" style="display: none;">
+            <div class="card-header">
+                <h5 id="tituloFormulario">Crear Nueva Liquidación</h5>
+            </div>
+            <div class="card-body">
+                <form id="formLiquidacion">
+                    <input type="hidden" id="liquidacionId" />
+                    <div class="mb-3">
+                        <label for="fecha" class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="fecha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="montoTotal" class="form-label">Monto Total</label>
+                        <input type="number" class="form-control" id="montoTotal" required min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="mb-3">
+                        <label for="estado" class="form-label">Estado</label>
+                        <select class="form-control" id="estado" required>
+                            <option value="">Seleccione un estado</option>
+                            <option value="PENDIENTE">PENDIENTE</option>
+                            <option value="PAGADA">PAGADA</option>
+                            <option value="ANULADA">ANULADA</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="arbitro" class="form-label">Árbitro</label>
+                        <select class="form-control" id="arbitro" required>
+                            <option value="">Seleccione un árbitro</option>
+                            <!-- Los árbitros se cargan dinámicamente -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelarFormulario()">Cancelar</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Tabla de liquidaciones -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Lista de Liquidaciones</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-responsive">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Monto Total</th>
+                            <th>Estado</th>
+                            <th>Árbitro</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaLiquidaciones">
+                        <!-- Los datos se cargan dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // JavaScript para conectar con backend
+        const API_URL = '/api/liquidaciones';
+        const ARBITROS_URL = '/api/arbitros';
+        
+        // Cargar liquidaciones al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarLiquidaciones();
+            cargarArbitros();
+        });
+        
+        // Función para cargar árbitros en el dropdown
+        function cargarArbitros() {
+            fetch(ARBITROS_URL, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                }
+            })
+                .then(response => response.json())
+                .then(arbitros => {
+                    const select = document.getElementById('arbitro');
+                    // Limpiar opciones existentes excepto la primera
+                    while (select.children.length > 1) {
+                        select.removeChild(select.lastChild);
+                    }
+                    
+                    arbitros.forEach(arbitro => {
+                        const option = document.createElement('option');
+                        option.value = arbitro.id;
+                        option.textContent = arbitro.nombre;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar árbitros:', error);
+                    // Si no hay endpoint de árbitros, agregar algunos de ejemplo
+                    const select = document.getElementById('arbitro');
+                    const ejemplos = [
+                        {id: 1, nombre: 'Juan Pérez'},
+                        {id: 2, nombre: 'María González'},
+                        {id: 3, nombre: 'Carlos López'}
+                    ];
+                    ejemplos.forEach(arbitro => {
+                        const option = document.createElement('option');
+                        option.value = arbitro.id;
+                        option.textContent = arbitro.nombre;
+                        select.appendChild(option);
+                    });
+                });
+        }
+        
+        // Función para obtener badge de estado
+        function obtenerBadgeEstado(estado) {
+            const badges = {
+                'PENDIENTE': '<span class="badge bg-warning text-dark">PENDIENTE</span>',
+                'PAGADA': '<span class="badge bg-success">PAGADA</span>',
+                'ANULADA': '<span class="badge bg-danger">ANULADA</span>'
+            };
+            return badges[estado] || `<span class="badge bg-secondary">${estado}</span>`;
+        }
+        
+        // Función para cargar todas las liquidaciones
+        function cargarLiquidaciones() {
+            fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta: ' + response.status);
+                    }
+                    if (response.status === 204) {
+                        return [];
+                    }
+                    return response.json();
+                })
+                .then(liquidaciones => {
+                    const tbody = document.getElementById('tablaLiquidaciones');
+                    tbody.innerHTML = '';
+                    liquidaciones.forEach(liquidacion => {
+                        const estadoBadge = obtenerBadgeEstado(liquidacion.estado);
+                        const arbitroNombre = liquidacion.arbitro ? liquidacion.arbitro.nombre : 'Sin árbitro';
+                        const botonAprobar = liquidacion.estado === 'PENDIENTE' 
+                            ? `<button class="btn btn-sm btn-success" onclick="aprobarLiquidacion(${liquidacion.id})">Aprobar</button>` 
+                            : '';
+                        
+                        const row = `
+                            <tr>
+                                <td>${liquidacion.id}</td>
+                                <td>${liquidacion.fecha}</td>
+                                <td>$${parseFloat(liquidacion.montoTotal).toFixed(2)}</td>
+                                <td>${estadoBadge}</td>
+                                <td>${arbitroNombre}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" onclick="editarLiquidacion(${liquidacion.id})">Editar</button>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminarLiquidacion(${liquidacion.id})">Eliminar</button>
+                                    ${botonAprobar}
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar las liquidaciones: ' + error.message);
+                });
+        }
+        
+        // Función para mostrar formulario de crear
+        function mostrarFormularioCrear() {
+            document.getElementById('formularioLiquidacion').style.display = 'block';
+            document.getElementById('tituloFormulario').textContent = 'Crear Nueva Liquidación';
+            document.getElementById('formLiquidacion').reset();
+            document.getElementById('liquidacionId').value = '';
+            // Establecer fecha actual por defecto
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        }
+        
+        // Función para editar liquidación
+        function editarLiquidacion(id) {
+            fetch(`${API_URL}/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                }
+            })
+                .then(response => response.json())
+                .then(liquidacion => {
+                    document.getElementById('formularioLiquidacion').style.display = 'block';
+                    document.getElementById('tituloFormulario').textContent = 'Editar Liquidación';
+                    document.getElementById('liquidacionId').value = liquidacion.id;
+                    document.getElementById('fecha').value = liquidacion.fecha;
+                    document.getElementById('montoTotal').value = liquidacion.montoTotal;
+                    document.getElementById('estado').value = liquidacion.estado;
+                    document.getElementById('arbitro').value = liquidacion.arbitro ? liquidacion.arbitro.id : '';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar la liquidación: ' + error.message);
+                });
+        }
+        
+        // Función para eliminar liquidación
+        function eliminarLiquidacion(id) {
+            if (confirm('¿Está seguro de eliminar esta liquidación?')) {
+                fetch(`${API_URL}/${id}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Liquidación eliminada exitosamente');
+                        cargarLiquidaciones();
+                    } else {
+                        throw new Error('Error al eliminar');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar la liquidación: ' + error.message);
+                });
+            }
+        }
+        
+        // Función para aprobar liquidación
+        function aprobarLiquidacion(id) {
+            if (confirm('¿Está seguro de aprobar esta liquidación?')) {
+                fetch(`${API_URL}/${id}/aprobar`, { 
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Liquidación aprobada exitosamente');
+                        cargarLiquidaciones();
+                    } else {
+                        throw new Error('Error al aprobar');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al aprobar la liquidación: ' + error.message);
+                });
+            }
+        }
+        
+        // Manejar submit del formulario
+        document.getElementById('formLiquidacion').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const montoTotal = parseFloat(document.getElementById('montoTotal').value);
+            if (montoTotal < 0) {
+                alert('El monto total no puede ser negativo');
+                return;
+            }
+            
+            const liquidacion = {
+                fecha: document.getElementById('fecha').value,
+                montoTotal: montoTotal,
+                estado: document.getElementById('estado').value,
+                arbitro: {
+                    id: parseInt(document.getElementById('arbitro').value)
+                }
+            };
+            
+            const liquidacionId = document.getElementById('liquidacionId').value;
+            const method = liquidacionId ? 'PUT' : 'POST';
+            const url = liquidacionId ? `${API_URL}/${liquidacionId}` : API_URL;
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                },
+                body: JSON.stringify(liquidacion)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Error en la operación');
+                }
+            })
+            .then(() => {
+                alert(liquidacionId ? 'Liquidación actualizada exitosamente' : 'Liquidación creada exitosamente');
+                cancelarFormulario();
+                cargarLiquidaciones();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al guardar la liquidación: ' + error.message);
+            });
+        });
+        
+        // Función para cancelar formulario
+        function cancelarFormulario() {
+            document.getElementById('formularioLiquidacion').style.display = 'none';
+            document.getElementById('formLiquidacion').reset();
+        }
+    </script>
+</body>
+</html>

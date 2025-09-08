@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Torneos - CABA Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">CABA Pro Admin</a>
+            <div class="navbar-nav">
+                <a class="nav-link active" href="/admin/torneos">Torneos</a>
+                <a class="nav-link" href="/admin/tarifas">Tarifas</a>
+                <a class="nav-link" href="/admin/liquidaciones">Liquidaciones</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1>Gestión de Torneos</h1>
+        
+        <!-- Botón para crear nuevo torneo -->
+        <button class="btn btn-primary mb-3" onclick="mostrarFormularioCrear()">
+            Nuevo Torneo
+        </button>
+        
+        <!-- Formulario para crear/editar torneo (inicialmente oculto) -->
+        <div id="formularioTorneo" class="card mb-3" style="display: none;">
+            <div class="card-header">
+                <h5 id="tituloFormulario">Crear Nuevo Torneo</h5>
+            </div>
+            <div class="card-body">
+                <form id="formTorneo">
+                    <input type="hidden" id="torneoId" />
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre del Torneo</label>
+                        <input type="text" class="form-control" id="nombre" required minlength="3" maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                        <input type="date" class="form-control" id="fechaInicio" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaFin" class="form-label">Fecha de Fin</label>
+                        <input type="date" class="form-control" id="fechaFin" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="cancelarFormulario()">Cancelar</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Tabla de torneos -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Lista de Torneos</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped table-responsive">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Fecha Inicio</th>
+                            <th>Fecha Fin</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaTorneos">
+                        <!-- Los datos se cargan dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // JavaScript para conectar con backend
+        const API_URL = '/api/torneos';
+        
+        // Cargar torneos al cargar la página
+        document.addEventListener('DOMContentLoaded', cargarTorneos);
+        
+        // Función para obtener estado del torneo
+        function obtenerEstadoTorneo(fechaInicio, fechaFin) {
+            const hoy = new Date();
+            const inicio = new Date(fechaInicio);
+            const fin = new Date(fechaFin);
+            
+            if (hoy < inicio) {
+                return '<span class="badge bg-secondary">Próximo</span>';
+            } else if (hoy >= inicio && hoy <= fin) {
+                return '<span class="badge bg-success">Activo</span>';
+            } else {
+                return '<span class="badge bg-danger">Finalizado</span>';
+            }
+        }
+        
+        // Función para cargar todos los torneos
+        function cargarTorneos() {
+            fetch(API_URL, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error en la respuesta: ' + response.status);
+                    }
+                    if (response.status === 204) {
+                        return [];
+                    }
+                    return response.json();
+                })
+                .then(torneos => {
+                    const tbody = document.getElementById('tablaTorneos');
+                    tbody.innerHTML = '';
+                    torneos.forEach(torneo => {
+                        const row = `
+                            <tr>
+                                <td>${torneo.id}</td>
+                                <td>${torneo.nombre}</td>
+                                <td>${torneo.fechaInicio}</td>
+                                <td>${torneo.fechaFin}</td>
+                                <td>${obtenerEstadoTorneo(torneo.fechaInicio, torneo.fechaFin)}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning" onclick="editarTorneo(${torneo.id})">Editar</button>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminarTorneo(${torneo.id})">Eliminar</button>
+                                </td>
+                            </tr>
+                        `;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar los torneos: ' + error.message);
+                });
+        }
+        
+        // Función para mostrar formulario de crear
+        function mostrarFormularioCrear() {
+            document.getElementById('formularioTorneo').style.display = 'block';
+            document.getElementById('tituloFormulario').textContent = 'Crear Nuevo Torneo';
+            document.getElementById('formTorneo').reset();
+            document.getElementById('torneoId').value = '';
+        }
+        
+        // Función para editar torneo
+        function editarTorneo(id) {
+            fetch(`${API_URL}/${id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                }
+            })
+                .then(response => response.json())
+                .then(torneo => {
+                    document.getElementById('formularioTorneo').style.display = 'block';
+                    document.getElementById('tituloFormulario').textContent = 'Editar Torneo';
+                    document.getElementById('torneoId').value = torneo.id;
+                    document.getElementById('nombre').value = torneo.nombre;
+                    document.getElementById('fechaInicio').value = torneo.fechaInicio;
+                    document.getElementById('fechaFin').value = torneo.fechaFin;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al cargar el torneo: ' + error.message);
+                });
+        }
+        
+        // Función para eliminar torneo
+        function eliminarTorneo(id) {
+            if (confirm('¿Está seguro de eliminar este torneo?')) {
+                fetch(`${API_URL}/${id}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Torneo eliminado exitosamente');
+                        cargarTorneos();
+                    } else {
+                        throw new Error('Error al eliminar');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al eliminar el torneo: ' + error.message);
+                });
+            }
+        }
+        
+        // Validar fechas
+        function validarFechas() {
+            const fechaInicio = document.getElementById('fechaInicio').value;
+            const fechaFin = document.getElementById('fechaFin').value;
+            
+            if (fechaInicio && fechaFin && fechaInicio >= fechaFin) {
+                alert('La fecha de fin debe ser posterior a la fecha de inicio');
+                return false;
+            }
+            return true;
+        }
+        
+        // Manejar submit del formulario
+        document.getElementById('formTorneo').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validarFechas()) {
+                return;
+            }
+            
+            const torneo = {
+                nombre: document.getElementById('nombre').value,
+                fechaInicio: document.getElementById('fechaInicio').value,
+                fechaFin: document.getElementById('fechaFin').value
+            };
+            
+            const torneoId = document.getElementById('torneoId').value;
+            const method = torneoId ? 'PUT' : 'POST';
+            const url = torneoId ? `${API_URL}/${torneoId}` : API_URL;
+            
+            fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa('user:751c919b-981f-460e-8fbe-5324316d558e')
+                },
+                body: JSON.stringify(torneo)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Error en la operación');
+                }
+            })
+            .then(() => {
+                alert(torneoId ? 'Torneo actualizado exitosamente' : 'Torneo creado exitosamente');
+                cancelarFormulario();
+                cargarTorneos();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al guardar el torneo: ' + error.message);
+            });
+        });
+        
+        // Función para cancelar formulario
+        function cancelarFormulario() {
+            document.getElementById('formularioTorneo').style.display = 'none';
+            document.getElementById('formTorneo').reset();
+        }
+    </script>
+</body>
+</html>
