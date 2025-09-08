@@ -20,6 +20,15 @@ public class Asignacion {
     @Column(nullable = false)
     private EstadoAsignacion estado;
 
+    // Relaciones con Arbitro y Partido
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "arbitro_id")
+    private Arbitro arbitro;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "partido_id")
+    private Partido partido;
+
     // ============================
     // Constructores
     // ============================
@@ -31,6 +40,15 @@ public class Asignacion {
         this.rolEspecifico = rolEspecifico;
         this.pagoCalculado = pagoCalculado;
         this.estado = estado;
+    }
+
+    // Constructor completo
+    public Asignacion(String rolEspecifico, Float pagoCalculado, EstadoAsignacion estado, Arbitro arbitro, Partido partido) {
+        this.rolEspecifico = rolEspecifico;
+        this.pagoCalculado = pagoCalculado;
+        this.estado = estado;
+        this.arbitro = arbitro;
+        this.partido = partido;
     }
 
     // ============================
@@ -77,5 +95,21 @@ public class Asignacion {
 
     public void setEstado(EstadoAsignacion estado) {
         this.estado = estado;
+    }
+
+    public Arbitro getArbitro() {
+        return arbitro;
+    }
+
+    public void setArbitro(Arbitro arbitro) {
+        this.arbitro = arbitro;
+    }
+
+    public Partido getPartido() {
+        return partido;
+    }
+
+    public void setPartido(Partido partido) {
+        this.partido = partido;
     }
 }
