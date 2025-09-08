@@ -64,17 +64,17 @@ public class TestController {
         return EstadoAsignacion.PENDIENTE;
     }
 
-    @GetMapping("/test-asignacion")
-    public Asignacion testAsignacion() {
-        return new Asignacion("Árbitro de prueba", 50000.0f, EstadoAsignacion.ACEPTADA);
-    }
+    // @GetMapping("/test-asignacion")
+    // public Asignacion testAsignacion() {
+    //     return new Asignacion("Árbitro de prueba", 50000.0f, EstadoAsignacion.ACEPTADA);
+    // }
 
-    @GetMapping("/test-lista")
-    public List<Object> testLista() {
-        Partido partido = new Partido(LocalDateTime.now().plusDays(1), "Estadio Central", "Equipo A", "Equipo B");
-        EstadoAsignacion estado = EstadoAsignacion.PENDIENTE;
-        Asignacion asignacion = new Asignacion("Árbitro Demo", 35000.0f, estado);
+    // @GetMapping("/test-lista")
+    // public List<Object> testLista() {
+    //     Partido partido = new Partido(LocalDateTime.now().plusDays(1), "Estadio Central", "Equipo A", "Equipo B");
+    //     EstadoAsignacion estado = EstadoAsignacion.PENDIENTE;
+    //     Asignacion asignacion = new Asignacion("Árbitro Demo", 35000.0f, estado);
 
-        return Arrays.asList(partido, estado, asignacion);
-    }
+    //     return Arrays.asList(partido, estado, asignacion);
+    // }
 }

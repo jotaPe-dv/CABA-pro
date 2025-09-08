@@ -16,10 +16,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 // 1. Permite el acceso a la consola H2
                 .requestMatchers(toH2Console()).permitAll()
-                
-                // 2. Mantén el acceso permitido a tus rutas de admin para pruebas
-                .requestMatchers("/admin/**").permitAll() 
-                
+
+                // 2. Mantén el acceso permitido a tus rutas de controller para pruebas
+                .requestMatchers("/controller/**").permitAll()
+
                 // 3. Por ahora, permite todo lo demás para simplificar
                 .anyRequest().permitAll()
             );
