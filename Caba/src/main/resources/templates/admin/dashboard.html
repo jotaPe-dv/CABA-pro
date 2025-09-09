@@ -94,7 +94,7 @@
                 <div class="card stats-card">
                     <div class="card-body text-center">
                         <i class="fas fa-trophy"></i>
-                        <h3 class="fw-bold">5</h3>
+                        <h3 class="fw-bold" th:text="${torneosActivos}">0</h3>
                         <p class="mb-0">Torneos Activos</p>
                     </div>
                 </div>
@@ -103,7 +103,7 @@
                 <div class="card stats-card">
                     <div class="card-body text-center">
                         <i class="fas fa-users"></i>
-                        <h3 class="fw-bold">12</h3>
+                        <h3 class="fw-bold" th:text="${arbitrosActivos}">0</h3>
                         <p class="mb-0">Árbitros Activos</p>
                     </div>
                 </div>
@@ -112,7 +112,7 @@
                 <div class="card stats-card">
                     <div class="card-body text-center">
                         <i class="fas fa-calendar-check"></i>
-                        <h3 class="fw-bold">8</h3>
+                        <h3 class="fw-bold" th:text="${partidosHoy}">0</h3>
                         <p class="mb-0">Partidos Hoy</p>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
                 <div class="card stats-card">
                     <div class="card-body text-center">
                         <i class="fas fa-dollar-sign"></i>
-                        <h3 class="fw-bold">3</h3>
+                        <h3 class="fw-bold" th:text="${liquidacionesPendientes}">0</h3>
                         <p class="mb-0">Liquidaciones Pendientes</p>
                     </div>
                 </div>
