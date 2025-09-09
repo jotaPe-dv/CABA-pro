@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -23,221 +22,41 @@
 
     <div class="container mt-5">
         <h1>Gestión de Partidos</h1>
-        <button class="btn btn-primary mb-3" onclick="mostrarFormularioCrear()">
-            Nuevo Partido
-        </button>
-
-        <!-- Formulario para crear/editar partido (inicialmente oculto) -->
-        <div id="formularioPartido" class="card mb-3" style="display: none;">
-            <div class="card-header">
-                <h5 id="tituloFormulario">Crear Nuevo Partido</h5>
-            </div>
-            <div class="card-body">
-                <form id="formPartido">
-                    <input type="hidden" id="partidoId" />
-                    <div class="mb-3">
-                        <label for="fechaHora" class="form-label">Fecha y Hora</label>
-                        <input type="datetime-local" class="form-control" id="fechaHora" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="lugar" class="form-label">Lugar</label>
-                        <input type="text" class="form-control" id="lugar" required maxlength="100">
-                    </div>
-                    <div class="mb-3">
-                        <label for="equipoLocal" class="form-label">Equipo Local</label>
-                        <input type="text" class="form-control" id="equipoLocal" required maxlength="100">
-                    </div>
-                    <div class="mb-3">
-                        <label for="equipoVisitante" class="form-label">Equipo Visitante</label>
-                        <input type="text" class="form-control" id="equipoVisitante" required maxlength="100">
-                    </div>
-                    <button type="submit" class="btn btn-success">Guardar</button>
-                    <button type="button" class="btn btn-secondary" onclick="cancelarFormulario()">Cancelar</button>
-                </form>
-            </div>
+        <div class="mb-3">
+            <a href="/admin/partidos/nuevo" class="btn btn-success">Crear Nuevo Partido</a>
         </div>
-
-        <!-- Tabla de partidos -->
-        <div class="card">
-            <div class="card-header">
-                <h5>Lista de Partidos</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped table-responsive">
+        <div class="row">
+            <div class="col-md-12">
+                <h4>Lista de Partidos</h4>
+                <table class="table table-bordered">
                     <thead>
                         <tr>
                             <th>ID</th>
                             <th>Fecha y Hora</th>
+                            <th>Local</th>
+                            <th>Visitante</th>
                             <th>Lugar</th>
-                            <th>Equipo Local</th>
-                            <th>Equipo Visitante</th>
-                            <th>Árbitros</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="tablaPartidos">
-                        <!-- Los datos se cargan dinámicamente -->
+                    <tbody>
+                        <tr th:each="partido : ${partidos}">
+                            <td th:text="${partido.id}"></td>
+                            <td th:text="${#temporals.format(partido.fechaHora, 'yyyy-MM-dd HH:mm')}"></td>
+                            <td th:text="${partido.equipoLocal}"></td>
+                            <td th:text="${partido.equipoVisitante}"></td>
+                            <td th:text="${partido.lugar}"></td>
+                            <td>
+                                <a th:href="@{'/admin/partidos/editar/' + ${partido.id}}" class="btn btn-sm btn-warning">Editar</a>
+                                <a th:href="@{'/admin/partidos/eliminar/' + ${partido.id}}" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar este partido?');">Eliminar</a>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
-                <div id="noPartidos" class="alert alert-info d-none">No hay partidos registrados.</div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const API_URL = '/api/partidos';
-        document.addEventListener('DOMContentLoaded', cargarPartidos);
-
-        function cargarPartidos() {
-            fetch(API_URL)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error en la respuesta: ' + response.status);
-                    }
-                    if (response.status === 204) {
-                        return [];
-                    }
-                    return response.json();
-                })
-                .then(partidos => {
-                    const tbody = document.getElementById('tablaPartidos');
-                    tbody.innerHTML = '';
-                    if (!partidos || partidos.length === 0) {
-                        document.getElementById('noPartidos').classList.remove('d-none');
-                        return;
-                    }
-                    document.getElementById('noPartidos').classList.add('d-none');
-                    partidos.forEach(partido => {
-                        fetch(`/api/partidos/${partido.id}/arbitros`)
-                            .then(resp => resp.json())
-                            .then(arbitros => {
-                                const arbitrosHtml = arbitros.length > 0 ? arbitros.map(a => `<span class='badge bg-secondary me-1'>${a}</span>`).join('') : '<span class="text-muted">Sin árbitros</span>';
-                                const row = `
-                                    <tr>
-                                        <td>${partido.id}</td>
-                                        <td>${partido.fechaHora ? partido.fechaHora.replace('T', ' ') : ''}</td>
-                                        <td>${partido.lugar}</td>
-                                        <td>${partido.equipoLocal}</td>
-                                        <td>${partido.equipoVisitante}</td>
-                                        <td>${arbitrosHtml}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-warning" onclick="editarPartido(${partido.id})">Editar</button>
-                                            <button class="btn btn-sm btn-danger" onclick="eliminarPartido(${partido.id})">Eliminar</button>
-                                        </td>
-                                    </tr>
-                                `;
-                                tbody.innerHTML += row;
-                            })
-                            .catch(() => {
-                                const row = `
-                                    <tr>
-                                        <td>${partido.id}</td>
-                                        <td>${partido.fechaHora ? partido.fechaHora.replace('T', ' ') : ''}</td>
-                                        <td>${partido.lugar}</td>
-                                        <td>${partido.equipoLocal}</td>
-                                        <td>${partido.equipoVisitante}</td>
-                                        <td><span class='text-muted'>Error árbitros</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-warning" onclick="editarPartido(${partido.id})">Editar</button>
-                                            <button class="btn btn-sm btn-danger" onclick="eliminarPartido(${partido.id})">Eliminar</button>
-                                        </td>
-                                    </tr>
-                                `;
-                                tbody.innerHTML += row;
-                            });
-                    });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al cargar los partidos: ' + error.message);
-                });
-        }
-
-        function mostrarFormularioCrear() {
-            document.getElementById('formularioPartido').style.display = 'block';
-            document.getElementById('tituloFormulario').textContent = 'Crear Nuevo Partido';
-            document.getElementById('formPartido').reset();
-            document.getElementById('partidoId').value = '';
-        }
-
-        function editarPartido(id) {
-            fetch(`${API_URL}/${id}`)
-                .then(response => response.json())
-                .then(partido => {
-                    document.getElementById('formularioPartido').style.display = 'block';
-                    document.getElementById('tituloFormulario').textContent = 'Editar Partido';
-                    document.getElementById('partidoId').value = partido.id;
-                    document.getElementById('fechaHora').value = partido.fechaHora ? partido.fechaHora.substring(0,16) : '';
-                    document.getElementById('lugar').value = partido.lugar;
-                    document.getElementById('equipoLocal').value = partido.equipoLocal;
-                    document.getElementById('equipoVisitante').value = partido.equipoVisitante;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error al cargar el partido: ' + error.message);
-                });
-        }
-
-        function eliminarPartido(id) {
-            if (confirm('¿Está seguro de eliminar este partido?')) {
-                fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-                    .then(response => {
-                        if (response.ok) {
-                            alert('Partido eliminado exitosamente');
-                            cargarPartidos();
-                        } else {
-                            throw new Error('Error al eliminar');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error al eliminar el partido: ' + error.message);
-                    });
-            }
-        }
-
-        document.getElementById('formPartido').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const partido = {
-                fechaHora: document.getElementById('fechaHora').value,
-                lugar: document.getElementById('lugar').value,
-                equipoLocal: document.getElementById('equipoLocal').value,
-                equipoVisitante: document.getElementById('equipoVisitante').value
-            };
-            const partidoId = document.getElementById('partidoId').value;
-            const method = partidoId ? 'PUT' : 'POST';
-            const url = partidoId ? `${API_URL}/${partidoId}` : API_URL;
-            fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(partido)
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Error en la operación');
-                }
-            })
-            .then(() => {
-                alert(partidoId ? 'Partido actualizado exitosamente' : 'Partido creado exitosamente');
-                cancelarFormulario();
-                cargarPartidos();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error al guardar el partido: ' + error.message);
-            });
-        });
-
-        function cancelarFormulario() {
-            document.getElementById('formularioPartido').style.display = 'none';
-            document.getElementById('formPartido').reset();
-        }
-    </script>
 </body>
-</html>
 </html>

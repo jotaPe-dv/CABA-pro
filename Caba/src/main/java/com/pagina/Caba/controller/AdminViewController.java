@@ -22,10 +22,7 @@ public class AdminViewController {
     private ArbitroRepository arbitroRepository;
     @Autowired
     private LiquidacionRepository liquidacionRepository;
-    @GetMapping("/partidos")
-    public String partidos() {
-        return "admin/partidos";
-    }
+    // Eliminado método partidos() para evitar conflicto de rutas
     
     @GetMapping("/dashboard")
     public String dashboard(Model model) {
@@ -40,10 +37,7 @@ public class AdminViewController {
         return "admin/dashboard";
     }
     
-    @GetMapping("/torneos")
-    public String torneos() {
-        return "admin/torneos";
-    }
+    // Eliminado método torneos() para evitar conflicto de rutas
     
     @GetMapping("/tarifas")
     public String tarifas() {
