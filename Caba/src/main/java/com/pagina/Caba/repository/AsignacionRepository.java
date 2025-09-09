@@ -1,3 +1,4 @@
+
 package com.pagina.Caba.repository;
 
 import com.pagina.Caba.model.Asignacion;
@@ -9,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
+    @Query("SELECT a FROM Asignacion a JOIN FETCH a.arbitro ar WHERE a.partido.id = :partidoId")
+    List<Asignacion> findByPartidoId(@Param("partidoId") Long partidoId);
     
     @Query("SELECT a FROM Asignacion a JOIN FETCH a.arbitro ar JOIN FETCH a.partido p WHERE ar.id = :arbitroId AND a.estado = :estado")
     List<Asignacion> findByArbitroIdAndEstado(@Param("arbitroId") Long arbitroId, @Param("estado") EstadoAsignacion estado);

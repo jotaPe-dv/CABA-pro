@@ -201,7 +201,7 @@
                     asignaciones.forEach(asignacion => {
                         const partido = asignacion.partido || {};
                         const card = `
-                            <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="col-md-6 col-lg-4 mb-3" id="asignacion-${asignacion.id}">
                                 <div class="card h-100">
                                     <div class="card-header">
                                         <h6 class="mb-0">
@@ -308,8 +308,17 @@
                 .then(response => {
                     if (response.ok) {
                         showSuccessToast('Asignación aceptada exitosamente');
-                        cargarAsignacionesPendientes();
+                        // Eliminar del DOM la tarjeta de asignación
+                        const asignacionCard = document.getElementById('asignacion-' + id);
+                        if (asignacionCard) {
+                            asignacionCard.remove();
+                        }
                         cargarHistorialAsignaciones();
+                        // Si ya no hay asignaciones, mostrar mensaje
+                        const container = document.getElementById('asignacionesPendientes');
+                        if (container && container.children.length === 0) {
+                            document.getElementById('noAsignaciones').classList.remove('d-none');
+                        }
                     } else {
                         throw new Error('Error en la respuesta');
                     }
@@ -332,8 +341,17 @@
                 .then(response => {
                     if (response.ok) {
                         showSuccessToast('Asignación rechazada');
-                        cargarAsignacionesPendientes();
+                        // Eliminar del DOM la tarjeta de asignación
+                        const asignacionCard = document.getElementById('asignacion-' + id);
+                        if (asignacionCard) {
+                            asignacionCard.remove();
+                        }
                         cargarHistorialAsignaciones();
+                        // Si ya no hay asignaciones, mostrar mensaje
+                        const container = document.getElementById('asignacionesPendientes');
+                        if (container && container.children.length === 0) {
+                            document.getElementById('noAsignaciones').classList.remove('d-none');
+                        }
                     } else {
                         throw new Error('Error en la respuesta');
                     }

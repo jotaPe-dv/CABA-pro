@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 @RequestMapping("/admin")
 public class AdminViewController {
+    @GetMapping("/partidos")
+    public String partidos() {
+        return "admin/partidos";
+    }
     
     @GetMapping("/dashboard")
     public String dashboard() {

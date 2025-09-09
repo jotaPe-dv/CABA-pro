@@ -12,9 +12,12 @@ import java.util.Optional;
 
 @Service
 public class AsignacionService {
-
     @Autowired
     private AsignacionRepository asignacionRepository;
+
+    public List<Asignacion> findByPartidoId(Long partidoId) {
+        return asignacionRepository.findByPartidoId(partidoId);
+    }
 
     public List<Asignacion> findByArbitroIdAndEstado(Long arbitroId, EstadoAsignacion estado) {
         return asignacionRepository.findByArbitroIdAndEstado(arbitroId, estado);

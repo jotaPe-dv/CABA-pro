@@ -55,8 +55,11 @@ public class SecurityConfig {
                 .permitAll()
             );
         
-        // Deshabilita la protección CSRF específicamente para la consola H2
-        http.csrf(csrf -> csrf.ignoringRequestMatchers(toH2Console()));
+        // Deshabilita la protección CSRF específicamente para la consola H2 y APIs REST
+        http.csrf(csrf -> csrf
+            .ignoringRequestMatchers(toH2Console())
+            .ignoringRequestMatchers("/api/**")
+        );
         
         // Permite que la consola H2 se cargue dentro de un frame
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
