@@ -35,56 +35,7 @@
             </tbody>
         </table>
 
-        <!-- Sección de asignaciones pendientes -->
-        <div class="mt-5">
-            <h2>Asignaciones Pendientes</h2>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Partido</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="asignacion : ${asignacionesPendientes}">
-                        <td th:text="${asignacion.id}"></td>
-                        <td th:text="${asignacion.partido}"></td>
-                        <td th:text="${asignacion.estado}"></td>
-                        <td>
-                            <form th:action="@{/arbitro/asignaciones/aceptar/{id}(id=${asignacion.id})}" method="post" style="display:inline">
-                                <button type="submit" class="btn btn-success btn-sm">Aceptar</button>
-                            </form>
-                            <form th:action="@{/arbitro/asignaciones/rechazar/{id}(id=${asignacion.id})}" method="post" style="display:inline">
-                                <button type="submit" class="btn btn-danger btn-sm">Rechazar</button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Sección de historial de asignaciones -->
-        <div class="mt-5">
-            <h2>Historial de Asignaciones</h2>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Partido</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="asignacion : ${asignacionesHistorial}">
-                        <td th:text="${asignacion.id}"></td>
-                        <td th:text="${asignacion.partido}"></td>
-                        <td th:text="${asignacion.estado}"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <!-- ...existing code... -->
     </div>
 </body>
 </html>

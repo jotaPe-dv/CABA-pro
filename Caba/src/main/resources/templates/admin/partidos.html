@@ -36,6 +36,7 @@
                             <th>Local</th>
                             <th>Visitante</th>
                             <th>Lugar</th>
+                            <th>Árbitros asignados</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -46,6 +47,11 @@
                             <td th:text="${partido.equipoLocal}"></td>
                             <td th:text="${partido.equipoVisitante}"></td>
                             <td th:text="${partido.lugar}"></td>
+                            <td>
+                      <span th:if="${arbitrosPorPartido[partido.id] != null && !#lists.isEmpty(arbitrosPorPartido[partido.id])}"
+                          th:text="${#strings.arrayJoin(arbitrosPorPartido[partido.id].toArray(), ', ')}"></span>
+                                <span th:if="${arbitrosPorPartido[partido.id] == null || #lists.isEmpty(arbitrosPorPartido[partido.id])}" class="text-muted"><em>Sin árbitros asignados</em></span>
+                            </td>
                             <td>
                                 <a th:href="@{'/admin/partidos/editar/' + ${partido.id}}" class="btn btn-sm btn-warning">Editar</a>
                                 <a th:href="@{'/admin/partidos/eliminar/' + ${partido.id}}" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar este partido?');">Eliminar</a>

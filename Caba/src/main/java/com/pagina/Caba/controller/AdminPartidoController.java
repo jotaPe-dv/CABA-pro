@@ -21,10 +21,25 @@ public class AdminPartidoController {
     @Autowired
     private PartidoService partidoService;
 
+    @Autowired
+    private com.pagina.Caba.service.AsignacionService asignacionService;
+
     @GetMapping
     public String listarPartidos(Model model) {
         List<Partido> partidos = partidoService.findAll();
+        java.util.Map<Long, java.util.List<String>> arbitrosPorPartido = new java.util.HashMap<>();
+        for (Partido partido : partidos) {
+            java.util.List<com.pagina.Caba.model.Asignacion> asignaciones = asignacionService.findByPartidoId(partido.getId());
+            java.util.List<String> nombres = new java.util.ArrayList<>();
+            for (com.pagina.Caba.model.Asignacion asignacion : asignaciones) {
+                if (asignacion.getArbitro() != null) {
+                    nombres.add(asignacion.getArbitro().getNombre());
+                }
+            }
+            arbitrosPorPartido.put(partido.getId(), nombres);
+        }
         model.addAttribute("partidos", partidos);
+        model.addAttribute("arbitrosPorPartido", arbitrosPorPartido);
         model.addAttribute("partidoEditar", new Partido());
         return "admin/partidos";
     }
