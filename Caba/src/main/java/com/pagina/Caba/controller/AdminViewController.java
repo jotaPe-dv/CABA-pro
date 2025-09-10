@@ -44,8 +44,5 @@ public class AdminViewController {
         return "admin/tarifas";
     }
     
-    @GetMapping("/liquidaciones")
-    public String liquidaciones() {
-        return "admin/liquidaciones";
-    }
+    // ...existing code...
 }

@@ -104,20 +104,51 @@
                     Asignaciones Pendientes
                 </h3>
                 
-                <div id="asignacionesPendientes" class="row">
-                    <!-- Las asignaciones se cargan dinámicamente -->
-                </div>
-                
-                <div id="noAsignaciones" class="alert alert-info d-none" role="alert">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>No hay asignaciones pendientes</strong> en este momento. ¡Mantente atento a nuevas oportunidades!
-                </div>
-                
-                <div id="loadingAsignaciones" class="text-center">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
+                <div class="row">
+                    <div th:if="${#lists.isEmpty(asignacionesPendientes)}" class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>No hay asignaciones pendientes</strong> en este momento. ¡Mantente atento a nuevas oportunidades!
                     </div>
-                    <p class="mt-2">Cargando asignaciones...</p>
+                    <div th:each="asignacion : ${asignacionesPendientes}" class="col-md-6 col-lg-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-basketball-ball me-2"></i>
+                                    <span th:text="${asignacion.partido.equipoLocal}"></span> vs <span th:text="${asignacion.partido.equipoVisitante}"></span>
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-2">
+                                    <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                                    <strong>Fecha:</strong> <span th:text="${asignacion.partido.fechaHora}"></span>
+                                </p>
+                                <p class="mb-2">
+                                    <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                                    <strong>Lugar:</strong> <span th:text="${asignacion.partido.lugar}"></span>
+                                </p>
+                                <p class="mb-3">
+                                    <i class="fas fa-user-tie me-2 text-info"></i>
+                                    <strong>Rol:</strong> <span th:text="${asignacion.rolEspecifico}"></span>
+                                </p>
+                                <p class="mb-3">
+                                    <i class="fas fa-dollar-sign me-2 text-success"></i>
+                                    <strong>Pago:</strong> $<span th:text="${asignacion.pagoCalculado}"></span>
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <form th:action="@{/arbitro/dashboard/aceptar/{id}(id=${asignacion.id})}" method="post" style="display:inline">
+                                        <button type="submit" class="btn btn-accept text-white">
+                                            <i class="fas fa-check me-2"></i>Aceptar
+                                        </button>
+                                    </form>
+                                    <form th:action="@{/arbitro/dashboard/rechazar/{id}(id=${asignacion.id})}" method="post" style="display:inline">
+                                        <button type="submit" class="btn btn-reject text-white">
+                                            <i class="fas fa-times me-2"></i>Rechazar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -132,15 +163,36 @@
                 
                 <div class="card">
                     <div class="card-body">
-                        <div id="historialAsignaciones">
-                            <!-- Historial se carga dinámicamente -->
-                        </div>
-                        
-                        <div id="loadingHistorial" class="text-center">
-                            <div class="spinner-border text-secondary" role="status">
-                                <span class="visually-hidden">Cargando historial...</span>
+                        <div>
+                            <div th:if="${#lists.isEmpty(asignacionesHistorial)}" class="text-muted text-center">No hay historial disponible.</div>
+                            <div th:if="${!#lists.isEmpty(asignacionesHistorial)}" class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Partido</th>
+                                            <th>Fecha</th>
+                                            <th>Rol</th>
+                                            <th>Estado</th>
+                                            <th>Pago</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="asignacion : ${asignacionesHistorial}">
+                                            <td th:text="${asignacion.partido != null && asignacion.partido.equipoLocal != null && asignacion.partido.equipoVisitante != null ? asignacion.partido.equipoLocal + ' vs ' + asignacion.partido.equipoVisitante : 'Sin datos'}"></td>
+                                            <td th:text="${asignacion.partido != null && asignacion.partido.fechaHora != null ? asignacion.partido.fechaHora : 'Sin fecha'}"></td>
+                                            <td th:text="${asignacion.rolEspecifico != null ? asignacion.rolEspecifico : 'Sin rol'}"></td>
+                                            <td>
+                                                <span th:classappend="'status-badge ' +
+                                                (${asignacion.estado != null and asignacion.estado.name() == 'PENDIENTE'} ? 'status-pendiente' :
+                                                (${asignacion.estado != null and asignacion.estado.name() == 'ACEPTADA'} ? 'status-aceptada' :
+                                                (${asignacion.estado != null and asignacion.estado.name() == 'RECHAZADA'} ? 'status-rechazada' : 'status-pendiente')))
+                                                " th:text="${asignacion.estado != null ? asignacion.estado.name() : 'PENDIENTE'}"></span>
+                                            </td>
+                                            <td th:text="${asignacion.pagoCalculado != null ? #numbers.formatDecimal(asignacion.pagoCalculado, 1, 'POINT', 2, 'POINT') : '0.00'}"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <p class="mt-2">Cargando historial...</p>
                         </div>
                     </div>
                 </div>
@@ -173,207 +225,5 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js" crossorigin="anonymous"></script>
-    <script>
-        // JavaScript para cargar y manejar asignaciones
-        document.addEventListener('DOMContentLoaded', function() {
-            cargarAsignacionesPendientes();
-            cargarHistorialAsignaciones();
-        });
-        
-        function cargarAsignacionesPendientes() {
-            const container = document.getElementById('asignacionesPendientes');
-            const noAsignaciones = document.getElementById('noAsignaciones');
-            const loading = document.getElementById('loadingAsignaciones');
-            
-            fetch('/api/arbitro/asignaciones/pendientes')
-                .then(response => response.json())
-                .then(asignaciones => {
-                    loading.style.display = 'none';
-                    
-                    if (asignaciones.length === 0) {
-                        noAsignaciones.classList.remove('d-none');
-                        return;
-                    }
-                    
-                    container.innerHTML = '';
-                    asignaciones.forEach(asignacion => {
-                        const partido = asignacion.partido || {};
-                        const card = `
-                            <div class="col-md-6 col-lg-4 mb-3" id="asignacion-${asignacion.id}">
-                                <div class="card h-100">
-                                    <div class="card-header">
-                                        <h6 class="mb-0">
-                                            <i class="fas fa-basketball-ball me-2"></i>
-                                            ${partido.equipoLocal || 'Equipo A'} vs ${partido.equipoVisitante || 'Equipo B'}
-                                        </h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="mb-2">
-                                            <i class="fas fa-calendar-alt me-2 text-primary"></i>
-                                            <strong>Fecha:</strong> ${partido.fechaHora || 'Por definir'}
-                                        </p>
-                                        <p class="mb-2">
-                                            <i class="fas fa-map-marker-alt me-2 text-danger"></i>
-                                            <strong>Lugar:</strong> ${partido.lugar || 'Por definir'}
-                                        </p>
-                                        <p class="mb-3">
-                                            <i class="fas fa-user-tie me-2 text-info"></i>
-                                            <strong>Rol:</strong> ${asignacion.rolEspecifico}
-                                        </p>
-                                        <p class="mb-3">
-                                            <i class="fas fa-dollar-sign me-2 text-success"></i>
-                                            <strong>Pago:</strong> $${asignacion.pagoCalculado}
-                                        </p>
-                                        <div class="d-grid gap-2">
-                                            <button class="btn btn-accept text-white" onclick="aceptarAsignacion(${asignacion.id})">
-                                                <i class="fas fa-check me-2"></i>Aceptar
-                                            </button>
-                                            <button class="btn btn-reject text-white" onclick="rechazarAsignacion(${asignacion.id})">
-                                                <i class="fas fa-times me-2"></i>Rechazar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        container.innerHTML += card;
-                    });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    loading.style.display = 'none';
-                    showErrorToast('Error al cargar las asignaciones pendientes');
-                });
-        }
-        
-        function cargarHistorialAsignaciones() {
-            const container = document.getElementById('historialAsignaciones');
-            const loading = document.getElementById('loadingHistorial');
-            
-            fetch('/api/arbitro/asignaciones/historial')
-                .then(response => response.json())
-                .then(asignaciones => {
-                    loading.style.display = 'none';
-                    
-                    if (asignaciones.length === 0) {
-                        container.innerHTML = '<p class="text-muted text-center">No hay historial disponible.</p>';
-                        return;
-                    }
-                    
-                    let historialHTML = '<div class="table-responsive"><table class="table table-hover"><thead class="table-dark"><tr><th>Partido</th><th>Fecha</th><th>Rol</th><th>Estado</th><th>Pago</th></tr></thead><tbody>';
-                    
-                    asignaciones.forEach(asignacion => {
-                        const partido = asignacion.partido || {};
-                        const statusClass = getStatusClass(asignacion.estado);
-                        historialHTML += `
-                            <tr>
-                                <td>${partido.equipoLocal || 'Equipo A'} vs ${partido.equipoVisitante || 'Equipo B'}</td>
-                                <td>${partido.fechaHora || 'Por definir'}</td>
-                                <td>${asignacion.rolEspecifico}</td>
-                                <td><span class="status-badge ${statusClass}">${asignacion.estado}</span></td>
-                                <td>$${asignacion.pagoCalculado}</td>
-                            </tr>
-                        `;
-                    });
-                    
-                    historialHTML += '</tbody></table></div>';
-                    container.innerHTML = historialHTML;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    loading.style.display = 'none';
-                    showErrorToast('Error al cargar el historial');
-                });
-        }
-        
-        function getStatusClass(estado) {
-            switch(estado) {
-                case 'PENDIENTE': return 'status-pendiente';
-                case 'ACEPTADA': return 'status-aceptada';
-                case 'RECHAZADA': return 'status-rechazada';
-                default: return 'status-pendiente';
-            }
-        }
-        
-        function aceptarAsignacion(id) {
-            if (confirm('¿Confirma que acepta esta asignación?')) {
-                fetch(`/api/arbitro/asignaciones/${id}/aceptar`, { 
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showSuccessToast('Asignación aceptada exitosamente');
-                        // Eliminar del DOM la tarjeta de asignación
-                        const asignacionCard = document.getElementById('asignacion-' + id);
-                        if (asignacionCard) {
-                            asignacionCard.remove();
-                        }
-                        cargarHistorialAsignaciones();
-                        // Si ya no hay asignaciones, mostrar mensaje
-                        const container = document.getElementById('asignacionesPendientes');
-                        if (container && container.children.length === 0) {
-                            document.getElementById('noAsignaciones').classList.remove('d-none');
-                        }
-                    } else {
-                        throw new Error('Error en la respuesta');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showErrorToast('Error al aceptar la asignación');
-                });
-            }
-        }
-        
-        function rechazarAsignacion(id) {
-            if (confirm('¿Confirma que rechaza esta asignación?')) {
-                fetch(`/api/arbitro/asignaciones/${id}/rechazar`, { 
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        showSuccessToast('Asignación rechazada');
-                        // Eliminar del DOM la tarjeta de asignación
-                        const asignacionCard = document.getElementById('asignacion-' + id);
-                        if (asignacionCard) {
-                            asignacionCard.remove();
-                        }
-                        cargarHistorialAsignaciones();
-                        // Si ya no hay asignaciones, mostrar mensaje
-                        const container = document.getElementById('asignacionesPendientes');
-                        if (container && container.children.length === 0) {
-                            document.getElementById('noAsignaciones').classList.remove('d-none');
-                        }
-                    } else {
-                        throw new Error('Error en la respuesta');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showErrorToast('Error al rechazar la asignación');
-                });
-            }
-        }
-        
-        function showSuccessToast(message) {
-            document.getElementById('successMessage').textContent = message;
-            const toast = new bootstrap.Toast(document.getElementById('successToast'));
-            toast.show();
-        }
-        
-        function showErrorToast(message) {
-            document.getElementById('errorMessage').textContent = message;
-            const toast = new bootstrap.Toast(document.getElementById('errorToast'));
-            toast.show();
-        }
-    </script>
 </body>
 </html>

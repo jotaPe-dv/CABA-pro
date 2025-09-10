@@ -20,16 +20,5 @@ public class ArbitroViewController {
     @Autowired
     private AsignacionService asignacionService;
     
-    @GetMapping("/dashboard")
-    public String dashboard(Authentication auth, Model model) {
-        // Obtener árbitro actual
-        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
-        
-        // Cargar asignaciones pendientes
-        List<Asignacion> asignacionesPendientes = asignacionService
-            .findByArbitroIdAndEstado(userPrincipal.getId(), EstadoAsignacion.PENDIENTE);
-        
-        model.addAttribute("asignacionesPendientes", asignacionesPendientes);
-        return "dashboard-arbitro";
-    }
+    // ...existing code...
 }
