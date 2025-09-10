@@ -41,7 +41,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="liquidacion : ${liquidaciones}">
+                        <tr th:each="liquidacion : ${liquidaciones}" th:if="${liquidacion.estado.name() != 'PAGADA'}">
                             <td th:text="${liquidacion.id}"></td>
                             <td th:text="${#temporals.format(liquidacion.fecha, 'yyyy-MM-dd')}"></td>
                             <td th:text="${liquidacion.montoTotal}"></td>
@@ -49,8 +49,42 @@
                             <td th:text="${liquidacion.arbitro != null ? liquidacion.arbitro.nombre : 'Sin árbitro'}"></td>
                             <td>
                                 <a th:href="@{'/admin/liquidaciones/editar/' + ${liquidacion.id}}" class="btn btn-sm btn-warning">Editar</a>
-                                <a th:href="@{'/admin/liquidaciones/eliminar/' + ${liquidacion.id}}" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que deseas eliminar esta liquidación?');">Eliminar</a>
+                                <form th:action="@{'/admin/liquidaciones/liquidar/' + ${liquidacion.id}}" method="post" style="display:inline">
+                                    <button type="submit" class="btn btn-sm btn-success">Liquidar</button>
+                                </form>
                             </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Liquidaciones -->
+    <div class="container mt-5" id="historialLiquidaciones">
+        <h2>Historial de Liquidaciones</h2>
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Monto Total</th>
+                            <th>Estado</th>
+                            <th>Árbitro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="liq : ${liquidaciones}" th:if="${liq.estado.name() == 'PAGADA'}">
+                            <td th:text="${liq.id}"></td>
+                            <td th:text="${#temporals.format(liq.fecha, 'yyyy-MM-dd')}"></td>
+                            <td th:text="${liq.montoTotal}"></td>
+                            <td th:text="${liq.estado}"></td>
+                            <td th:text="${liq.arbitro != null ? liq.arbitro.nombre : 'Sin árbitro'}"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(liquidaciones.?[estado.name() == 'PAGADA'])}">
+                            <td colspan="5" class="text-center text-muted">No hay liquidaciones pagadas.</td>
                         </tr>
                     </tbody>
                 </table>

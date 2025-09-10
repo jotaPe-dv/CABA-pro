@@ -31,18 +31,31 @@ public class AsignacionService {
         return asignacionRepository.findById(id);
     }
 
+    @Autowired
+    private com.pagina.Caba.service.LiquidacionService liquidacionService;
+
     @Transactional
     public void aceptarAsignacion(Long asignacionId, Long arbitroId) {
         Asignacion asignacion = findById(asignacionId)
             .orElseThrow(() -> new RuntimeException("Asignación no encontrada"));
-        
+
         // Verificar que la asignación pertenece al árbitro
         if (!asignacion.getArbitro().getId().equals(arbitroId)) {
             throw new RuntimeException("No autorizado");
         }
-        
+
         asignacion.aceptar();
         asignacionRepository.save(asignacion);
+
+        // Crear liquidación automáticamente
+        java.math.BigDecimal monto = java.math.BigDecimal.valueOf(asignacion.getPagoCalculado() != null ? asignacion.getPagoCalculado() : 0.0f);
+        com.pagina.Caba.model.Liquidacion liquidacion = new com.pagina.Caba.model.Liquidacion(
+            java.time.LocalDate.now(),
+            monto,
+            com.pagina.Caba.model.EstadoLiquidacion.PENDIENTE,
+            asignacion.getArbitro()
+        );
+        liquidacionService.save(liquidacion);
     }
 
     @Transactional

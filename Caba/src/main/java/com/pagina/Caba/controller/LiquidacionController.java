@@ -70,4 +70,16 @@ public class LiquidacionController {
         liquidacionService.deleteById(id);
         return "redirect:/admin/liquidaciones";
     }
+
+    // Liquidar liquidación (cambiar estado a PAGADA)
+    @PostMapping("/liquidar/{id}")
+    public String liquidarLiquidacion(@PathVariable Long id) {
+        var liquidacionOpt = liquidacionService.findById(id);
+        if (liquidacionOpt.isPresent()) {
+            var liquidacion = liquidacionOpt.get();
+            liquidacion.setEstado(com.pagina.Caba.model.EstadoLiquidacion.PAGADA);
+            liquidacionService.save(liquidacion);
+        }
+        return "redirect:/admin/liquidaciones";
+    }
 }
