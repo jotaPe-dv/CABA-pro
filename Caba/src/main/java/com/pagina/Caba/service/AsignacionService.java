@@ -22,12 +22,16 @@ public class AsignacionService {
     @Autowired
     private PartidoRepository partidoRepository;
     
+
+
     @Autowired
-    private TarifaRepository tarifaRepository;
+    private TarifaService tarifaService;
     
     // CRUD Básico
     public List<Asignacion> obtenerTodas() {
-        return asignacionRepository.findAll();
+        List<Asignacion> asignaciones = asignacionRepository.findAll();
+        System.out.println("[DEBUG] AsignacionService.obtenerTodas() - Retornando " + asignaciones.size() + " asignaciones");
+        return asignaciones;
     }
     
     public Optional<Asignacion> obtenerPorId(Long id) {
@@ -35,7 +39,13 @@ public class AsignacionService {
     }
     
     public Asignacion guardar(Asignacion asignacion) {
-        return asignacionRepository.save(asignacion);
+        System.out.println("[DEBUG] AsignacionService.guardar() - Guardando asignación: " + 
+                          "Partido ID=" + asignacion.getPartido().getId() + 
+                          ", Arbitro=" + asignacion.getArbitro().getNombre() + 
+                          ", Rol=" + asignacion.getRolEspecifico());
+        Asignacion resultado = asignacionRepository.save(asignacion);
+        System.out.println("[DEBUG] AsignacionService.guardar() - Asignación guardada con ID: " + resultado.getId());
+        return resultado;
     }
     
     // Lógica de Negocio Principal
@@ -43,30 +53,25 @@ public class AsignacionService {
         // Obtener entidades
         Optional<Partido> partidoOpt = partidoRepository.findById(partidoId);
         Optional<Arbitro> arbitroOpt = arbitroRepository.findById(arbitroId);
-        
         if (partidoOpt.isEmpty()) {
             throw new IllegalArgumentException("Partido no encontrado");
         }
         if (arbitroOpt.isEmpty()) {
             throw new IllegalArgumentException("Árbitro no encontrado");
         }
-        
         Partido partido = partidoOpt.get();
         Arbitro arbitro = arbitroOpt.get();
-        
         // Validaciones
         validarAsignacion(partido, arbitro);
-        
-        // Buscar tarifa vigente
-        Optional<Tarifa> tarifaOpt = tarifaRepository.findTarifaVigentePorTipo(
-            tipoPartido, LocalDateTime.now());
-        
+        // Buscar tarifa automáticamente según tipo de partido y escalafón del árbitro
+        String escalafon = arbitro.getEscalafon();
+        String tipo = tipoPartido != null ? tipoPartido : partido.getTipoPartido();
+        java.time.LocalDateTime fecha = partido.getFechaPartido();
+        Optional<Tarifa> tarifaOpt = tarifaService.buscarTarifaParaAsignacion(tipo, escalafon, fecha);
         if (tarifaOpt.isEmpty()) {
-            throw new IllegalArgumentException("No hay tarifa vigente para este tipo de partido");
+            throw new IllegalArgumentException("No hay tarifa vigente para el tipo de partido y escalafón del árbitro");
         }
-        
         Tarifa tarifa = tarifaOpt.get();
-        
         // Crear asignación
         Asignacion asignacion = new Asignacion(partido, arbitro, tarifa);
         return asignacionRepository.save(asignacion);

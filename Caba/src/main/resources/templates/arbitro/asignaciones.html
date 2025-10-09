@@ -97,6 +97,7 @@
                                         <th>Partido</th>
                                         <th>Fecha y Hora</th>
                                         <th>Torneo</th>
+                                        <th class="text-center">Ubicación</th>
                                         <th>Estado</th>
                                         <th>Monto</th>
                                         <th>Acciones</th>
@@ -109,47 +110,41 @@
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-trophy-fill text-warning me-2"></i>
                                                 <div>
-                                                    <div class="fw-bold" th:text="${asignacion.partido?.equipoLocal + ' vs ' + asignacion.partido?.equipoVisitante}">Lakers vs Warriors</div>
-                                                    <small class="text-muted" th:text="${asignacion.partido?.lugar}">Staples Center</small>
+                                                    <div class="fw-bold" th:text="${asignacion.partido != null ? asignacion.partido.equipoLocal + ' vs ' + asignacion.partido.equipoVisitante : ''}">Lakers vs Warriors</div>
+                                                    <small class="text-muted" th:text="${asignacion.partido != null ? asignacion.partido.tipoPartido : ''}">Tipo</small>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
-                                            <div th:text="${asignacion.partido?.fechaHora}">15/10/2025 19:00</div>
-                                            <small class="text-muted">En 2 días</small>
+                                            <div th:text="${asignacion.partido != null ? #temporals.format(asignacion.partido.fechaPartido, 'dd/MM/yyyy HH:mm') : ''}">15/10/2025 19:00</div>
+                                            <small class="text-muted" th:if="${asignacion.partido != null}"> <span th:text="${#temporals.createNow().isBefore(asignacion.partido.fechaPartido) ? 'Próximo' : 'Pasado'}">En 2 días</span></small>
                                         </td>
-                                        <td th:text="${asignacion.partido?.torneo?.nombre}">Liga Profesional</td>
+                                        <td th:text="${asignacion.partido != null && asignacion.partido.torneo != null ? asignacion.partido.torneo.nombre : ''}">Liga Profesional</td>
+                                        <td class="text-center" th:text="${asignacion.partido != null ? asignacion.partido.ubicacion : ''}">Ubicación</td>
                                         <td>
-                                            <span th:class="'badge ' + 
-                                                (${asignacion.estado.name()} == 'PENDIENTE' ? 'bg-warning' :
-                                                 ${asignacion.estado.name()} == 'ACEPTADA' ? 'bg-success' :
-                                                 ${asignacion.estado.name()} == 'RECHAZADA' ? 'bg-danger' :
-                                                 ${asignacion.estado.name()} == 'COMPLETADA' ? 'bg-primary' : 'bg-secondary')"
-                                                  th:text="${asignacion.estado}">PENDIENTE</span>
+                                            <span class="badge" th:classappend="${asignacion.estado.name() == 'PENDIENTE'} ? ' bg-warning' : (asignacion.estado.name() == 'ACEPTADA' ? ' bg-success' : (asignacion.estado.name() == 'RECHAZADA' ? ' bg-danger' : (asignacion.estado.name() == 'COMPLETADA' ? ' bg-primary' : ' bg-secondary')))" th:text="${asignacion.estado}">PENDIENTE</span>
                                         </td>
                                         <td>
-                                            <div class="fw-bold text-success" th:text="'$' + ${asignacion.montoCalculado}">$150.00</div>
+                                            <div class="fw-bold text-success" th:text="'$' + #numbers.formatDecimal((asignacion.montoCalculado != null) ? asignacion.montoCalculado : (asignacion.tarifa != null ? asignacion.tarifa.monto : 0), 1, 2)">$150.00</div>
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm" th:if="${asignacion.estado.name()} == 'PENDIENTE'">
+                                            <div class="mt-2 btn-group btn-group-sm" th:if="${asignacion.estado.name() == 'PENDIENTE'}">
                                                 <form th:action="@{'/asignaciones/aceptar/' + ${asignacion.id}}" method="post" class="d-inline">
-                                                    <button type="submit" class="btn btn-success btn-sm" 
-                                                            onclick="return confirm('¿Está seguro de aceptar esta asignación?')">
+                                                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('¿Está seguro de aceptar esta asignación?')">
                                                         <i class="bi bi-check-lg"></i>
                                                     </button>
                                                 </form>
-                                                <button type="button" class="btn btn-danger btn-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        th:data-bs-target="'#rechazarModal' + ${asignacion.id}">
+                                                <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" th:data-bs-target="'#rechazarModal' + ${asignacion.id}">
                                                     <i class="bi bi-x-lg"></i>
                                                 </button>
                                             </div>
-                                            <span th:unless="${asignacion.estado.name()} == 'PENDIENTE'" class="text-muted">
-                                                <i class="bi bi-check-circle-fill" th:if="${asignacion.estado.name()} == 'ACEPTADA'"></i>
-                                                <i class="bi bi-x-circle-fill" th:if="${asignacion.estado.name()} == 'RECHAZADA'"></i>
-                                                <i class="bi bi-flag-fill" th:if="${asignacion.estado.name()} == 'COMPLETADA'"></i>
+                                            <span th:unless="${asignacion.estado.name() == 'PENDIENTE'}" class="text-muted">
+                                                <i class="bi bi-check-circle-fill" th:if="${asignacion.estado.name() == 'ACEPTADA'}"></i>
+                                                <i class="bi bi-x-circle-fill" th:if="${asignacion.estado.name() == 'RECHAZADA'}"></i>
+                                                <i class="bi bi-flag-fill" th:if="${asignacion.estado.name() == 'COMPLETADA'}"></i>
                                                 Procesada
                                             </span>
+                                        </td>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -168,8 +163,8 @@
         </div>
     </div>
     
-    <!-- Modales para rechazar asignaciones -->
-    <div th:each="asignacion : ${asignaciones}" th:if="${asignacion.estado.name()} == 'PENDIENTE'">
+    <!-- Modales para rechazar asignaciones y ver comentarios -->
+    <div th:each="asignacion : ${asignaciones}">
         <div class="modal fade" th:id="'rechazarModal' + ${asignacion.id}" tabindex="-1">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -198,6 +193,8 @@
                 </div>
             </div>
         </div>
+
+        
     </div>
     
     <script th:replace="~{fragments/layout :: scripts}"></script>

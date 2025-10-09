@@ -2,6 +2,8 @@ package com.pagina.Caba.service;
 
 import com.pagina.Caba.model.Torneo;
 import com.pagina.Caba.repository.TorneoRepository;
+import com.pagina.Caba.dto.TorneoDto;
+import com.pagina.Caba.dto.TarifaDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,22 +18,73 @@ public class TorneoService {
     @Autowired
     private TorneoRepository torneoRepository;
 
-    // CRUD Básico
-    public List<Torneo> obtenerTodos() {
-        return torneoRepository.findAll();
+    // Métodos para el controlador REST (DTO)
+    public List<TorneoDto> findAll() {
+        return torneoRepository.findAll().stream().map(this::toDto).toList();
     }
 
-    public Optional<Torneo> obtenerPorId(Long id) {
-        return torneoRepository.findById(id);
+    public Optional<TorneoDto> findById(Long id) {
+        return torneoRepository.findById(id).map(this::toDto);
     }
 
-    public Torneo guardar(Torneo torneo) {
-        validarTorneo(torneo);
-        return torneoRepository.save(torneo);
+    public TorneoDto save(TorneoDto dto) {
+        Torneo torneo = toEntity(dto);
+        torneo.setActivo(true);
+        torneo.setFechaCreacion(java.time.LocalDateTime.now());
+        return toDto(torneoRepository.save(torneo));
     }
 
-    public void eliminar(Long id) {
+    public TorneoDto update(Long id, TorneoDto dto) {
+        Torneo torneo = torneoRepository.findById(id).orElseThrow(() -> new RuntimeException("Torneo no encontrado"));
+        torneo.setNombre(dto.getNombre());
+        torneo.setFechaInicio(dto.getFechaInicio());
+        torneo.setFechaFin(dto.getFechaFin());
+        // Puedes agregar más campos aquí según tu modelo
+        return toDto(torneoRepository.save(torneo));
+    }
+
+    public void deleteById(Long id) {
         torneoRepository.deleteById(id);
+    }
+
+    public List<TorneoDto> getTorneosActivos() {
+        return torneoRepository.findByActivoTrue().stream().map(this::toDto).toList();
+    }
+
+    public List<TorneoDto> getTorneosByDateRange(java.time.LocalDate fechaInicio, java.time.LocalDate fechaFin) {
+        return torneoRepository.findAll().stream()
+            .filter(t -> !t.getFechaInicio().isBefore(fechaInicio) && !t.getFechaFin().isAfter(fechaFin))
+            .map(this::toDto).toList();
+    }
+
+    public TorneoDto createTorneoWithTarifas(TorneoDto dto) {
+        // Implementa la lógica para crear torneo y tarifas asociadas si es necesario
+        return save(dto);
+    }
+
+    public List<TorneoDto> findByNombreContaining(String nombre) {
+        return torneoRepository.findByNombreContainingIgnoreCase(nombre).stream().map(this::toDto).toList();
+    }
+
+    // Conversión entidad <-> DTO
+    private TorneoDto toDto(Torneo torneo) {
+        TorneoDto dto = new TorneoDto();
+        dto.setId(torneo.getId());
+        dto.setNombre(torneo.getNombre());
+        dto.setFechaInicio(torneo.getFechaInicio());
+        dto.setFechaFin(torneo.getFechaFin());
+        // Si tienes relación con tarifas, setea aquí la lista de tarifas
+        return dto;
+    }
+
+    private Torneo toEntity(TorneoDto dto) {
+        Torneo torneo = new Torneo();
+        torneo.setId(dto.getId());
+        torneo.setNombre(dto.getNombre());
+        torneo.setFechaInicio(dto.getFechaInicio());
+        torneo.setFechaFin(dto.getFechaFin());
+        // Si tienes relación con tarifas, setea aquí la lista de tarifas
+        return torneo;
     }
 
     // Lógica de Negocio

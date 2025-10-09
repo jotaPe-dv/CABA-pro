@@ -176,7 +176,7 @@
                                             <tr>
                                                 <th>Partido</th>
                                                 <th>Fecha</th>
-                                                <th>Categoría</th>
+                                                <th>Tipo</th>
                                                 <th>Monto</th>
                                                 <th>Acciones</th>
                                             </tr>
@@ -185,8 +185,8 @@
                                             <tr th:each="asignacion : ${asignacionesPendientesList}">
                                                 <td th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}">Partido</td>
                                                 <td th:text="${#temporals.format(asignacion.partido.fechaPartido, 'dd/MM/yyyy HH:mm')}">Fecha</td>
-                                                <td th:text="${asignacion.partido.categoria}">Categoría</td>
-                                                <td th:text="'$', #numbers.formatDecimal(asignacion.montoCalculado, 1, 2)">$0.00</td>
+                                                <td th:text="${asignacion.partido.tipoPartido}">Tipo</td>
+                                                <td th:text="'$' + #numbers.formatDecimal(asignacion.montoCalculado, 1, 2)">$0.00</td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm">
                                                         <a th:href="@{'/asignaciones/aceptar/' + ${asignacion.id}}" class="btn btn-success">

@@ -14,19 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import com.pagina.Caba.dto.LiquidacionDto;
-import com.pagina.Caba.model.Liquidacion;
-import com.pagina.Caba.model.Asignacion;
-import com.pagina.Caba.model.EstadoLiquidacion;
-import com.pagina.Caba.model.EstadoAsignacion;
-import com.pagina.Caba.repository.LiquidacionRepository;
-import com.pagina.Caba.repository.AsignacionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+
+
 
 
 @Service
@@ -35,11 +24,63 @@ public class LiquidacionService {
     public void deleteById(Long id) {
         liquidacionRepository.deleteById(id);
     }
+    //
     // Genera una liquidación para un árbitro en un rango de fechas (implementación básica de ejemplo)
+    /**
+     * Genera una liquidación para un árbitro en un rango de fechas, calculando el monto
+     * según la especialidad y escalafón del árbitro y la tarifa base de la asignación.
+     */
     public LiquidacionDto generarLiquidacion(Long arbitroId, java.time.LocalDate fechaInicio, java.time.LocalDate fechaFin) {
-        // Aquí deberías implementar la lógica real según tu modelo de negocio
-        // Por ahora, solo lanza excepción para que compile
-        throw new UnsupportedOperationException("No implementado");
+        // Buscar asignaciones COMPLETADAS del árbitro en el rango de fechas
+        List<Asignacion> asignaciones = asignacionRepository.findAll().stream()
+            .filter(a -> a.getArbitro() != null && a.getArbitro().getId().equals(arbitroId))
+            .filter(a -> a.getEstado() == EstadoAsignacion.COMPLETADA)
+            .filter(a -> a.getPartido() != null &&
+                a.getPartido().getFechaPartido() != null &&
+                !a.getPartido().getFechaPartido().toLocalDate().isBefore(fechaInicio) &&
+                !a.getPartido().getFechaPartido().toLocalDate().isAfter(fechaFin))
+            .toList();
+
+        if (asignaciones.isEmpty()) {
+            throw new IllegalArgumentException("No hay asignaciones completadas para el árbitro en el rango de fechas");
+        }
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (Asignacion asignacion : asignaciones) {
+            BigDecimal monto = calcularMontoLiquidacion(asignacion);
+            total = total.add(monto);
+        }
+
+        // Crear una liquidación (puede asociarse a la última asignación del rango)
+        Asignacion ultima = asignaciones.get(asignaciones.size() - 1);
+        Liquidacion liquidacion = new Liquidacion(ultima, total);
+        liquidacion.setEstado(EstadoLiquidacion.PENDIENTE);
+        liquidacionRepository.save(liquidacion);
+        return toDto(liquidacion);
+    }
+
+    /**
+     * Calcula el monto de liquidación para una asignación según reglas de especialidad y escalafón.
+     * Puedes ajustar los multiplicadores según las reglas de negocio.
+     */
+    private BigDecimal calcularMontoLiquidacion(Asignacion asignacion) {
+        BigDecimal base = asignacion.getTarifa() != null ? asignacion.getTarifa().getMonto() : BigDecimal.ZERO;
+        if (asignacion.getArbitro() == null) return base;
+        String especialidad = asignacion.getArbitro().getEspecialidad();
+        String escalafon = asignacion.getArbitro().getEscalafon();
+
+        // Multiplicadores de ejemplo (ajustar según reglas reales)
+        BigDecimal multEspecialidad = BigDecimal.ONE;
+        if ("Principal".equalsIgnoreCase(especialidad)) multEspecialidad = new BigDecimal("1.2");
+        else if ("Auxiliar".equalsIgnoreCase(especialidad)) multEspecialidad = new BigDecimal("1.0");
+        else if ("Mesa".equalsIgnoreCase(especialidad)) multEspecialidad = new BigDecimal("0.9");
+
+        BigDecimal multEscalafon = BigDecimal.ONE;
+        if ("A".equalsIgnoreCase(escalafon)) multEscalafon = new BigDecimal("1.15");
+        else if ("B".equalsIgnoreCase(escalafon)) multEscalafon = new BigDecimal("1.05");
+        else if ("C".equalsIgnoreCase(escalafon)) multEscalafon = new BigDecimal("1.00");
+
+        return base.multiply(multEspecialidad).multiply(multEscalafon);
     }
 
     // Aprueba una liquidación cambiando su estado a PAGADA (implementación básica de ejemplo)

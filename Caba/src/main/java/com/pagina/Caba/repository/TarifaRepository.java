@@ -30,6 +30,13 @@ public interface TarifaRepository extends JpaRepository<Tarifa, Long> {
     Optional<Tarifa> findTarifaVigentePorTipo(@Param("tipoPartido") String tipoPartido, 
                                              @Param("fecha") LocalDateTime fecha);
     
+    @Query("SELECT t FROM Tarifa t WHERE t.tipoPartido = :tipoPartido AND t.escalafon = :escalafon AND t.activa = true AND " +
+           "t.fechaVigenciaInicio <= :fecha AND " +
+           "(t.fechaVigenciaFin IS NULL OR t.fechaVigenciaFin >= :fecha)")
+    Optional<Tarifa> findTarifaVigentePorTipoYEscalafon(@Param("tipoPartido") String tipoPartido, 
+                                                        @Param("escalafon") String escalafon,
+                                                        @Param("fecha") LocalDateTime fecha);
+    
     @Query("SELECT COUNT(t) FROM Tarifa t WHERE t.activa = true")
     long countTarifasActivas();
     

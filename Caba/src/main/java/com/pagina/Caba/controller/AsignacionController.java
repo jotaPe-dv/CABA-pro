@@ -28,7 +28,10 @@ public class AsignacionController {
     
     @GetMapping
     public String listar(Model model) {
+        System.out.println("[DEBUG] Cargando lista de asignaciones...");
         List<Asignacion> asignaciones = asignacionService.obtenerTodas();
+        System.out.println("[DEBUG] Total asignaciones encontradas: " + asignaciones.size());
+        
         model.addAttribute("asignaciones", asignaciones);
         // Crear lista de partidos únicos
         List<com.pagina.Caba.model.Partido> partidos = asignaciones.stream()
@@ -65,6 +68,10 @@ public class AsignacionController {
             @RequestParam(required = false) String comentarios,
             RedirectAttributes redirectAttributes) {
         System.out.println("[DEBUG] Entrando a guardar asignaciones");
+        System.out.println("[DEBUG] Parámetros recibidos: partido=" + partido + 
+                          ", principal=" + arbitroPrincipalId + 
+                          ", asistente=" + arbitroAsistenteId + 
+                          ", mesa=" + arbitroMesaId);
         try {
             if (arbitroPrincipalId.equals(arbitroAsistenteId) || arbitroPrincipalId.equals(arbitroMesaId) || arbitroAsistenteId.equals(arbitroMesaId)) {
                 throw new IllegalArgumentException("No se puede asignar el mismo árbitro a más de un rol en el mismo partido");
@@ -75,18 +82,15 @@ public class AsignacionController {
             }
             var partidoObj = partidoOpt.get();
             String tipoPartido = partidoObj.getTipoPartido();
-            var tarifaOpt = tarifaRepository.findTarifaVigentePorTipo(tipoPartido, java.time.LocalDateTime.now());
-            if (tarifaOpt.isEmpty()) {
-                throw new IllegalArgumentException("No hay tarifa vigente para este tipo de partido");
-            }
-            var tarifa = tarifaOpt.get();
-
+            
             // Crear las tres asignaciones
-            crearAsignacionConRol(partidoObj, arbitroPrincipalId, "Principal", tarifa, comentarios);
-            crearAsignacionConRol(partidoObj, arbitroAsistenteId, "Auxiliar", tarifa, comentarios);
-            crearAsignacionConRol(partidoObj, arbitroMesaId, "Mesa", tarifa, comentarios);
+            crearAsignacionConRol(partidoObj, arbitroPrincipalId, "Principal", tipoPartido, comentarios);
+            crearAsignacionConRol(partidoObj, arbitroAsistenteId, "Auxiliar", tipoPartido, comentarios);
+            crearAsignacionConRol(partidoObj, arbitroMesaId, "Mesa", tipoPartido, comentarios);
 
-            System.out.println("[DEBUG] Asignaciones después de guardar: " + asignacionService.obtenerTodas().size());
+            System.out.println("[DEBUG] Asignaciones creadas exitosamente");
+            System.out.println("[DEBUG] Total asignaciones en BD antes del redirect: " + asignacionService.obtenerTodas().size());
+            
             redirectAttributes.addFlashAttribute("success", "Asignaciones creadas exitosamente");
         } catch (Exception e) {
             System.out.println("[DEBUG] Error al crear asignaciones: " + e.getMessage());
@@ -99,13 +103,27 @@ public class AsignacionController {
             com.pagina.Caba.model.Partido partido,
             Long arbitroId,
             String rol,
-            com.pagina.Caba.model.Tarifa tarifa,
+            String tipoPartido,
             String comentarios) {
+        System.out.println("[DEBUG] Creando asignación para rol: " + rol + ", arbitro ID: " + arbitroId);
+        
         var arbitroOpt = arbitroService.obtenerPorId(arbitroId);
         if (arbitroOpt.isEmpty()) {
             throw new IllegalArgumentException("Árbitro no encontrado para el rol " + rol);
         }
         var arbitro = arbitroOpt.get();
+        
+        // Buscar tarifa específica para este tipo de partido y escalafón del árbitro
+        String escalafon = arbitro.getEscalafon();
+        System.out.println("[DEBUG] Buscando tarifa para tipo: " + tipoPartido + ", escalafón: " + escalafon);
+        
+        var tarifaOpt = tarifaRepository.findTarifaVigentePorTipoYEscalafon(tipoPartido, escalafon, java.time.LocalDateTime.now());
+        if (tarifaOpt.isEmpty()) {
+            throw new IllegalArgumentException("No hay tarifa vigente para partido tipo '" + tipoPartido + "' y escalafón '" + escalafon + "' del árbitro " + arbitro.getNombreCompleto());
+        }
+        var tarifa = tarifaOpt.get();
+        System.out.println("[DEBUG] Tarifa encontrada: " + tarifa.getDescripcion() + " = $" + tarifa.getMonto());
+        
         // Validar conflicto de horario
         boolean conflicto = asignacionService.obtenerAsignacionesPorArbitro(arbitroId).stream()
                 .anyMatch(a -> (a.getEstado() == com.pagina.Caba.model.EstadoAsignacion.ACEPTADA
@@ -122,7 +140,10 @@ public class AsignacionController {
         asignacion.setEstado(com.pagina.Caba.model.EstadoAsignacion.PENDIENTE);
         asignacion.setRolEspecifico(rol);
         asignacion.setComentarios(comentarios);
-        asignacionService.guardar(asignacion);
+        
+        System.out.println("[DEBUG] Guardando asignación para rol: " + rol);
+        Asignacion asignacionGuardada = asignacionService.guardar(asignacion);
+        System.out.println("[DEBUG] Asignación guardada con ID: " + asignacionGuardada.getId());
     }
 
     @GetMapping("/editar/{id}")
@@ -150,13 +171,23 @@ public class AsignacionController {
 
     // ====== RUTAS PARA ARBITRO ======
     
+    @Autowired
+    private com.pagina.Caba.service.UsuarioArbitroLookupService usuarioArbitroLookupService;
+
     @GetMapping("/mis-asignaciones")
     public String misAsignaciones(Authentication authentication, Model model) {
         String email = authentication.getName();
-        // Por ahora simplificamos, necesitamos implementar buscar arbitro por email
-        model.addAttribute("asignaciones", asignacionService.obtenerTodas());
+        // Buscar el árbitro por email
+        var arbitroOpt = usuarioArbitroLookupService.buscarPorEmail(email);
+        if (arbitroOpt.isEmpty()) {
+            model.addAttribute("error", "No se encontró el árbitro para el usuario actual");
+            model.addAttribute("asignaciones", java.util.Collections.emptyList());
+        } else {
+            var asignaciones = asignacionService.obtenerAsignacionesPorArbitro(arbitroOpt.get().getId());
+            model.addAttribute("asignaciones", asignaciones);
+        }
         model.addAttribute("pageTitle", "Mis Asignaciones");
-        return "arbitro/asignaciones";
+    return "arbitro/asignaciones";
     }
 
     @PostMapping("/aceptar/{id}")
@@ -170,7 +201,7 @@ public class AsignacionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al aceptar asignación: " + e.getMessage());
         }
-    return "redirect:/admin/asignaciones/mis-asignaciones";
+        return "redirect:/asignaciones/mis-asignaciones";
     }
 
     @PostMapping("/rechazar/{id}")
@@ -184,6 +215,6 @@ public class AsignacionController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Error al rechazar asignación: " + e.getMessage());
         }
-    return "redirect:/admin/asignaciones/mis-asignaciones";
+        return "redirect:/asignaciones/mis-asignaciones";
     }
 }
