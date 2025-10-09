@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+    <div class="container mt-4">
+        <h1 class="mb-4"><i class="bi bi-calendar3 me-2"></i>Calendario de Partidos</h1>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Partido</th>
+                                <th>Fecha</th>
+                                <th>Categoría</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="asignacion : ${asignaciones}">
+                                <td th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}">Partido</td>
+                                <td th:text="${#temporals.format(asignacion.partido.fechaPartido, 'dd/MM/yyyy HH:mm')}">Fecha</td>
+                                <td th:text="${asignacion.partido.categoria}">Categoría</td>
+                                <td th:text="${asignacion.estado}">Estado</td>
+                            </tr>
+                            <tr th:if="${asignaciones.size()} == 0">
+                                <td colspan="4" class="text-center text-muted">No hay partidos en el calendario.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a href="/arbitro/dashboard" class="btn btn-secondary"><i class="bi bi-arrow-left me-1"></i>Volver al Dashboard</a>
+        </div>
+    </div>
+    <script th:replace="~{fragments/layout :: scripts}"></script>
+</body>
+</html>

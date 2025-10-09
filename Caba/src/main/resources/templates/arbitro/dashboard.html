@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="d-flex flex-column p-3">
+                    <h6 class="text-muted mb-3">ÁRBITRO</h6>
+                    
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/arbitro/dashboard" class="nav-link active">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/asignaciones/mis-asignaciones" class="nav-link">
+                                <i class="bi bi-calendar-check me-2"></i>Mis Asignaciones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/arbitro/perfil" class="nav-link">
+                                <i class="bi bi-person me-2"></i>Mi Perfil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/arbitro/disponibilidad" class="nav-link">
+                                <i class="bi bi-calendar3 me-2"></i>Disponibilidad
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/arbitro/liquidaciones" class="nav-link">
+                                <i class="bi bi-cash-coin me-2"></i>Mis Liquidaciones
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>
+                        <i class="bi bi-person-badge me-2"></i>Panel de Árbitro
+                    </h1>
+                    <div class="text-muted">
+                        <i class="bi bi-person-circle me-1"></i>
+                        Bienvenido, <span sec:authentication="name">Árbitro</span>
+                    </div>
+                </div>
+                
+                <!-- Estado del Árbitro -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-success shadow">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="card-title text-success mb-1">
+                                            <i class="bi bi-check-circle-fill me-2"></i>Estado: Disponible
+                                        </h5>
+                                        <p class="card-text text-muted">
+                                            Puede recibir nuevas asignaciones de partidos.
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-outline-warning">
+                                            <i class="bi bi-pause-circle me-1"></i>Marcar como No Disponible
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas Personales -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Asignaciones Pendientes
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${asignacionesPendientes}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-calendar-check text-primary" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            Partidos Completados
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${partidosCompletados}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            Liquidaciones Pendientes
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${liquidacionesPendientes}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-cash-coin text-warning" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Ingresos del Mes
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${ingresosMes} + ' €'">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-currency-dollar text-info" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Asignaciones Pendientes de Respuesta -->
+                <div class="row">
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-clock-history me-2"></i>Asignaciones Pendientes de Respuesta
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info" role="alert">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Tiene <strong th:text="${asignacionesPendientes}">0</strong> asignaciones esperando su respuesta. 
+                                    Por favor, revise y responda lo antes posible.
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Partido</th>
+                                                <th>Fecha</th>
+                                                <th>Categoría</th>
+                                                <th>Monto</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="asignacion : ${asignacionesPendientesList}">
+                                                <td th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}">Partido</td>
+                                                <td th:text="${#temporals.format(asignacion.partido.fechaPartido, 'dd/MM/yyyy HH:mm')}">Fecha</td>
+                                                <td th:text="${asignacion.partido.categoria}">Categoría</td>
+                                                <td th:text="'$', #numbers.formatDecimal(asignacion.montoCalculado, 1, 2)">$0.00</td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a th:href="@{'/asignaciones/aceptar/' + ${asignacion.id}}" class="btn btn-success">
+                                                            <i class="bi bi-check"></i> Aceptar
+                                                        </a>
+                                                        <a th:href="@{'/asignaciones/rechazar/' + ${asignacion.id}}" class="btn btn-danger">
+                                                            <i class="bi bi-x"></i> Rechazar
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr th:if="${asignacionesPendientesList.size()} == 0">
+                                                <td colspan="5" class="text-center text-muted">No hay asignaciones pendientes.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <a href="/asignaciones/mis-asignaciones" class="btn btn-caba">
+                                        <i class="bi bi-eye me-2"></i>Ver Todas las Asignaciones
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-calendar-week me-2"></i>Próximos Partidos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div th:each="asignacion : ${proximosPartidos}" class="list-group-item d-flex justify-content-between align-items-start">
+                                        <div class="ms-2 me-auto">
+                                            <div class="fw-bold" th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}">Partido</div>
+                                            <small class="text-muted" th:text="${#temporals.format(asignacion.partido.fechaPartido, 'EEEE dd/MM HH:mm')}">Fecha</small>
+                                        </div>
+                                        <span class="badge rounded-pill"
+                                              th:classappend="${asignacion.estado.name() == 'ACEPTADA'} ? 'bg-success' : 'bg-primary'"
+                                              th:text="${asignacion.estado.name() == 'ACEPTADA'} ? 'Confirmado' : 'Programado'">Estado</span>
+                                    </div>
+                                    <div th:if="${proximosPartidos.size()} == 0" class="list-group-item text-center text-muted">
+                                        No hay próximos partidos.
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center mt-3">
+                                    <a href="/arbitro/calendario" class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-calendar3 me-1"></i>Ver Calendario Completo
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:replace="~{fragments/layout :: scripts}"></script>
+    
+    <style>
+        .border-left-primary { border-left: 0.25rem solid #007bff !important; }
+        .border-left-success { border-left: 0.25rem solid #28a745 !important; }
+        .border-left-warning { border-left: 0.25rem solid #ffc107 !important; }
+        .border-left-info { border-left: 0.25rem solid #17a2b8 !important; }
+    </style>
+</body>
+</html>

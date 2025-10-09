@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="d-flex flex-column p-3">
+                    <h6 class="text-muted mb-3">ADMINISTRACIÓN</h6>
+                    
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/admin/dashboard" class="nav-link active">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/arbitros" class="nav-link">
+                                <i class="bi bi-people me-2"></i>Árbitros
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/asignaciones" class="nav-link">
+                                <i class="bi bi-calendar-check me-2"></i>Asignaciones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/liquidaciones" class="nav-link">
+                                <i class="bi bi-cash-coin me-2"></i>Liquidaciones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/torneos" class="nav-link">
+                                <i class="bi bi-trophy me-2"></i>Torneos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/partidos" class="nav-link">
+                                <i class="bi bi-calendar-event me-2"></i>Partidos
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/tarifas" class="nav-link">
+                                <i class="bi bi-currency-dollar me-2"></i>Tarifas
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/especialidades" class="nav-link">
+                                <i class="bi bi-award me-2"></i>Especialidades
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>
+                        <i class="bi bi-speedometer2 me-2"></i>Panel de Administrador
+                    </h1>
+                    <div class="text-muted">
+                        <i class="bi bi-person-circle me-1"></i>
+                        Bienvenido, <span sec:authentication="name">Admin</span>
+                    </div>
+                </div>
+                
+                <!-- Estadísticas -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            Árbitros Activos
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${arbitrosActivos}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            Asignaciones Pendientes
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${asignacionesPendientes}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-calendar-check text-success" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            Liquidaciones Pendientes
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${liquidacionesPendientes}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-cash-coin text-warning" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            Partidos del Mes
+                                        </div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${partidosDelMes}">0</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="bi bi-calendar-event text-info" style="font-size: 2rem;"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Acciones Rápidas -->
+                <div class="row">
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-lightning-charge me-2"></i>Acciones Rápidas
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="/admin/asignaciones/nueva" class="btn btn-caba">
+                                        <i class="bi bi-plus-circle me-2"></i>Nueva Asignación
+                                    </a>
+                                    <a href="/arbitros" class="btn btn-outline-primary">
+                                        <i class="bi bi-people me-2"></i>Gestionar Árbitros
+                                    </a>
+                                    <a href="/liquidaciones" class="btn btn-outline-success">
+                                        <i class="bi bi-cash-coin me-2"></i>Procesar Liquidaciones
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6 mb-4">
+                        <div class="card shadow">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-clock-history me-2"></i>Actividad Reciente
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">Hace 2 horas</small><br>
+                                            Nueva asignación creada
+                                        </div>
+                                        <span class="badge bg-primary rounded-pill">Nuevo</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">Hace 4 horas</small><br>
+                                            Liquidación procesada
+                                        </div>
+                                        <span class="badge bg-success rounded-pill">Completado</span>
+                                    </div>
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <small class="text-muted">Ayer</small><br>
+                                            Árbitro registrado
+                                        </div>
+                                        <span class="badge bg-info rounded-pill">Info</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:replace="~{fragments/layout :: scripts}"></script>
+    
+    <style>
+        .border-left-primary { border-left: 0.25rem solid #007bff !important; }
+        .border-left-success { border-left: 0.25rem solid #28a745 !important; }
+        .border-left-warning { border-left: 0.25rem solid #ffc107 !important; }
+        .border-left-info { border-left: 0.25rem solid #17a2b8 !important; }
+    </style>
+</body>
+</html>

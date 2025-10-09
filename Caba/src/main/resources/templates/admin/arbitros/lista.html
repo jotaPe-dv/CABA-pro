@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Árbitros</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Lista de Árbitros</h2>
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="arbitro : ${arbitros}">
+            <td th:text="${arbitro.id}"></td>
+            <td th:text="${arbitro.nombre}"></td>
+            <td th:text="${arbitro.email}"></td>
+            <td>
+                <!-- Acciones como editar/eliminar pueden ir aquí -->
+                <a th:href="@{'/arbitros/editar/' + ${arbitro.id}}" class="btn btn-sm btn-primary">Editar</a>
+                <a th:href="@{'/arbitros/eliminar/' + ${arbitro.id}}" class="btn btn-sm btn-danger">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <a href="/arbitros/nuevo" class="btn btn-success">Agregar Árbitro</a>
+</div>
+</body>
+</html>

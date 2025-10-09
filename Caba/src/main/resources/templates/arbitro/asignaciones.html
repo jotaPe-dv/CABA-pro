@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="d-flex flex-column p-3">
+                    <h6 class="text-muted mb-3">ÁRBITRO</h6>
+                    
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/arbitro/dashboard" class="nav-link">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/asignaciones/mis-asignaciones" class="nav-link active">
+                                <i class="bi bi-calendar-check me-2"></i>Mis Asignaciones
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/arbitro/perfil" class="nav-link">
+                                <i class="bi bi-person me-2"></i>Mi Perfil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/arbitro/disponibilidad" class="nav-link">
+                                <i class="bi bi-calendar3 me-2"></i>Disponibilidad
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>
+                        <i class="bi bi-calendar-check me-2"></i>Mis Asignaciones
+                    </h1>
+                    <div class="badge bg-info fs-6">
+                        Total: <span th:text="${#lists.size(asignaciones)}">0</span> asignaciones
+                    </div>
+                </div>
+                
+                <!-- Filtros -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select">
+                                    <option value="">Todos los estados</option>
+                                    <option value="PENDIENTE">Pendiente</option>
+                                    <option value="ACEPTADA">Aceptada</option>
+                                    <option value="RECHAZADA">Rechazada</option>
+                                    <option value="COMPLETADA">Completada</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha desde</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha hasta</label>
+                                <input type="date" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-caba d-block">
+                                    <i class="bi bi-search me-1"></i>Filtrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de Asignaciones -->
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-check me-2"></i>Lista de Asignaciones
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Partido</th>
+                                        <th>Fecha y Hora</th>
+                                        <th>Torneo</th>
+                                        <th>Estado</th>
+                                        <th>Monto</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="asignacion : ${asignaciones}">
+                                        <td th:text="${asignacion.id}">#001</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-trophy-fill text-warning me-2"></i>
+                                                <div>
+                                                    <div class="fw-bold" th:text="${asignacion.partido?.equipoLocal + ' vs ' + asignacion.partido?.equipoVisitante}">Lakers vs Warriors</div>
+                                                    <small class="text-muted" th:text="${asignacion.partido?.lugar}">Staples Center</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div th:text="${asignacion.partido?.fechaHora}">15/10/2025 19:00</div>
+                                            <small class="text-muted">En 2 días</small>
+                                        </td>
+                                        <td th:text="${asignacion.partido?.torneo?.nombre}">Liga Profesional</td>
+                                        <td>
+                                            <span th:class="'badge ' + 
+                                                (${asignacion.estado.name()} == 'PENDIENTE' ? 'bg-warning' :
+                                                 ${asignacion.estado.name()} == 'ACEPTADA' ? 'bg-success' :
+                                                 ${asignacion.estado.name()} == 'RECHAZADA' ? 'bg-danger' :
+                                                 ${asignacion.estado.name()} == 'COMPLETADA' ? 'bg-primary' : 'bg-secondary')"
+                                                  th:text="${asignacion.estado}">PENDIENTE</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-success" th:text="'$' + ${asignacion.montoCalculado}">$150.00</div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" th:if="${asignacion.estado.name()} == 'PENDIENTE'">
+                                                <form th:action="@{'/asignaciones/aceptar/' + ${asignacion.id}}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-success btn-sm" 
+                                                            onclick="return confirm('¿Está seguro de aceptar esta asignación?')">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </button>
+                                                </form>
+                                                <button type="button" class="btn btn-danger btn-sm" 
+                                                        data-bs-toggle="modal" 
+                                                        th:data-bs-target="'#rechazarModal' + ${asignacion.id}">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <span th:unless="${asignacion.estado.name()} == 'PENDIENTE'" class="text-muted">
+                                                <i class="bi bi-check-circle-fill" th:if="${asignacion.estado.name()} == 'ACEPTADA'"></i>
+                                                <i class="bi bi-x-circle-fill" th:if="${asignacion.estado.name()} == 'RECHAZADA'"></i>
+                                                <i class="bi bi-flag-fill" th:if="${asignacion.estado.name()} == 'COMPLETADA'"></i>
+                                                Procesada
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Mensaje si no hay asignaciones -->
+                        <div th:if="${#lists.isEmpty(asignaciones)}" class="text-center p-5">
+                            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted mt-3">No hay asignaciones disponibles</h5>
+                            <p class="text-muted">No se encontraron asignaciones para mostrar en este momento.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modales para rechazar asignaciones -->
+    <div th:each="asignacion : ${asignaciones}" th:if="${asignacion.estado.name()} == 'PENDIENTE'">
+        <div class="modal fade" th:id="'rechazarModal' + ${asignacion.id}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Rechazar Asignación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{'/asignaciones/rechazar/' + ${asignacion.id}}" method="post">
+                        <div class="modal-body">
+                            <p>¿Está seguro de rechazar la asignación del partido:</p>
+                            <strong th:text="${asignacion.partido?.equipoLocal + ' vs ' + asignacion.partido?.equipoVisitante}">Partido</strong>
+                            
+                            <div class="mt-3">
+                                <label for="motivo" class="form-label">Motivo del rechazo:</label>
+                                <textarea class="form-control" name="motivo" rows="3" 
+                                          placeholder="Especifique el motivo por el cual rechaza esta asignación..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-1"></i>Rechazar Asignación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script th:replace="~{fragments/layout :: scripts}"></script>
+</body>
+</html>
