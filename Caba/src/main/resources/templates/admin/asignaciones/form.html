@@ -8,25 +8,24 @@
 <body>
 <div class="container mt-4">
     <h2 th:text="${asignacion?.id} != null ? 'Editar Asignación' : 'Nueva Asignación'"></h2>
-    <form th:action="@{/admin/asignaciones/guardar}" th:object="${asignacion}" method="post" class="row g-3">
-    <input type="hidden" th:field="*{id}" />
+    <form th:action="@{/admin/asignaciones/guardar}" method="post" class="row g-3">
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         <div class="col-md-4">
-            <label class="form-label">Árbitro Principal</label>
+            <label class="form-label">Árbitro Principal <span class="text-danger">*</span></label>
             <select class="form-select" name="arbitroPrincipalId" required>
                 <option value="">Seleccione...</option>
                 <option th:each="arbitro : ${arbitros}" th:if="${arbitro.especialidad == 'Principal'}" th:value="${arbitro.id}" th:text="${arbitro.nombreCompleto}"></option>
             </select>
         </div>
         <div class="col-md-4">
-            <label class="form-label">Árbitro Asistente</label>
+            <label class="form-label">Árbitro Asistente <span class="text-danger">*</span></label>
             <select class="form-select" name="arbitroAsistenteId" required>
                 <option value="">Seleccione...</option>
                 <option th:each="arbitro : ${arbitros}" th:if="${arbitro.especialidad == 'Auxiliar'}" th:value="${arbitro.id}" th:text="${arbitro.nombreCompleto}"></option>
             </select>
         </div>
         <div class="col-md-4">
-            <label class="form-label">Árbitro Mesa</label>
+            <label class="form-label">Árbitro Mesa <span class="text-danger">*</span></label>
             <select class="form-select" name="arbitroMesaId" required>
                 <option value="">Seleccione...</option>
                 <option th:each="arbitro : ${arbitros}" th:if="${arbitro.especialidad == 'Mesa'}" th:value="${arbitro.id}" th:text="${arbitro.nombreCompleto}"></option>
@@ -40,14 +39,13 @@
             </select>
         </div>
         <div class="col-md-6">
-            <label class="form-label">Tarifa</label>
-            <input type="text" class="form-control" th:field="*{montoCalculado}" placeholder="Monto de tarifa" readonly />
+            <label class="form-label">Tarifa (calculada automáticamente)</label>
+            <input type="text" class="form-control" placeholder="Se calculará automáticamente según escalafón y tipo de partido" readonly />
+            <small class="text-muted">La tarifa se asigna automáticamente según el escalafón del árbitro y tipo de partido</small>
         </div>
-        <!-- Estado oculto, siempre PENDIENTE -->
-        <input type="hidden" th:field="*{estado}" value="PENDIENTE" />
-        <div class="col-md-6">
+        <div class="col-md-12">
             <label class="form-label">Comentarios</label>
-            <textarea class="form-control" th:field="*{comentarios}" rows="3"></textarea>
+            <textarea class="form-control" name="comentarios" rows="3" placeholder="Comentarios adicionales (opcional)"></textarea>
         </div>
         <div class="col-12">
             <button type="submit" class="btn btn-success">Guardar</button>

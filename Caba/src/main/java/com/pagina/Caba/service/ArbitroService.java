@@ -3,9 +3,9 @@ package com.pagina.Caba.service;
 import jakarta.annotation.PostConstruct;
 
 import com.pagina.Caba.model.Arbitro;
-import com.pagina.Caba.model.EstadoAsignacion;
 import com.pagina.Caba.repository.ArbitroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -18,17 +18,17 @@ public class ArbitroService {
     @PostConstruct
     public void crearArbitrosPorDefecto() {
         if (arbitroRepository.count() == 0) {
-            Arbitro principal = new Arbitro("Juan", "Principal", "principal@caba.com", "123456", "LIC001", "3000000001", "Principal", "A", "");
+            Arbitro principal = new Arbitro("Juan", "Principal", "principal@caba.com", passwordEncoder.encode("123456"), "LIC001", "3000000001", "Principal", "A", "");
             principal.setDisponible(true);
             principal.setActivo(true);
             arbitroRepository.save(principal);
 
-            Arbitro asistente = new Arbitro("Pedro", "Asistente", "asistente@caba.com", "123456", "LIC002", "3000000002", "Auxiliar", "B", "");
+            Arbitro asistente = new Arbitro("Pedro", "Asistente", "asistente@caba.com", passwordEncoder.encode("123456"), "LIC002", "3000000002", "Auxiliar", "B", "");
             asistente.setDisponible(true);
             asistente.setActivo(true);
             arbitroRepository.save(asistente);
 
-            Arbitro mesa = new Arbitro("Maria", "Mesa", "mesa@caba.com", "123456", "LIC003", "3000000003", "Mesa", "C", "");
+            Arbitro mesa = new Arbitro("Maria", "Mesa", "mesa@caba.com", passwordEncoder.encode("123456"), "LIC003", "3000000003", "Mesa", "C", "");
             mesa.setDisponible(true);
             mesa.setActivo(true);
             arbitroRepository.save(mesa);
@@ -37,6 +37,9 @@ public class ArbitroService {
     
     @Autowired
     private ArbitroRepository arbitroRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     
     // CRUD Básico
@@ -50,6 +53,33 @@ public class ArbitroService {
     
     public Arbitro guardar(Arbitro arbitro) {
         validarArbitro(arbitro);
+        
+        // Si es un nuevo árbitro o se está cambiando la contraseña, hashearla
+        if (arbitro.getId() == null) {
+            // Nuevo árbitro - hashear la contraseña y configurar estados por defecto
+            arbitro.setPassword(passwordEncoder.encode(arbitro.getPassword()));
+            
+            // Configurar estados por defecto para nuevos árbitros
+            if (arbitro.getActivo() == null) {
+                arbitro.setActivo(true);
+            }
+            if (arbitro.getDisponible() == null) {
+                arbitro.setDisponible(true);
+            }
+        } else {
+            // Árbitro existente - solo hashear si la contraseña ha cambiado
+            Optional<Arbitro> arbitroExistente = arbitroRepository.findById(arbitro.getId());
+            if (arbitroExistente.isPresent()) {
+                String passwordActual = arbitroExistente.get().getPassword();
+                String passwordNueva = arbitro.getPassword();
+                
+                // Si la contraseña es diferente y no está ya hasheada, hashearla
+                if (!passwordNueva.equals(passwordActual) && !passwordNueva.startsWith("$2a$")) {
+                    arbitro.setPassword(passwordEncoder.encode(passwordNueva));
+                }
+            }
+        }
+        
         return arbitroRepository.save(arbitro);
     }
     

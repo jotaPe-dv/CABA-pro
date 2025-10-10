@@ -59,7 +59,12 @@
         </div>
         <div class="col-md-6">
             <label for="escalafon" class="form-label">Escalafón:</label>
-            <input type="text" id="escalafon" th:field="*{escalafon}" class="form-control" required/>
+            <select id="escalafon" th:field="*{escalafon}" class="form-select" required>
+                <option value="">Seleccione escalafón...</option>
+                <option value="A">A - Escalafón Superior</option>
+                <option value="B">B - Escalafón Intermedio</option>
+                <option value="C">C - Escalafón Básico</option>
+            </select>
         </div>
         <div class="col-md-6">
             <label for="fotoUrl" class="form-label">Foto URL:</label>

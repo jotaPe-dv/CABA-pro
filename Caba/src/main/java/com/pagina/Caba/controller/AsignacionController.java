@@ -5,7 +5,6 @@ import com.pagina.Caba.model.Arbitro;
 import com.pagina.Caba.service.AsignacionService;
 import com.pagina.Caba.service.ArbitroService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -52,8 +51,20 @@ public class AsignacionController {
 
     @GetMapping("/nueva")
     public String nuevaAsignacion(Model model) {
+        System.out.println("[DEBUG] Cargando formulario de nueva asignación");
+        
+        List<Arbitro> arbitrosDisponibles = arbitroService.obtenerArbitrosDisponibles();
+        System.out.println("[DEBUG] Árbitros disponibles encontrados: " + arbitrosDisponibles.size());
+        
+        for (Arbitro arbitro : arbitrosDisponibles) {
+            System.out.println("[DEBUG] Árbitro: " + arbitro.getNombreCompleto() + 
+                             " | Especialidad: " + arbitro.getEspecialidad() + 
+                             " | Activo: " + arbitro.getActivo() + 
+                             " | Disponible: " + arbitro.getDisponible());
+        }
+        
         model.addAttribute("asignacion", new Asignacion());
-        model.addAttribute("arbitros", arbitroService.obtenerArbitrosDisponibles());
+        model.addAttribute("arbitros", arbitrosDisponibles);
         model.addAttribute("partidos", partidoRepository.findByCompletadoFalse());
         model.addAttribute("pageTitle", "Nueva Asignación");
         return "admin/asignaciones/form";
@@ -73,9 +84,13 @@ public class AsignacionController {
                           ", asistente=" + arbitroAsistenteId + 
                           ", mesa=" + arbitroMesaId);
         try {
-            if (arbitroPrincipalId.equals(arbitroAsistenteId) || arbitroPrincipalId.equals(arbitroMesaId) || arbitroAsistenteId.equals(arbitroMesaId)) {
+            // Validar que no se asigne el mismo árbitro a múltiples roles
+            if (arbitroPrincipalId.equals(arbitroAsistenteId) || 
+                arbitroPrincipalId.equals(arbitroMesaId) || 
+                arbitroAsistenteId.equals(arbitroMesaId)) {
                 throw new IllegalArgumentException("No se puede asignar el mismo árbitro a más de un rol en el mismo partido");
             }
+            
             var partidoOpt = partidoRepository.findById(partido);
             if (partidoOpt.isEmpty()) {
                 throw new IllegalArgumentException("Partido no encontrado");
@@ -88,12 +103,13 @@ public class AsignacionController {
             crearAsignacionConRol(partidoObj, arbitroAsistenteId, "Auxiliar", tipoPartido, comentarios);
             crearAsignacionConRol(partidoObj, arbitroMesaId, "Mesa", tipoPartido, comentarios);
 
-            System.out.println("[DEBUG] Asignaciones creadas exitosamente");
+            System.out.println("[DEBUG] 3 asignaciones creadas exitosamente");
             System.out.println("[DEBUG] Total asignaciones en BD antes del redirect: " + asignacionService.obtenerTodas().size());
             
-            redirectAttributes.addFlashAttribute("success", "Asignaciones creadas exitosamente");
+            redirectAttributes.addFlashAttribute("success", "3 asignaciones creadas exitosamente");
         } catch (Exception e) {
             System.out.println("[DEBUG] Error al crear asignaciones: " + e.getMessage());
+            e.printStackTrace();
             redirectAttributes.addFlashAttribute("error", "Error al crear asignaciones: " + e.getMessage());
         }
         return "redirect:/admin/asignaciones";
@@ -169,52 +185,5 @@ public class AsignacionController {
     return "redirect:/admin/asignaciones";
     }
 
-    // ====== RUTAS PARA ARBITRO ======
-    
-    @Autowired
-    private com.pagina.Caba.service.UsuarioArbitroLookupService usuarioArbitroLookupService;
 
-    @GetMapping("/mis-asignaciones")
-    public String misAsignaciones(Authentication authentication, Model model) {
-        String email = authentication.getName();
-        // Buscar el árbitro por email
-        var arbitroOpt = usuarioArbitroLookupService.buscarPorEmail(email);
-        if (arbitroOpt.isEmpty()) {
-            model.addAttribute("error", "No se encontró el árbitro para el usuario actual");
-            model.addAttribute("asignaciones", java.util.Collections.emptyList());
-        } else {
-            var asignaciones = asignacionService.obtenerAsignacionesPorArbitro(arbitroOpt.get().getId());
-            model.addAttribute("asignaciones", asignaciones);
-        }
-        model.addAttribute("pageTitle", "Mis Asignaciones");
-    return "arbitro/asignaciones";
-    }
-
-    @PostMapping("/aceptar/{id}")
-    public String aceptarAsignacion(@PathVariable Long id, 
-                                    Authentication authentication,
-                                    RedirectAttributes redirectAttributes) {
-        try {
-            String email = authentication.getName();
-            asignacionService.aceptarAsignacion(id, email);
-            redirectAttributes.addFlashAttribute("success", "Asignación aceptada exitosamente");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al aceptar asignación: " + e.getMessage());
-        }
-        return "redirect:/asignaciones/mis-asignaciones";
-    }
-
-    @PostMapping("/rechazar/{id}")
-    public String rechazarAsignacion(@PathVariable Long id, 
-                                     @RequestParam String motivo,
-                                     Authentication authentication,
-                                     RedirectAttributes redirectAttributes) {
-        try {
-            asignacionService.rechazarAsignacion(id, motivo);
-            redirectAttributes.addFlashAttribute("success", "Asignación rechazada");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Error al rechazar asignación: " + e.getMessage());
-        }
-        return "redirect:/asignaciones/mis-asignaciones";
-    }
 }
