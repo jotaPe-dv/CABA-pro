@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <div class="d-flex flex-column p-3">
+                    <h6 class="text-muted mb-3">ADMINISTRACIÓN</h6>
+                    <ul class="nav nav-pills flex-column mb-auto">
+                        <li class="nav-item">
+                            <a href="/admin/dashboard" class="nav-link">
+                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/chat" class="nav-link active">
+                                <i class="bi bi-chat-dots me-2"></i>Chat
+                                <span id="badge-total-no-leidos" class="badge bg-danger ms-2" style="display: none;">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/arbitros" class="nav-link">
+                                <i class="bi bi-people me-2"></i>Árbitros
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/admin/asignaciones" class="nav-link">
+                                <i class="bi bi-calendar-check me-2"></i>Asignaciones
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content p-0">
+                <div class="row g-0 h-100">
+                    <!-- Lista de Conversaciones -->
+                    <div class="col-md-4 border-end bg-light">
+                        <div class="p-3 border-bottom bg-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-chat-dots me-2"></i>Conversaciones
+                            </h5>
+                        </div>
+                        <div class="search-box p-3 border-bottom">
+                            <input type="text" id="searchConversations" class="form-control" placeholder="Buscar árbitros...">
+                        </div>
+                        <div id="conversations-list" class="overflow-auto" style="height: calc(100vh - 200px);">
+                            <!-- Se carga dinámicamente con JavaScript -->
+                            <div class="text-center text-muted p-4">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2 mb-0">Cargando conversaciones...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Área de Chat -->
+                    <div class="col-md-8">
+                        <div id="chat-container" class="d-flex flex-column h-100">
+                            <!-- Header del Chat -->
+                            <div id="chat-header" class="p-3 border-bottom bg-white" style="display: none;">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0" id="chat-nombre"></h6>
+                                        <small class="text-muted" id="chat-tipo"></small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Mensajes -->
+                            <div id="messages-container" class="flex-grow-1 overflow-auto p-3 bg-light" style="height: calc(100vh - 260px);">
+                                <div class="text-center text-muted p-5">
+                                    <i class="bi bi-chat-text" style="font-size: 3rem;"></i>
+                                    <h5 class="mt-3">Selecciona una conversación</h5>
+                                    <p>Elige un árbitro de la lista para comenzar a chatear</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Input de Mensaje -->
+                            <div id="message-input-container" class="p-3 border-top bg-white" style="display: none;">
+                                <div class="input-group">
+                                    <input type="text" id="message-input" class="form-control" 
+                                           placeholder="Escribe un mensaje..." 
+                                           autocomplete="off">
+                                    <button class="btn btn-primary" type="button" id="send-button">
+                                        <i class="bi bi-send-fill"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted" id="typing-indicator" style="display: none;">
+                                    <i class="bi bi-three-dots"></i> Escribiendo...
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden data -->
+    <input type="hidden" id="usuario-actual-id" th:value="${usuarioActual.id}">
+    <input type="hidden" id="usuario-actual-nombre" th:value="${usuarioActual.nombreCompleto}">
+    
+    <!-- SockJS y STOMP para WebSocket -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    
+    <script th:inline="javascript">
+        // Variables globales
+        let stompClient = null;
+        let conversacionActual = null;
+        const usuarioActualId = document.getElementById('usuario-actual-id').value;
+        const usuarioActualNombre = document.getElementById('usuario-actual-nombre').value;
+        
+        // Conectar WebSocket al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            conectarWebSocket();
+            cargarArbitros();
+            actualizarContadorNoLeidos();
+            
+            // Event listeners
+            document.getElementById('send-button').addEventListener('click', enviarMensaje);
+            document.getElementById('message-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    enviarMensaje();
+                }
+            });
+            
+            // Buscar conversaciones
+            document.getElementById('searchConversations').addEventListener('input', filtrarConversaciones);
+        });
+        
+        // Conectar a WebSocket
+        function conectarWebSocket() {
+            const socket = new SockJS('/ws-chat');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('Conectado a WebSocket: ' + frame);
+                
+                // Suscribirse al canal personal
+                stompClient.subscribe('/topic/chat/' + usuarioActualId, function(mensaje) {
+                    const mensajeDTO = JSON.parse(mensaje.body);
+                    recibirMensaje(mensajeDTO);
+                });
+                
+                // Suscribirse a notificaciones de "escribiendo"
+                stompClient.subscribe('/topic/chat/typing/' + usuarioActualId, function(data) {
+                    const info = JSON.parse(data.body);
+                    mostrarIndicadorEscribiendo(info);
+                });
+            }, function(error) {
+                console.error('Error de conexión WebSocket:', error);
+                setTimeout(conectarWebSocket, 5000); // Reconectar después de 5 segundos
+            });
+        }
+        
+        // Cargar lista de árbitros
+        // Cargar lista de árbitros
+        async function cargarArbitros() {
+            try {
+        // Si no necesitas la ruta '/arbitros' que devuelve HTML, puedes quitar estas dos líneas.
+        // const response = await fetch('/arbitros');
+        // const html = await response.text();
+
+        // Llamada a la API REST que devuelve { success: true, arbitros: [...] }
+        const res = await fetch('/api/arbitros/disponibles');
+        const data = await res.json();
+
+        if (data && data.success && Array.isArray(data.arbitros)) {
+            mostrarListaArbitros(data.arbitros);
+        } else {
+            // fallback: otra API que devuelve { success, usuarios }
+            cargarListaGenerica();
+        }
+    } catch (error) {
+        console.error('Error cargando árbitros:', error);
+        cargarListaGenerica();
+    }
+}
+
+        
+        function cargarListaGenerica() {
+            // Cargar todos los usuarios tipo ARBITRO
+            fetch('/api/chat/usuarios-disponibles')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        mostrarListaArbitros(data.usuarios);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function mostrarListaArbitros(arbitros) {
+            const container = document.getElementById('conversations-list');
+            container.innerHTML = '';
+            
+            if (arbitros.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="bi bi-inbox"></i>
+                        <p class="mt-2">No hay árbitros disponibles</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            arbitros.forEach(arbitro => {
+                const item = document.createElement('div');
+                item.className = 'conversation-item p-3 border-bottom';
+                item.style.cursor = 'pointer';
+                item.dataset.userId = arbitro.id;
+                item.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                            ${arbitro.nombre.charAt(0)}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-0">${arbitro.nombreCompleto}</h6>
+                                <span class="badge bg-danger badge-no-leidos" data-user-id="${arbitro.id}" style="display: none;">0</span>
+                            </div>
+                            <small class="text-muted">Árbitro - ${arbitro.especialidad || 'General'}</small>
+                        </div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => abrirConversacion(arbitro));
+                container.appendChild(item);
+            });
+            
+            // Actualizar contadores individuales
+            actualizarContadoresIndividuales();
+        }
+        
+        function abrirConversacion(usuario) {
+            conversacionActual = usuario;
+            
+            // Actualizar UI
+            document.getElementById('chat-header').style.display = 'block';
+            document.getElementById('message-input-container').style.display = 'block';
+            document.getElementById('chat-nombre').textContent = usuario.nombreCompleto;
+            document.getElementById('chat-tipo').textContent = `Árbitro - ${usuario.especialidad || 'General'}`;
+            
+            // Marcar conversación activa
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active', 'bg-light');
+            });
+            const itemActivo = document.querySelector(`[data-user-id="${usuario.id}"]`);
+            if (itemActivo) {
+                itemActivo.classList.add('active', 'bg-light');
+            }
+            
+            // Cargar mensajes
+            cargarMensajes(usuario.id);
+        }
+        
+        async function cargarMensajes(otroUsuarioId) {
+            try {
+                const response = await fetch(`/api/chat/conversacion/${otroUsuarioId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    mostrarMensajes(data.mensajes);
+                    // Actualizar contador
+                    actualizarContadorConversacion(otroUsuarioId, 0);
+                    actualizarContadorNoLeidos();
+                }
+            } catch (error) {
+                console.error('Error cargando mensajes:', error);
+            }
+        }
+        
+        function mostrarMensajes(mensajes) {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+            
+            if (mensajes.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="bi bi-chat"></i>
+                        <p class="mt-2">No hay mensajes aún. ¡Inicia la conversación!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            mensajes.forEach(mensaje => {
+                agregarMensajeAChat(mensaje, false);
+            });
+            
+            scrollToBottom();
+        }
+        
+        function agregarMensajeAChat(mensaje, animar = true) {
+            const container = document.getElementById('messages-container');
+            const esMio = mensaje.remitenteId == usuarioActualId;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message mb-3 ${esMio ? 'text-end' : ''}`;
+            if (animar) messageDiv.style.opacity = '0';
+            
+            const fecha = new Date(mensaje.fechaEnvio);
+            const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="d-inline-block ${esMio ? 'bg-primary text-white' : 'bg-white'} rounded p-2 px-3" style="max-width: 70%;">
+                    ${!esMio ? `<small class="fw-bold d-block">${mensaje.remitenteNombre}</small>` : ''}
+                    <div>${escapeHtml(mensaje.contenido)}</div>
+                    <small class="text-${esMio ? 'white-50' : 'muted'} d-block mt-1">${hora}</small>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            if (animar) {
+                setTimeout(() => {
+                    messageDiv.style.transition = 'opacity 0.3s';
+                    messageDiv.style.opacity = '1';
+                }, 10);
+            }
+            
+            scrollToBottom();
+        }
+        
+        function enviarMensaje() {
+            const input = document.getElementById('message-input');
+            const contenido = input.value.trim();
+            
+            if (!contenido || !conversacionActual) return;
+            
+            const mensaje = {
+                remitenteId: usuarioActualId,
+                destinatarioId: conversacionActual.id,
+                contenido: contenido
+            };
+            
+            stompClient.send('/app/chat.send', {}, JSON.stringify(mensaje));
+            
+            input.value = '';
+            input.focus();
+        }
+        
+        function recibirMensaje(mensaje) {
+            // Si es de la conversación actual, mostrarlo
+            if (conversacionActual && 
+                (mensaje.remitenteId == conversacionActual.id || mensaje.destinatarioId == conversacionActual.id)) {
+                agregarMensajeAChat(mensaje, true);
+            }
+            
+            // Actualizar contador si no es mío
+            if (mensaje.destinatarioId == usuarioActualId) {
+                actualizarContadorConversacion(mensaje.remitenteId, '+1');
+                actualizarContadorNoLeidos();
+                
+                // Sonido de notificación (opcional)
+                reproducirSonidoNotificacion();
+            }
+        }
+        
+        function actualizarContadorNoLeidos() {
+            fetch('/api/chat/no-leidos')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.count > 0) {
+                        const badge = document.getElementById('badge-total-no-leidos');
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        document.getElementById('badge-total-no-leidos').style.display = 'none';
+                    }
+                });
+        }
+        
+        function actualizarContadoresIndividuales() {
+            document.querySelectorAll('.badge-no-leidos').forEach(badge => {
+                const userId = badge.dataset.userId;
+                fetch(`/api/chat/no-leidos/${userId}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && data.count > 0) {
+                            badge.textContent = data.count;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    });
+            });
+        }
+        
+        function actualizarContadorConversacion(userId, valor) {
+            const badge = document.querySelector(`.badge-no-leidos[data-user-id="${userId}"]`);
+            if (!badge) return;
+            
+            if (valor === 0 || valor === '0') {
+                badge.style.display = 'none';
+            } else if (valor === '+1') {
+                const current = parseInt(badge.textContent) || 0;
+                badge.textContent = current + 1;
+                badge.style.display = 'inline-block';
+            }
+        }
+        
+        function scrollToBottom() {
+            const container = document.getElementById('messages-container');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function filtrarConversaciones() {
+            const search = document.getElementById('searchConversations').value.toLowerCase();
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                const nombre = item.textContent.toLowerCase();
+                item.style.display = nombre.includes(search) ? 'block' : 'none';
+            });
+        }
+        
+        function reproducirSonidoNotificacion() {
+            // Opcional: agregar sonido de notificación
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuFzvLaizsIHGS57OihUhELTKXh8bllHAU2jdXvzX4vBSh+zPLajzsIHGO56uqkUxELTKXh8bllHAU2jdXvzX4vBSh+zPLajzsIHGO56uqkUxELTKXh8bllHAU2jdXvzX4vBSh+zPLajzsIHGO56uqkUxELTKXh8bllHAU2jdXvzX4vBQ==');
+            audio.volume = 0.3;
+            audio.play().catch(() => {});
+        }
+        
+        function mostrarIndicadorEscribiendo(info) {
+            if (info.escribiendo && conversacionActual && info.usuarioId == conversacionActual.id) {
+                document.getElementById('typing-indicator').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('typing-indicator').style.display = 'none';
+                }, 3000);
+            }
+        }
+    </script>
+    
+    <style>
+        .conversation-item:hover {
+            background-color: #f8f9fa !important;
+        }
+        
+        .conversation-item.active {
+            background-color: #e9ecef !important;
+        }
+        
+        .message {
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #messages-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        #messages-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        #messages-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+    
+    <script th:replace="~{fragments/layout :: scripts}"></script>
+</body>
+</html>

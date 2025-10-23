@@ -21,9 +21,21 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
-                // Recursos públicos
+                // ✅ Recursos públicos PRIMERO
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
                 .requestMatchers("/", "/login", "/register").permitAll()
+                
+                // ✅ WebSocket - ANTES de anyRequest()
+                .requestMatchers("/ws-chat/**").permitAll()
+                
+                // ✅ API del Chat - ANTES de anyRequest()
+                .requestMatchers("/api/chat/**").hasAnyRole("ADMIN", "ARBITRO")
+                .requestMatchers("/api/arbitros/disponibles").hasRole("ADMIN")
+                .requestMatchers("/api/administradores/principal").hasRole("ARBITRO")
+                
+                // ✅ Páginas de Chat - ANTES de anyRequest()
+                .requestMatchers("/admin/chat").hasRole("ADMIN")
+                .requestMatchers("/arbitro/chat").hasRole("ARBITRO")
                 
                 // Rutas para ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -43,7 +55,7 @@ public class SecurityConfig {
                 .requestMatchers("/asignaciones/**").hasAnyRole("ADMIN", "ARBITRO")
                 .requestMatchers("/especialidades/**").hasAnyRole("ADMIN", "ARBITRO")
                 
-                // Cualquier otra ruta requiere autenticación
+                // ⚠️ IMPORTANTE: anyRequest() SIEMPRE AL FINAL
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -65,7 +77,7 @@ public class SecurityConfig {
                 .maxSessionsPreventsLogin(false)
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**")
+                .ignoringRequestMatchers("/h2-console/**", "/ws-chat/**")
             )
             .headers(headers -> headers
                 .frameOptions().sameOrigin() // Para H2 Console
