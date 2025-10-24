@@ -3,11 +3,14 @@ package com.pagina.Caba.service;
 import jakarta.annotation.PostConstruct;
 
 import com.pagina.Caba.model.Arbitro;
+import com.pagina.Caba.model.Asignacion;
 import com.pagina.Caba.repository.ArbitroRepository;
+import com.pagina.Caba.repository.AsignacionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,6 +42,9 @@ public class ArbitroService {
     private ArbitroRepository arbitroRepository;
     
     @Autowired
+    private AsignacionRepository asignacionRepository;
+    
+    @Autowired
     private PasswordEncoder passwordEncoder;
     
     
@@ -51,40 +57,82 @@ public class ArbitroService {
         return arbitroRepository.findById(id);
     }
     
-    public Arbitro guardar(Arbitro arbitro) {
-        validarArbitro(arbitro);
-        
-        // Si es un nuevo árbitro o se está cambiando la contraseña, hashearla
-        if (arbitro.getId() == null) {
-            // Nuevo árbitro - hashear la contraseña y configurar estados por defecto
-            arbitro.setPassword(passwordEncoder.encode(arbitro.getPassword()));
-            
-            // Configurar estados por defecto para nuevos árbitros
-            if (arbitro.getActivo() == null) {
-                arbitro.setActivo(true);
-            }
-            if (arbitro.getDisponible() == null) {
-                arbitro.setDisponible(true);
-            }
-        } else {
-            // Árbitro existente - solo hashear si la contraseña ha cambiado
-            Optional<Arbitro> arbitroExistente = arbitroRepository.findById(arbitro.getId());
-            if (arbitroExistente.isPresent()) {
-                String passwordActual = arbitroExistente.get().getPassword();
-                String passwordNueva = arbitro.getPassword();
-                
-                // Si la contraseña es diferente y no está ya hasheada, hashearla
-                if (!passwordNueva.equals(passwordActual) && !passwordNueva.startsWith("$2a$")) {
-                    arbitro.setPassword(passwordEncoder.encode(passwordNueva));
-                }
+    public Arbitro crear(Arbitro arbitro) {
+        validarNumeroLicencia(null, arbitro.getNumeroLicencia());
+        validarEmail(null, arbitro.getEmail());
+
+        if (!StringUtils.hasText(arbitro.getPassword())) {
+            throw new IllegalArgumentException("La contraseña es obligatoria");
+        }
+
+        arbitro.setPassword(passwordEncoder.encode(arbitro.getPassword()));
+
+        if (arbitro.getActivo() == null) {
+            arbitro.setActivo(true);
+        }
+
+        if (arbitro.getDisponible() == null) {
+            arbitro.setDisponible(true);
+        }
+
+        return arbitroRepository.save(arbitro);
+    }
+
+    public Arbitro actualizar(Long id, Arbitro datosActualizados) {
+        Arbitro existente = arbitroRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Árbitro no encontrado con id=" + id));
+
+        validarNumeroLicencia(id, datosActualizados.getNumeroLicencia());
+        validarEmail(id, datosActualizados.getEmail());
+
+        existente.setNombre(datosActualizados.getNombre());
+        existente.setApellido(datosActualizados.getApellido());
+        existente.setEmail(datosActualizados.getEmail());
+        existente.setNumeroLicencia(datosActualizados.getNumeroLicencia());
+        existente.setTelefono(datosActualizados.getTelefono());
+        existente.setDireccion(datosActualizados.getDireccion());
+        existente.setTarifaBase(datosActualizados.getTarifaBase());
+        Boolean disponible = datosActualizados.getDisponible();
+        if (disponible != null) {
+            existente.setDisponible(disponible);
+        }
+        existente.setEspecialidad(datosActualizados.getEspecialidad());
+        existente.setEscalafon(datosActualizados.getEscalafon());
+        existente.setFotoUrl(datosActualizados.getFotoUrl());
+
+        String nuevaPassword = datosActualizados.getPassword();
+        if (StringUtils.hasText(nuevaPassword)) {
+            if (!nuevaPassword.equals(existente.getPassword()) && !nuevaPassword.startsWith("$2a$")) {
+                existente.setPassword(passwordEncoder.encode(nuevaPassword));
+            } else {
+                existente.setPassword(nuevaPassword);
             }
         }
-        
-        return arbitroRepository.save(arbitro);
+
+        return arbitroRepository.save(existente);
     }
     
     public void eliminar(Long id) {
-        arbitroRepository.deleteById(id);
+        Optional<Arbitro> arbitroOpt = arbitroRepository.findById(id);
+        if (arbitroOpt.isPresent()) {
+            Arbitro arbitro = arbitroOpt.get();
+            // Borrar asignaciones relacionadas primero para evitar FK constraint
+            try {
+                List<Asignacion> asignaciones = asignacionRepository.findByArbitro(arbitro);
+                if (asignaciones != null && !asignaciones.isEmpty()) {
+                    asignacionRepository.deleteAll(asignaciones);
+                }
+            } catch (Exception ex) {
+                // Log y rethrow para que el llamador pueda manejarlo (y evitar dejar datos en estado inconsistentes)
+                System.out.println("⚠️ Error al eliminar asignaciones relacionadas con el árbitro id=" + id + ": " + ex.getMessage());
+                throw ex;
+            }
+
+            // Finalmente eliminar el árbitro
+            arbitroRepository.deleteById(id);
+        } else {
+            throw new IllegalArgumentException("Árbitro no encontrado con id=" + id);
+        }
     }
     
     // Lógica de Negocio
@@ -151,17 +199,25 @@ public class ArbitroService {
     }
     
     // Validaciones
-    private void validarArbitro(Arbitro arbitro) {
-        if (arbitro.getNumeroLicencia() != null && 
-            arbitroRepository.existsByNumeroLicencia(arbitro.getNumeroLicencia())) {
-            if (arbitro.getId() == null) { // Nuevo arbitro
-                throw new IllegalArgumentException("Ya existe un árbitro con ese número de licencia");
-            }
-            // Para edición, verificar que no sea otro arbitro
-            Optional<Arbitro> existente = arbitroRepository.findByNumeroLicencia(arbitro.getNumeroLicencia());
-            if (existente.isPresent() && !existente.get().getId().equals(arbitro.getId())) {
-                throw new IllegalArgumentException("Ya existe un árbitro con ese número de licencia");
-            }
+    private void validarNumeroLicencia(Long arbitroId, String numeroLicencia) {
+        if (!StringUtils.hasText(numeroLicencia)) {
+            throw new IllegalArgumentException("El número de licencia es obligatorio");
+        }
+
+        Optional<Arbitro> existente = arbitroRepository.findByNumeroLicencia(numeroLicencia);
+        if (existente.isPresent() && !existente.get().getId().equals(arbitroId)) {
+            throw new IllegalArgumentException("Ya existe un árbitro con ese número de licencia");
+        }
+    }
+
+    private void validarEmail(Long arbitroId, String email) {
+        if (!StringUtils.hasText(email)) {
+            throw new IllegalArgumentException("El email es obligatorio");
+        }
+
+        Optional<Arbitro> existente = arbitroRepository.findByEmail(email);
+        if (existente.isPresent() && !existente.get().getId().equals(arbitroId)) {
+            throw new IllegalArgumentException("Ya existe un usuario registrado con ese email");
         }
     }
     

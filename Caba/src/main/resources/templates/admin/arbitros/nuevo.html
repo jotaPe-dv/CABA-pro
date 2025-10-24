@@ -9,6 +9,9 @@
 <div class="container mt-4">
     <h2>Crear Árbitro</h2>
     <form th:action="@{/arbitros/guardar}" th:object="${arbitro}" method="post" class="row g-3">
+        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+            <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+        </div>
         <div class="col-md-6">
             <label for="nombre" class="form-label">Nombre:</label>
             <input type="text" id="nombre" th:field="*{nombre}" class="form-control" required/>

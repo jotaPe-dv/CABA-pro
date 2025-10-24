@@ -14,10 +14,11 @@ import com.pagina.Caba.repository.ArbitroRepository;
 import com.pagina.Caba.repository.TorneoRepository;
 import com.pagina.Caba.repository.PartidoRepository;
 import com.pagina.Caba.service.AsignacionService;
+import com.pagina.Caba.service.TarifaService;
 import com.pagina.Caba.model.Asignacion;
-import com.pagina.Caba.model.Arbitro;
 import com.pagina.Caba.model.Torneo;
 import com.pagina.Caba.model.Partido;
+import java.util.List;
 
 @SpringBootApplication
 public class CabaApplication {
@@ -34,8 +35,9 @@ public class CabaApplication {
 		PasswordEncoder passwordEncoder,
 		TorneoRepository torneoRepository,
 		PartidoRepository partidoRepository,
-		AsignacionService asignacionService) {
-		return args -> {
+		AsignacionService asignacionService,
+		TarifaService tarifaService) {
+	return args -> {
 			// ADMIN
 			if (!administradorRepository.existsByEmail("admin@caba.com")) {
 				   Administrador admin = new Administrador(
@@ -112,7 +114,14 @@ public class CabaApplication {
 
 				// Crear asignaciones por defecto: Principal, Auxiliar, Mesa si hay árbitros disponibles
 				if (partidoObj != null) {
-					String[] roles = {"Principal", "Auxiliar", "Mesa"};
+					// Verificar si ya existen asignaciones para este partido
+					List<com.pagina.Caba.model.Asignacion> asignacionesExistentes = 
+						asignacionService.obtenerAsignacionesPorPartido(partidoObj.getId());
+					if (!asignacionesExistentes.isEmpty()) {
+						System.out.println("ℹ️ Ya existen " + asignacionesExistentes.size() + 
+							" asignaciones para el partido por defecto, omitiendo creación");
+					} else {
+						String[] roles = {"Principal", "Auxiliar", "Mesa"};
 					for (String rol : roles) {
 						// Buscar un árbitro disponible con la especialidad correspondiente
 						Arbitro elegido = arbitroRepository.findByDisponibleTrueAndActivoTrue()
@@ -125,19 +134,29 @@ public class CabaApplication {
 							elegido = arbitroRepository.findByDisponibleTrueAndActivoTrue()
 							.stream().findFirst().orElse(null);
 						}
-						if (elegido != null) {
-							try {
-								Asignacion creada = asignacionService.crearAsignacion(partidoObj.getId(), elegido.getId(), partidoObj.getTipoPartido());
-								// Asegurarnos de setear el rol específico y guardar
-								creada.setRolEspecifico(rol);
-								asignacionService.guardar(creada);
-								System.out.println("✅ Asignación por defecto creada: partidoId=" + partidoObj.getId() + ", arbitro=" + elegido.getEmail() + ", rol=" + rol);
-							} catch (Exception ex) {
-								System.out.println("⚠️ No se pudo crear asignación para rol " + rol + ": " + ex.getMessage());
-							}
-						} else {
-							System.out.println("ℹ️ No hay árbitros disponibles para asignar el rol: " + rol);
-						}
+								if (elegido != null) {
+									try {
+										// Buscar tarifa adecuada y crear la asignación LOCALMENTE estableciendo el rol antes de persistir
+										String escalafon = elegido.getEscalafon();
+										String tipo = partidoObj.getTipoPartido();
+										java.time.LocalDateTime fecha = partidoObj.getFechaPartido();
+										var tarifaOpt = tarifaService.buscarTarifaParaAsignacion(tipo, escalafon, fecha);
+										if (tarifaOpt.isEmpty()) {
+											System.out.println("⚠️ No hay tarifa vigente para rol " + rol + " y árbitro " + elegido.getEmail());
+										} else {
+											var tarifa = tarifaOpt.get();
+											Asignacion asignacion = new Asignacion(partidoObj, elegido, tarifa);
+											asignacion.setRolEspecifico(rol);
+											asignacionService.guardar(asignacion);
+											System.out.println("✅ Asignación por defecto creada: partidoId=" + partidoObj.getId() + ", arbitro=" + elegido.getEmail() + ", rol=" + rol);
+										}
+									} catch (Exception ex) {
+										System.out.println("⚠️ No se pudo crear asignación para rol " + rol + ": " + ex.getMessage());
+									}
+								} else {
+									System.out.println("ℹ️ No hay árbitros disponibles para asignar el rol: " + rol);
+								}
+					}
 					}
 				}
 			}

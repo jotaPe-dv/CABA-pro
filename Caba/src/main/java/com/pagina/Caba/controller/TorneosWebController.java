@@ -68,4 +68,35 @@ public class TorneosWebController {
         torneoRepository.save(existente);
         return "redirect:/torneos";
     }
+
+    // --- Confirmar eliminación ---
+    @GetMapping("/torneos/eliminar/{id}")
+    public String mostrarConfirmacionEliminarTorneo(@PathVariable Long id, Model model) {
+        Torneo torneo = torneoRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Torneo no encontrado: " + id));
+        model.addAttribute("torneo", torneo);
+        return "torneos/eliminar";
+    }
+
+    // --- Eliminar torneo ---
+    @PostMapping("/torneos/eliminar/{id}")
+    public String eliminarTorneo(@PathVariable Long id, org.springframework.web.servlet.mvc.support.RedirectAttributes redirectAttributes) {
+        try {
+            Torneo torneo = torneoRepository.findById(id).orElse(null);
+            if (torneo != null) {
+                // Verificar si tiene partidos asociados
+                List<com.pagina.Caba.model.Partido> partidos = torneo.getPartidos() != null ? new java.util.ArrayList<>(torneo.getPartidos()) : java.util.Collections.emptyList();
+                if (!partidos.isEmpty()) {
+                    redirectAttributes.addFlashAttribute("error", "No se puede eliminar el torneo porque tiene " + partidos.size() + " partidos asociados. Elimine primero los partidos o reasígnelos.");
+                    return "redirect:/torneos";
+                }
+            }
+            torneoRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("success", "Torneo eliminado correctamente.");
+            return "redirect:/torneos";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al eliminar el torneo: " + e.getMessage());
+            return "redirect:/torneos";
+        }
+    }
 }

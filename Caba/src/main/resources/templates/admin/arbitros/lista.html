@@ -8,6 +8,8 @@
 <body>
 <div class="container mt-4">
     <h2>Lista de Árbitros</h2>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     <table class="table table-striped">
         <thead>
         <tr>
@@ -23,9 +25,12 @@
             <td th:text="${arbitro.nombre}"></td>
             <td th:text="${arbitro.email}"></td>
             <td>
-                <!-- Acciones como editar/eliminar pueden ir aquí -->
                 <a th:href="@{'/arbitros/editar/' + ${arbitro.id}}" class="btn btn-sm btn-primary">Editar</a>
-                <a th:href="@{'/arbitros/eliminar/' + ${arbitro.id}}" class="btn btn-sm btn-danger">Eliminar</a>
+                <form th:action="@{'/arbitros/eliminar/' + ${arbitro.id}}" method="post" class="d-inline">
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            onclick="return confirm('¿Desea eliminar al árbitro seleccionado?');">Eliminar</button>
+                </form>
             </td>
         </tr>
         </tbody>

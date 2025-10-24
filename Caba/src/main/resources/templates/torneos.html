@@ -4,16 +4,42 @@
     <meta charset="UTF-8">
     <title>Lista de Torneos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .simulation-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .simulation-btn {
+            margin: 5px;
+        }
+        .badge-simulation {
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-4">
-    <h2>Torneos</h2>
+    <h2><i class="fas fa-trophy"></i> Torneos</h2>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    
     <table class="table table-striped">
         <thead>
         <tr>
             <th>ID</th>
             <th>Nombre</th>
             <th>Acciones</th>
+            <th>Simulación</th>
         </tr>
         </thead>
         <tbody>
@@ -21,14 +47,449 @@
             <td th:text="${torneo.id}"></td>
             <td th:text="${torneo.nombre}"></td>
             <td>
-                <!-- Botones de acción (editar, eliminar, etc.) -->
-                <a th:href="@{'/torneos/editar/' + ${torneo.id}}" class="btn btn-sm btn-primary">Editar</a>
-                <a th:href="@{'/torneos/eliminar/' + ${torneo.id}}" class="btn btn-sm btn-danger">Eliminar</a>
+                <a th:href="@{'/torneos/editar/' + ${torneo.id}}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <a th:href="@{'/torneos/eliminar/' + ${torneo.id}}" class="btn btn-sm btn-danger">
+                    <i class="fas fa-trash"></i> Eliminar
+                </a>
+            </td>
+            <td>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-info simulation-btn" 
+                            onclick="showBracketModal(this)" 
+                            th:attr="data-torneo-id=${torneo.id}, data-torneo-nombre=${torneo.nombre}">
+                        <i class="fas fa-sitemap"></i> Generar Bracket
+                    </button>
+                    <button type="button" class="btn btn-sm btn-warning simulation-btn" 
+                            onclick="simularSiguientePartido(this)" 
+                            th:attr="data-torneo-id=${torneo.id}">
+                        <i class="fas fa-play"></i> Simular Siguiente
+                    </button>
+                </div>
             </td>
         </tr>
         </tbody>
     </table>
-    <a href="/torneos/nuevo" class="btn btn-success">Nuevo Torneo</a>
+    
+    <div class="d-flex gap-2 mb-3">
+        <a href="/torneos/nuevo" class="btn btn-success">
+            <i class="fas fa-plus"></i> Nuevo Torneo
+        </a>
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/partidos'">
+            <i class="fas fa-futbol"></i> Ver Partidos
+        </button>
+    </div>
+
+    <!-- Panel de IA -->
+    <div class="simulation-section">
+        <h4><i class="fas fa-robot"></i> Herramientas de IA y Simulación Masiva</h4>
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-database"></i> Generar Dataset</h6>
+                        <p class="card-text small">Crea múltiples torneos automáticamente para entrenamiento de IA</p>
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">Cantidad</span>
+                            <input type="number" class="form-control" id="numTorneos" value="10" min="1" max="1000">
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100" onclick="generarBatch()">
+                            <i class="fas fa-cogs"></i> Generar Torneos
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-file-export"></i> Exportar Datos</h6>
+                        <p class="card-text small">Exporta partidos a formato JSONL para ML</p>
+                        <button class="btn btn-success btn-sm w-100 mb-2" onclick="exportarDatos()">
+                            <i class="fas fa-download"></i> Exportar a JSONL
+                        </button>
+                        <button class="btn btn-info btn-sm w-100" onclick="verEstadisticas()">
+                            <i class="fas fa-chart-bar"></i> Ver Estadísticas
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="fas fa-brain"></i> Predicción</h6>
+                        <p class="card-text small">Predice resultados usando IA</p>
+                        <button class="btn btn-warning btn-sm w-100 mb-2" onclick="showPredictModal()">
+                            <i class="fas fa-crystal-ball"></i> Predecir Partido
+                        </button>
+                        <button class="btn btn-danger btn-sm w-100" onclick="showChampionModal()">
+                            <i class="fas fa-crown"></i> Predecir Campeón
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<!-- Modal para Generar Bracket -->
+<div class="modal fade" id="bracketModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-sitemap"></i> Generar Bracket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalTorneoId">
+                <p>Ingresa los 4 equipos participantes:</p>
+                <div class="mb-2">
+                    <label class="form-label">Equipo 1</label>
+                    <input type="text" class="form-control" id="equipo1" placeholder="Equipo A">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Equipo 2</label>
+                    <input type="text" class="form-control" id="equipo2" placeholder="Equipo B">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Equipo 3</label>
+                    <input type="text" class="form-control" id="equipo3" placeholder="Equipo C">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Equipo 4</label>
+                    <input type="text" class="form-control" id="equipo4" placeholder="Equipo D">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="generarBracket()">
+                    <i class="fas fa-check"></i> Generar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Predicción de Partido -->
+<div class="modal fade" id="predictModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-crystal-ball"></i> Predecir Partido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label class="form-label">Equipo Local</label>
+                    <input type="text" class="form-control" id="predictLocal" placeholder="Equipo A">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Equipo Visitante</label>
+                    <input type="text" class="form-control" id="predictVisitante" placeholder="Equipo B">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Fase</label>
+                    <select class="form-select" id="predictFase">
+                        <option value="Regular">Regular</option>
+                        <option value="Semifinal">Semifinal</option>
+                        <option value="Final">Final</option>
+                    </select>
+                </div>
+                <div id="predictResult" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="predecirPartido()">
+                    <i class="fas fa-magic"></i> Predecir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Predicción de Campeón -->
+<div class="modal fade" id="championModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-crown"></i> Predecir Campeón</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label class="form-label">ID del Torneo</label>
+                    <input type="number" class="form-control" id="championTorneoId" placeholder="1">
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Simulaciones Monte Carlo</label>
+                    <input type="number" class="form-control" id="championSimulations" value="1000" min="100" max="10000">
+                </div>
+                <div id="championResult" class="mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" onclick="predecirCampeon()">
+                    <i class="fas fa-trophy"></i> Predecir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function getCsrfToken() {
+        return document.querySelector('meta[name="_csrf"]')?.content || 
+               document.querySelector('input[name="_csrf"]')?.value;
+    }
+
+    function showBracketModal(button) {
+        const torneoId = button.getAttribute('data-torneo-id');
+        const torneoNombre = button.getAttribute('data-torneo-nombre');
+        document.getElementById('modalTorneoId').value = torneoId;
+        new bootstrap.Modal(document.getElementById('bracketModal')).show();
+    }
+
+    async function generarBracket() {
+        const torneoId = document.getElementById('modalTorneoId').value;
+        const equipos = [
+            document.getElementById('equipo1').value.trim(),
+            document.getElementById('equipo2').value.trim(),
+            document.getElementById('equipo3').value.trim(),
+            document.getElementById('equipo4').value.trim()
+        ];
+
+        if (equipos.some(e => !e)) {
+            alert('Por favor ingresa los 4 equipos');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/torneos/simulacion/generar/${torneoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: JSON.stringify(equipos)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`✅ Bracket generado!\n${result.partidosCreados} partidos creados\n${result.asignacionesCreadas} asignaciones de árbitros`);
+                bootstrap.Modal.getInstance(document.getElementById('bracketModal')).hide();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (result.error || 'No se pudo generar el bracket'));
+            }
+        } catch (error) {
+            alert('❌ Error de conexión: ' + error.message);
+        }
+    }
+
+    async function simularSiguientePartido(button) {
+        const torneoId = button.getAttribute('data-torneo-id');
+        
+        if (!confirm('¿Simular el siguiente partido?\n\nREQUISITO: Todas las asignaciones deben estar ACEPTADAS')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/torneos/simulacion/simular-siguiente/${torneoId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`✅ Partido simulado!\n\n${result.equipoLocal} ${result.marcadorLocal} - ${result.marcadorVisitante} ${result.equipoVisitante}\n\nGanador: ${result.ganador}\nFase: ${result.fase}`);
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (result.error || result.message || 'No se pudo simular'));
+            }
+        } catch (error) {
+            alert('❌ Error de conexión: ' + error.message);
+        }
+    }
+
+    async function generarBatch() {
+        const numTorneos = document.getElementById('numTorneos').value;
+        if (!confirm(`¿Generar ${numTorneos} torneos automáticamente?\n\nEsto creará ${numTorneos * 3} partidos simulados.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/torneos/ai/batch?numTorneos=${numTorneos}&autoAceptar=true`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`✅ Generación completada!\n\nTorneos creados: ${result.numTorneos}\nPartidos simulados: ${result.partidosSimulados}`);
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (result.error || 'No se pudo generar batch'));
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    async function exportarDatos() {
+        const outputPath = prompt('Ruta de salida (dejar vacío para default):', 'C:/datos/torneos_export.jsonl');
+        if (outputPath === null) return;
+
+        try {
+            const url = outputPath ? `/api/torneos/ai/export?outputPath=${encodeURIComponent(outputPath)}` : '/api/torneos/ai/export';
+            const response = await fetch(url, {
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`✅ Exportación completada!\n\nArchivo: ${result.outputPath}\nRegistros: ${result.totalRegistros}`);
+            } else {
+                alert('❌ Error: ' + (result.error || 'No se pudo exportar'));
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    async function verEstadisticas() {
+        try {
+            const response = await fetch('/api/torneos/ai/stats', {
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+
+            const stats = await response.json();
+            if (response.ok) {
+                alert(`📊 Estadísticas de Datos\n\nTotal partidos: ${stats.totalPartidos}\nPartidos completados: ${stats.partidosCompletados}\nPartidos pendientes: ${stats.partidosPendientes}\nÚltima actualización: ${stats.ultimaActualizacion || 'N/A'}`);
+            } else {
+                alert('❌ Error al obtener estadísticas');
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    function showPredictModal() {
+        new bootstrap.Modal(document.getElementById('predictModal')).show();
+    }
+
+    async function predecirPartido() {
+        const data = {
+            equipoLocal: document.getElementById('predictLocal').value.trim(),
+            equipoVisitante: document.getElementById('predictVisitante').value.trim(),
+            fase: document.getElementById('predictFase').value
+        };
+
+        if (!data.equipoLocal || !data.equipoVisitante) {
+            alert('Por favor ingresa ambos equipos');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/torneos/ai/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                const html = `
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-futbol"></i> Predicción</h6>
+                        <hr>
+                        <p><strong>Probabilidades:</strong></p>
+                        <p>${data.equipoLocal}: <span class="badge bg-primary">${(result.p_local * 100).toFixed(1)}%</span></p>
+                        <p>${data.equipoVisitante}: <span class="badge bg-secondary">${(result.p_visitante * 100).toFixed(1)}%</span></p>
+                        <hr>
+                        <p><strong>Marcador esperado:</strong> ${result.expected_score_local.toFixed(1)} - ${result.expected_score_visitante.toFixed(1)}</p>
+                        <p><strong>Ganador predicho:</strong> <span class="badge bg-success">${result.predicted_winner}</span></p>
+                        <p><strong>Margen:</strong> ${result.predicted_margin.toFixed(2)} goles</p>
+                        <p class="small text-muted">Modelo: ${result.modelo}</p>
+                    </div>
+                `;
+                document.getElementById('predictResult').innerHTML = html;
+            } else {
+                alert('❌ Error: ' + (result.error || 'No se pudo predecir'));
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+
+    function showChampionModal() {
+        new bootstrap.Modal(document.getElementById('championModal')).show();
+    }
+
+    async function predecirCampeon() {
+        const torneoId = document.getElementById('championTorneoId').value;
+        const simulations = document.getElementById('championSimulations').value;
+
+        if (!torneoId) {
+            alert('Por favor ingresa el ID del torneo');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/torneos/ai/predict-champion/${torneoId}?simulations=${simulations}`, {
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                let probsHtml = '<ul class="list-unstyled">';
+                for (const [equipo, prob] of Object.entries(result.probabilidades)) {
+                    const percentage = (prob * 100).toFixed(1);
+                    const barWidth = prob * 100;
+                    probsHtml += `
+                        <li class="mb-2">
+                            <strong>${equipo}</strong>: ${percentage}%
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" style="width: ${barWidth}%">${percentage}%</div>
+                            </div>
+                        </li>
+                    `;
+                }
+                probsHtml += '</ul>';
+
+                const html = `
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-crown"></i> Predicción de Campeón</h6>
+                        <hr>
+                        <p><strong>Favorito:</strong> <span class="badge bg-warning text-dark">${result.favoritoPrediccion}</span></p>
+                        <p><strong>Probabilidad:</strong> ${(result.probabilidadFavorito * 100).toFixed(1)}%</p>
+                        <hr>
+                        <p><strong>Distribución de probabilidades:</strong></p>
+                        ${probsHtml}
+                        <p class="small text-muted">Modelo: ${result.modelo} (${simulations} simulaciones)</p>
+                    </div>
+                `;
+                document.getElementById('championResult').innerHTML = html;
+            } else {
+                alert('❌ Error: ' + (result.error || 'No se pudo predecir'));
+            }
+        } catch (error) {
+            alert('❌ Error: ' + error.message);
+        }
+    }
+</script>
 </body>
 </html>

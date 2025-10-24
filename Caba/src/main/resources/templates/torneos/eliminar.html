@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Eliminar Torneo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>Eliminar Torneo</h2>
+    <p>¿Estás seguro que deseas eliminar el torneo <strong th:text="${torneo.nombre}">Nombre</strong>?</p>
+    <form th:action="@{'/torneos/eliminar/' + ${torneo.id}}" method="post">
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a th:href="@{/torneos}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+</body>
+</html>

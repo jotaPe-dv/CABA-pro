@@ -44,6 +44,17 @@ public class TorneoService {
     }
 
     public void deleteById(Long id) {
+        Torneo torneo = torneoRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Torneo no encontrado con id=" + id));
+        // Verificar si tiene partidos asociados
+        List<com.pagina.Caba.model.Partido> partidos = torneoRepository.findById(id)
+            .map(t -> t.getPartidos() != null ? new java.util.ArrayList<>(t.getPartidos()) : java.util.Collections.<com.pagina.Caba.model.Partido>emptyList())
+            .orElse(java.util.Collections.emptyList());
+        if (!partidos.isEmpty()) {
+            throw new IllegalStateException(
+                "No se puede eliminar el torneo porque tiene " + partidos.size() + " partidos asociados. " +
+                "Elimine primero los partidos o reasígnelos a otro torneo.");
+        }
         torneoRepository.deleteById(id);
     }
 

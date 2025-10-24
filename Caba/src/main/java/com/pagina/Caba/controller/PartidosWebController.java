@@ -6,6 +6,7 @@ import com.pagina.Caba.model.Partido;
 import com.pagina.Caba.model.Torneo;
 import com.pagina.Caba.repository.PartidoRepository;
 import com.pagina.Caba.repository.TorneoRepository;
+import com.pagina.Caba.repository.AsignacionRepository;
 import com.pagina.Caba.model.Administrador;
 import com.pagina.Caba.repository.AdministradorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.validation.BindingResult;
 import jakarta.validation.Valid;
 import jakarta.annotation.PostConstruct;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 
@@ -26,6 +28,9 @@ public class PartidosWebController {
 
     @Autowired
     private TorneoRepository torneoRepository;
+    
+    @Autowired
+    private AsignacionRepository asignacionRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -161,7 +166,21 @@ public class PartidosWebController {
     // --- Eliminar partido ---
     @PostMapping("/partidos/eliminar/{id}")
     public String eliminarPartido(@PathVariable Long id) {
-        partidoRepository.deleteById(id);
-        return "redirect:/partidos";
+        try {
+            Optional<Partido> partidoOpt = partidoRepository.findById(id);
+            if (partidoOpt.isPresent()) {
+                Partido partido = partidoOpt.get();
+                // Eliminar asignaciones dependientes antes de eliminar el partido
+                List<com.pagina.Caba.model.Asignacion> asignaciones = asignacionRepository.findByPartido(partido);
+                if (!asignaciones.isEmpty()) {
+                    asignacionRepository.deleteAll(asignaciones);
+                }
+            }
+            partidoRepository.deleteById(id);
+            return "redirect:/partidos";
+        } catch (Exception e) {
+            System.err.println("Error al eliminar partido: " + e.getMessage());
+            return "redirect:/partidos?error=true";
+        }
     }
 }
