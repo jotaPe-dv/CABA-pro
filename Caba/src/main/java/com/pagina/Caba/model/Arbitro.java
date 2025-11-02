@@ -18,7 +18,7 @@ public class Arbitro extends Usuario {
     @Column(name = "numero_licencia", nullable = false, unique = true, length = 20)
     private String numeroLicencia;
     
-    @Pattern(regexp = "^[0-9]{10}$", message = "El telefono debe tener 10 digitos")
+    @Pattern(regexp = "^$|^[0-9]{10}$", message = "El telefono debe tener 10 digitos o estar vacío")
     @Column(length = 15)
     private String telefono;
     
@@ -75,9 +75,6 @@ public class Arbitro extends Usuario {
     public BigDecimal getTarifaBase() { return tarifaBase; }
     public void setTarifaBase(BigDecimal tarifaBase) { this.tarifaBase = tarifaBase; }
     
-    public Boolean getDisponible() { return disponible; }
-    public void setDisponible(Boolean disponible) { this.disponible = disponible; }
-    
     public String getEspecialidad() { return especialidad; }
     public void setEspecialidad(String especialidad) { this.especialidad = especialidad; }
 
@@ -86,6 +83,9 @@ public class Arbitro extends Usuario {
 
     public String getFotoUrl() { return fotoUrl; }
     public void setFotoUrl(String fotoUrl) { this.fotoUrl = fotoUrl; }
+    
+    public Boolean getDisponible() { return disponible; }
+    public void setDisponible(Boolean disponible) { this.disponible = disponible; }
     
     public Set<Asignacion> getAsignaciones() { return asignaciones; }
     public void setAsignaciones(Set<Asignacion> asignaciones) { this.asignaciones = asignaciones; }

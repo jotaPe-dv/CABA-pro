@@ -27,7 +27,7 @@ public class ChatApiController {
     private AdministradorRepository administradorRepository;
     
     /**
-     * Obtiene todos los árbitros disponibles (para que Admin pueda chatear)
+     * Obtiene todos los árbitros activos (para que Admin pueda chatear)
      */
     @GetMapping("/arbitros/disponibles")
     public Map<String, Object> obtenerArbitrosDisponibles() {

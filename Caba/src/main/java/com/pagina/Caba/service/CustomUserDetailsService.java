@@ -32,12 +32,11 @@ public class CustomUserDetailsService implements UserDetailsService {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         } else if (usuario instanceof Arbitro) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ARBITRO"));
-            
-            // Verificar que el árbitro esté disponible
-            Arbitro arbitro = (Arbitro) usuario;
-            if (!arbitro.getDisponible()) {
-                throw new UsernameNotFoundException("Cuenta de árbitro no disponible");
-            }
+        }
+
+        // Verificar que el usuario esté activo (no confundir con disponible)
+        if (!usuario.getActivo()) {
+            throw new UsernameNotFoundException("Cuenta de usuario inactiva");
         }
 
         return User.builder()

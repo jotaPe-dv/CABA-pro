@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head">
+    <title>Reasignar Árbitro</title>
+</head>
+<body>
+    <div th:replace="fragments/layout :: navbar"></div>
+    
+    <div class="container main-content">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h3 class="mb-0">
+                            <i class="bi bi-arrow-repeat me-2"></i>Reasignar Árbitro
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <!-- Información de la asignación rechazada -->
+                        <div class="alert alert-danger">
+                            <h5><i class="bi bi-exclamation-triangle me-2"></i>Asignación Rechazada</h5>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Partido:</strong><br>
+                                    <span th:text="${asignacion.partido.equipoLocal + ' vs ' + asignacion.partido.equipoVisitante}"></span>
+                                    <br><br>
+                                    <strong>Fecha:</strong><br>
+                                    <span th:text="${#temporals.format(asignacion.partido.fechaPartido, 'dd/MM/yyyy HH:mm')}"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Árbitro que rechazó:</strong><br>
+                                    <span th:text="${asignacion.arbitro.nombre + ' ' + asignacion.arbitro.apellido}"></span>
+                                    <br><br>
+                                    <strong>Rol:</strong><br>
+                                    <span class="badge bg-primary" th:text="${asignacion.rolEspecifico}"></span>
+                                </div>
+                            </div>
+                            <hr>
+                            <strong>Motivo del rechazo:</strong><br>
+                            <span th:text="${asignacion.comentarios ?: 'Sin motivo especificado'}"></span>
+                        </div>
+
+                        <!-- Formulario de reasignación -->
+                        <form th:action="@{'/admin/asignaciones/procesar-reasignacion/' + ${asignacion.id}}" 
+                              method="post" class="mt-4">
+                            
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            
+                            <div class="mb-4">
+                                <label for="nuevoArbitroId" class="form-label">
+                                    <i class="bi bi-person-check me-1"></i>
+                                    <strong>Seleccionar Nuevo Árbitro <span class="badge bg-primary" th:text="${asignacion.rolEspecifico}"></span>:</strong>
+                                </label>
+                                <select class="form-select form-select-lg" id="nuevoArbitroId" name="nuevoArbitroId" required>
+                                    <option value="">-- Seleccione un árbitro --</option>
+                                    <option th:each="arbitro : ${arbitros}" 
+                                            th:value="${arbitro.id}"
+                                            th:text="${arbitro.nombre + ' ' + arbitro.apellido + ' - ' + arbitro.especialidad}">
+                                    </option>
+                                </select>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Solo se muestran árbitros con rol <strong th:text="${asignacion.rolEspecifico}"></strong> activos
+                                </small>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Nota:</strong> Se creará una nueva asignación en estado PENDIENTE para el árbitro seleccionado. 
+                                El árbitro deberá aceptar la asignación antes de que el partido pueda ser simulado.
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <a th:href="@{/admin/asignaciones}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i>Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="bi bi-check-circle me-1"></i>Confirmar Reasignación
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="fragments/layout :: scripts"></div>
+</body>
+</html>

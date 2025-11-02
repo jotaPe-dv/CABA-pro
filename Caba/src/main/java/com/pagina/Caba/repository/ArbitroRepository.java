@@ -14,14 +14,15 @@ public interface ArbitroRepository extends JpaRepository<Arbitro, Long> {
     
     Optional<Arbitro> findByNumeroLicencia(String numeroLicencia);
     boolean existsByNumeroLicencia(String numeroLicencia);
+    
     List<Arbitro> findByDisponibleTrueAndActivoTrue();
     List<Arbitro> findByDisponibleFalse();
+    
     Optional<Arbitro> findByTelefono(String telefono);
-    
-    
-    @Query("SELECT COUNT(a) FROM Arbitro a WHERE a.activo = true")
-    long countArbitrosActivos();
     
     @Query("SELECT COUNT(a) FROM Arbitro a WHERE a.disponible = true AND a.activo = true")
     long countArbitrosDisponibles();
+    
+    @Query("SELECT COUNT(a) FROM Arbitro a WHERE a.activo = true")
+    long countArbitrosActivos();
 }

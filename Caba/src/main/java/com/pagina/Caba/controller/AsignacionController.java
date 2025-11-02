@@ -2,15 +2,18 @@ package com.pagina.Caba.controller;
 
 import com.pagina.Caba.model.Asignacion;
 import com.pagina.Caba.model.Arbitro;
+import com.pagina.Caba.model.EstadoAsignacion;
 import com.pagina.Caba.service.AsignacionService;
 import com.pagina.Caba.service.ArbitroService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -31,7 +34,14 @@ public class AsignacionController {
         List<Asignacion> asignaciones = asignacionService.obtenerTodas();
         System.out.println("[DEBUG] Total asignaciones encontradas: " + asignaciones.size());
         
+        // Filtrar asignaciones rechazadas
+        List<Asignacion> asignacionesRechazadas = asignaciones.stream()
+            .filter(a -> a.getEstado() == com.pagina.Caba.model.EstadoAsignacion.RECHAZADA)
+            .toList();
+        System.out.println("[DEBUG] Asignaciones rechazadas: " + asignacionesRechazadas.size());
+        
         model.addAttribute("asignaciones", asignaciones);
+        model.addAttribute("asignacionesRechazadas", asignacionesRechazadas);
         // Crear lista de partidos únicos
         List<com.pagina.Caba.model.Partido> partidos = asignaciones.stream()
             .map(Asignacion::getPartido)
@@ -183,6 +193,104 @@ public class AsignacionController {
             redirectAttributes.addFlashAttribute("error", "Error al eliminar asignación: " + e.getMessage());
         }
     return "redirect:/admin/asignaciones";
+    }
+
+    /**
+     * Endpoint para obtener las asignaciones rechazadas de un partido específico
+     */
+    /**
+     * Formulario de reasignación
+     */
+    @GetMapping("/reasignar-form/{asignacionId}")
+    public String mostrarFormularioReasignacion(@PathVariable Long asignacionId, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            Asignacion asignacion = asignacionService.obtenerPorId(asignacionId)
+                .orElseThrow(() -> new IllegalArgumentException("Asignación no encontrada"));
+            
+            if (asignacion.getEstado() != EstadoAsignacion.RECHAZADA) {
+                redirectAttributes.addFlashAttribute("error", "Solo se pueden reasignar asignaciones rechazadas");
+                return "redirect:/admin/asignaciones";
+            }
+            
+            // Obtener todos los árbitros activos
+            List<Arbitro> todosArbitros = arbitroService.obtenerTodos();
+            
+            // Filtrar árbitros por la misma especialidad (Principal, Auxiliar, Mesa) que el árbitro que rechazó
+            // Incluye también al árbitro que rechazó por si quiere ser reasignado
+            String especialidadRequerida = asignacion.getRolEspecifico(); // Principal, Auxiliar, Mesa
+            List<Arbitro> arbitrosDelMismoRol = todosArbitros.stream()
+                .filter(a -> a.getActivo())
+                .filter(a -> a.getEspecialidad() != null && a.getEspecialidad().equalsIgnoreCase(especialidadRequerida))
+                .toList();
+            
+            System.out.println("DEBUG: Rol requerido: " + especialidadRequerida);
+            System.out.println("DEBUG: Total árbitros: " + todosArbitros.size());
+            System.out.println("DEBUG: Árbitros filtrados: " + arbitrosDelMismoRol.size());
+            arbitrosDelMismoRol.forEach(a -> System.out.println("  - " + a.getNombre() + " " + a.getApellido() + " (" + a.getEspecialidad() + ")"));
+            
+            model.addAttribute("asignacion", asignacion);
+            model.addAttribute("arbitros", arbitrosDelMismoRol);
+            return "admin/asignaciones/reasignar";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al cargar el formulario: " + e.getMessage());
+            return "redirect:/admin/asignaciones";
+        }
+    }
+
+    /**
+     * Procesar reasignación
+     */
+    @PostMapping("/procesar-reasignacion/{asignacionId}")
+    public String procesarReasignacion(@PathVariable Long asignacionId, 
+                                       @RequestParam Long nuevoArbitroId,
+                                       RedirectAttributes redirectAttributes) {
+        try {
+            Asignacion nuevaAsignacion = asignacionService.reasignarArbitro(asignacionId, nuevoArbitroId);
+            redirectAttributes.addFlashAttribute("mensaje", "Árbitro reasignado exitosamente");
+            redirectAttributes.addFlashAttribute("tipo", "success");
+            return "redirect:/admin/asignaciones";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al reasignar: " + e.getMessage());
+            return "redirect:/admin/asignaciones";
+        }
+    }
+
+    /**
+     * Endpoint REST para obtener asignaciones rechazadas por partido
+     */
+    @GetMapping("/rechazadas/{partidoId}")
+    @ResponseBody
+    public ResponseEntity<?> obtenerAsignacionesRechazadas(@PathVariable Long partidoId) {
+        try {
+            List<Asignacion> asignacionesRechazadas = asignacionService.obtenerAsignacionesRechazadas(partidoId);
+            return ResponseEntity.ok(asignacionesRechazadas);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error al obtener asignaciones rechazadas: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Endpoint para reasignar un árbitro a una asignación rechazada
+     */
+    @PostMapping("/reasignar/{asignacionId}")
+    @ResponseBody
+    public ResponseEntity<?> reasignarArbitro(@PathVariable Long asignacionId, @RequestParam Long nuevoArbitroId) {
+        try {
+            Asignacion nuevaAsignacion = asignacionService.reasignarArbitro(asignacionId, nuevoArbitroId);
+            return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "message", "Árbitro reasignado exitosamente",
+                "asignacion", nuevaAsignacion
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("ok", false, "error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("ok", false, "error", "Error al reasignar árbitro: " + e.getMessage()));
+        }
     }
 
 

@@ -4,9 +4,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 @Configuration
 @EnableWebSecurity
@@ -18,7 +21,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry) throws Exception {
         http
             .authorizeHttpRequests(authz -> authz
                 // ✅ Recursos públicos PRIMERO
@@ -73,11 +86,13 @@ public class SecurityConfig {
                 .permitAll()
             )
             .sessionManagement(session -> session
-                .maximumSessions(1)
+                .maximumSessions(-1) // -1 = sesiones ilimitadas (permite múltiples pestañas)
                 .maxSessionsPreventsLogin(false)
+                .expiredUrl("/login?expired=true")
+                .sessionRegistry(sessionRegistry)
             )
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/h2-console/**", "/ws-chat/**")
+                .ignoringRequestMatchers("/h2-console/**", "/ws-chat/**", "/api/**")
             )
             .headers(headers -> headers
                 .frameOptions().sameOrigin() // Para H2 Console

@@ -1,83 +1,145 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Nuevo Árbitro</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<head th:replace="fragments/layout :: head">
+    <title>Nuevo Árbitro - CABA Pro</title>
 </head>
 <body>
-<div class="container mt-4">
-    <h2>Crear Árbitro</h2>
+    <div th:replace="fragments/layout :: navbar"></div>
+    
+    <div class="container main-content">
+        <div th:replace="fragments/layout :: alerts"></div>
+        
+        <h2><i class="bi bi-person-plus me-2"></i>Crear Árbitro</h2>
     <form th:action="@{/arbitros/guardar}" th:object="${arbitro}" method="post" class="row g-3">
-        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
-            <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+        <!-- Mensajes de error globales -->
+        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger col-12">
+            <strong>Errores:</strong>
+            <ul class="mb-0">
+                <li th:each="err : ${#fields.globalErrors()}" th:text="${err}"></li>
+            </ul>
+        </div>
+        
+        <!-- Mensajes de error de campos -->
+        <div th:if="${#fields.hasErrors('*')}" class="alert alert-warning col-12">
+            <strong>Por favor, corrija los siguientes errores:</strong>
+            <ul class="mb-0">
+                <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+            </ul>
+        </div>
+        
+        <div class="col-md-6">
+            <label for="nombre" class="form-label">Nombre:<span class="text-danger">*</span></label>
+            <input type="text" id="nombre" th:field="*{nombre}" 
+                   th:classappend="${#fields.hasErrors('nombre')} ? 'is-invalid' : ''"
+                   class="form-control" required/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('nombre')}" 
+                 th:errors="*{nombre}">Error en nombre</div>
         </div>
         <div class="col-md-6">
-            <label for="nombre" class="form-label">Nombre:</label>
-            <input type="text" id="nombre" th:field="*{nombre}" class="form-control" required/>
+            <label for="apellido" class="form-label">Apellido:<span class="text-danger">*</span></label>
+            <input type="text" id="apellido" th:field="*{apellido}" 
+                   th:classappend="${#fields.hasErrors('apellido')} ? 'is-invalid' : ''"
+                   class="form-control" required/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('apellido')}" 
+                 th:errors="*{apellido}">Error en apellido</div>
         </div>
         <div class="col-md-6">
-            <label for="apellido" class="form-label">Apellido:</label>
-            <input type="text" id="apellido" th:field="*{apellido}" class="form-control" required/>
+            <label for="email" class="form-label">Email:<span class="text-danger">*</span></label>
+            <input type="email" id="email" th:field="*{email}" 
+                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                   class="form-control" required/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" 
+                 th:errors="*{email}">Error en email</div>
         </div>
         <div class="col-md-6">
-            <label for="email" class="form-label">Email:</label>
-            <input type="email" id="email" th:field="*{email}" class="form-control" required/>
+            <label for="password" class="form-label">Contraseña:<span class="text-danger">*</span></label>
+            <input type="password" id="password" th:field="*{password}" 
+                   th:classappend="${#fields.hasErrors('password')} ? 'is-invalid' : ''"
+                   class="form-control" required minlength="6"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('password')}" 
+                 th:errors="*{password}">Error en contraseña</div>
+            <small class="form-text text-muted">Mínimo 6 caracteres</small>
         </div>
         <div class="col-md-6">
-            <label for="password" class="form-label">Contraseña:</label>
-            <input type="password" id="password" th:field="*{password}" class="form-control" required/>
-        </div>
-        <div class="col-md-6">
-            <label for="numeroLicencia" class="form-label">Número de Licencia:</label>
-            <input type="text" id="numeroLicencia" th:field="*{numeroLicencia}" class="form-control" required/>
+            <label for="numeroLicencia" class="form-label">Número de Licencia:<span class="text-danger">*</span></label>
+            <input type="text" id="numeroLicencia" th:field="*{numeroLicencia}" 
+                   th:classappend="${#fields.hasErrors('numeroLicencia')} ? 'is-invalid' : ''"
+                   class="form-control" required minlength="5" maxlength="20"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('numeroLicencia')}" 
+                 th:errors="*{numeroLicencia}">Error en número de licencia</div>
+            <small class="form-text text-muted">Entre 5 y 20 caracteres</small>
         </div>
         <div class="col-md-6">
             <label for="telefono" class="form-label">Teléfono:</label>
-            <input type="text" id="telefono" th:field="*{telefono}" class="form-control"/>
+            <input type="text" id="telefono" th:field="*{telefono}" 
+                   th:classappend="${#fields.hasErrors('telefono')} ? 'is-invalid' : ''"
+                   class="form-control" pattern="[0-9]{10}" placeholder="10 dígitos"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('telefono')}" 
+                 th:errors="*{telefono}">Error en teléfono</div>
+            <small class="form-text text-muted">Debe tener exactamente 10 dígitos o dejarlo vacío</small>
         </div>
         <div class="col-md-6">
             <label for="direccion" class="form-label">Dirección:</label>
-            <input type="text" id="direccion" th:field="*{direccion}" class="form-control"/>
+            <input type="text" id="direccion" th:field="*{direccion}" 
+                   th:classappend="${#fields.hasErrors('direccion')} ? 'is-invalid' : ''"
+                   class="form-control" maxlength="100"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('direccion')}" 
+                 th:errors="*{direccion}">Error en dirección</div>
         </div>
         <div class="col-md-6">
-            <label for="tarifaBase" class="form-label">Tarifa Base:</label>
-            <input type="number" step="0.01" id="tarifaBase" th:field="*{tarifaBase}" class="form-control"/>
-        </div>
-        <div class="col-md-6">
-            <label for="disponible" class="form-label">Disponible:</label>
-            <div class="form-check">
-                <input type="checkbox" id="disponible" th:field="*{disponible}" class="form-check-input"/>
-                <label class="form-check-label" for="disponible">Sí</label>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <label for="especialidad" class="form-label">Especialidad:</label>
-            <select id="especialidad" th:field="*{especialidad}" class="form-select" required>
+            <label for="especialidad" class="form-label">Especialidad:<span class="text-danger">*</span></label>
+            <select id="especialidad" th:field="*{especialidad}" 
+                    th:classappend="${#fields.hasErrors('especialidad')} ? 'is-invalid' : ''"
+                    class="form-select" required>
                 <option value="">Seleccione...</option>
                 <option value="Principal">Principal</option>
                 <option value="Auxiliar">Auxiliar</option>
                 <option value="Mesa">Mesa</option>
             </select>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('especialidad')}" 
+                 th:errors="*{especialidad}">Error en especialidad</div>
         </div>
         <div class="col-md-6">
-            <label for="escalafon" class="form-label">Escalafón:</label>
-            <select id="escalafon" th:field="*{escalafon}" class="form-select" required>
+            <label for="escalafon" class="form-label">Escalafón:<span class="text-danger">*</span></label>
+            <select id="escalafon" th:field="*{escalafon}" 
+                    th:classappend="${#fields.hasErrors('escalafon')} ? 'is-invalid' : ''"
+                    class="form-select" required>
                 <option value="">Seleccione escalafón...</option>
                 <option value="A">A - Escalafón Superior</option>
                 <option value="B">B - Escalafón Intermedio</option>
                 <option value="C">C - Escalafón Básico</option>
             </select>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('escalafon')}" 
+                 th:errors="*{escalafon}">Error en escalafón</div>
         </div>
         <div class="col-md-6">
             <label for="fotoUrl" class="form-label">Foto URL:</label>
-            <input type="text" id="fotoUrl" th:field="*{fotoUrl}" class="form-control"/>
+            <input type="url" id="fotoUrl" th:field="*{fotoUrl}" 
+                   th:classappend="${#fields.hasErrors('fotoUrl')} ? 'is-invalid' : ''"
+                   class="form-control" maxlength="255" placeholder="https://ejemplo.com/foto.jpg"/>
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('fotoUrl')}" 
+                 th:errors="*{fotoUrl}">Error en URL de foto</div>
+        </div>
+        <div class="col-md-6">
+            <label for="disponible" class="form-label">Disponible:</label>
+            <div class="form-check mt-2">
+                <input type="checkbox" id="disponible" th:field="*{disponible}" class="form-check-input" checked/>
+                <label class="form-check-label" for="disponible">El árbitro está disponible para asignaciones</label>
+            </div>
         </div>
         <div class="col-12">
-            <button type="submit" class="btn btn-success">Guardar</button>
-            <a href="/arbitros" class="btn btn-secondary ms-2">Cancelar</a>
+            <hr class="my-3"/>
+            <button type="submit" class="btn btn-success btn-lg">
+                <i class="bi bi-save"></i> Guardar Árbitro
+            </button>
+            <a href="/arbitros" class="btn btn-secondary btn-lg ms-2">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
         </div>
     </form>
 </div>
+
+<div th:replace="fragments/layout :: scripts"></div>
 </body>
+</html>
 </html>

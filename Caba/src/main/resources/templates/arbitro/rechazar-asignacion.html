@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head}"></head>
+<body>
+    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+    
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow">
+                    <div class="card-header bg-danger text-white">
+                        <h4 class="mb-0">
+                            <i class="bi bi-x-circle me-2"></i>Rechazar Asignación
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Información del partido -->
+                        <div class="alert alert-info">
+                            <h5><i class="bi bi-info-circle me-2"></i>Información del Partido</h5>
+                            <hr>
+                            <p class="mb-1">
+                                <strong>Partido:</strong> 
+                                <span th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}"></span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Fecha:</strong> 
+                                <span th:text="${#temporals.format(asignacion.partido.fechaPartido, 'EEEE dd/MM/yyyy HH:mm')}"></span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Tipo:</strong> 
+                                <span th:text="${asignacion.partido.tipoPartido}"></span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Tu rol:</strong> 
+                                <span class="badge bg-primary" th:text="${asignacion.rolEspecifico}"></span>
+                            </p>
+                            <p class="mb-0">
+                                <strong>Compensación:</strong> 
+                                <span class="text-success fw-bold" th:text="|$${#numbers.formatDecimal(asignacion.montoCalculado, 1, 2)}|"></span>
+                            </p>
+                        </div>
+
+                        <!-- Advertencia -->
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Importante:</strong> Debes proporcionar un motivo válido para rechazar esta asignación. 
+                            El administrador será notificado y deberá buscar un reemplazo.
+                        </div>
+
+                        <!-- Formulario de rechazo -->
+                        <form th:action="@{'/asignaciones/rechazar/' + ${asignacion.id}}" method="post">
+                            <div class="mb-3">
+                                <label for="motivoRechazo" class="form-label">
+                                    <i class="bi bi-chat-left-text me-1"></i>Motivo del Rechazo *
+                                </label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="motivoRechazo" 
+                                    name="motivoRechazo" 
+                                    rows="4" 
+                                    required
+                                    placeholder="Ejemplo: Conflicto de horario con otro compromiso, enfermedad, etc."
+                                    minlength="10"
+                                    maxlength="500"></textarea>
+                                <div class="form-text">Mínimo 10 caracteres, máximo 500 caracteres.</div>
+                            </div>
+
+                            <!-- Motivos sugeridos -->
+                            <div class="mb-3">
+                                <label class="form-label">Motivos Comunes (clic para usar):</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMotivo('Conflicto de horario con otro compromiso profesional')">
+                                        Conflicto de horario
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMotivo('Motivos de salud / enfermedad')">
+                                        Salud
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMotivo('Compromiso familiar importante')">
+                                        Compromiso familiar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMotivo('Ubicación del partido muy distante')">
+                                        Ubicación distante
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setMotivo('No me siento preparado para este nivel de partido')">
+                                        No preparado
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="d-flex justify-content-between gap-2">
+                                <a href="/arbitro/dashboard" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i>Volver al Dashboard
+                                </a>
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que deseas rechazar esta asignación?')">
+                                    <i class="bi bi-x-circle me-1"></i>Confirmar Rechazo
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información adicional -->
+                <div class="card mt-3 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title"><i class="bi bi-lightbulb me-2"></i>¿Qué sucede después?</h6>
+                        <ul class="mb-0 small">
+                            <li>Tu rechazo será registrado en el sistema</li>
+                            <li>El administrador será notificado inmediatamente</li>
+                            <li>Se buscará un árbitro reemplazo para este partido</li>
+                            <li>No afectará negativamente tu historial si el motivo es válido</li>
+                            <li>Podrás ver esta asignación en tu historial como "Rechazada"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:replace="~{fragments/layout :: scripts}"></script>
+    <script>
+        function setMotivo(motivo) {
+            document.getElementById('motivoRechazo').value = motivo;
+        }
+    </script>
+</body>
+</html>

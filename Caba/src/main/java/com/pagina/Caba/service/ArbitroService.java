@@ -135,12 +135,11 @@ public class ArbitroService {
         }
     }
     
-    // Lógica de Negocio
+    // Lógica de Negocio - Obtener árbitros activos
+    
     public List<Arbitro> obtenerArbitrosDisponibles() {
         return arbitroRepository.findByDisponibleTrueAndActivoTrue();
-    }
-    
-    public Optional<Arbitro> buscarPorNumeroLicencia(String numeroLicencia) {
+    }    public Optional<Arbitro> buscarPorNumeroLicencia(String numeroLicencia) {
         return arbitroRepository.findByNumeroLicencia(numeroLicencia);
     }
     

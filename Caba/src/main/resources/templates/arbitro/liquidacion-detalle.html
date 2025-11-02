@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/layout :: head">
+    <title>Detalle de Liquidación - CABA Pro</title>
+</head>
+<body>
+    <div th:replace="fragments/layout :: navbar"></div>
+    
+    <div class="container main-content">
+        <div th:replace="fragments/layout :: alerts"></div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2><i class="bi bi-receipt-cutoff me-2"></i>Detalle de Liquidación</h2>
+            <a href="/arbitro/liquidaciones" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Volver
+            </a>
+        </div>
+        
+        <div class="row">
+            <!-- Información Principal -->
+            <div class="col-md-8">
+                <div class="card shadow mb-3">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información General</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted small">Fecha de Creación</label>
+                                <p class="mb-0">
+                                    <strong th:text="${#temporals.format(liquidacion.fechaCreacion, 'dd/MM/yyyy HH:mm')}"></strong>
+                                </p>
+                            </div>
+                            <div class="col-md-6" th:if="${liquidacion.fechaPago != null}">
+                                <label class="text-muted small">Fecha de Pago</label>
+                                <p class="mb-0">
+                                    <strong th:text="${#temporals.format(liquidacion.fechaPago, 'dd/MM/yyyy HH:mm')}"></strong>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3" th:if="${liquidacion.metodoPago != null}">
+                            <div class="col-md-6">
+                                <label class="text-muted small">Método de Pago</label>
+                                <p class="mb-0">
+                                    <strong th:text="${liquidacion.metodoPago}"></strong>
+                                </p>
+                            </div>
+                            <div class="col-md-6" th:if="${liquidacion.referenciaPago != null}">
+                                <label class="text-muted small">Referencia de Pago</label>
+                                <p class="mb-0">
+                                    <strong th:text="${liquidacion.referenciaPago}"></strong>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="row" th:if="${liquidacion.observaciones != null && !liquidacion.observaciones.isEmpty()}">
+                            <div class="col-12">
+                                <label class="text-muted small">Observaciones</label>
+                                <p class="mb-0" th:text="${liquidacion.observaciones}"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Desglose de Montos -->
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-calculator me-2"></i>Desglose de Montos</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td><strong>Partido:</strong></td>
+                                    <td class="text-end">
+                                        <span th:text="${liquidacion.asignacion.partido.equipoLocal + ' vs ' + liquidacion.asignacion.partido.equipoVisitante}"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Rol:</strong></td>
+                                    <td class="text-end">
+                                        <span th:text="${liquidacion.asignacion.rolEspecifico}"></span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Monto:</strong></td>
+                                    <td class="text-end">
+                                        $<span th:text="${#numbers.formatDecimal(liquidacion.monto, 1, 'POINT', 2, 'COMMA')}">0.00</span>
+                                    </td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td><h5 class="mb-0"><strong>Total:</strong></h5></td>
+                                    <td class="text-end">
+                                        <h4 class="mb-0 text-success">
+                                            <strong>$<span th:text="${#numbers.formatDecimal(liquidacion.monto, 1, 'POINT', 2, 'COMMA')}">0.00</span></strong>
+                                        </h4>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel Lateral -->
+            <div class="col-md-4">
+                <!-- Estado -->
+                <div class="card mb-3 shadow" 
+                     th:classappend="${liquidacion.estado.name() == 'PAGADA'} ? 'border-success' : 
+                                    (${liquidacion.estado.name() == 'APROBADA'} ? 'border-primary' : 
+                                    (${liquidacion.estado.name() == 'CANCELADA'} ? 'border-danger' : 'border-warning'))">
+                    <div class="card-header text-white"
+                         th:classappend="${liquidacion.estado.name() == 'PAGADA'} ? 'bg-success' : 
+                                        (${liquidacion.estado.name() == 'APROBADA'} ? 'bg-primary' : 
+                                        (${liquidacion.estado.name() == 'CANCELADA'} ? 'bg-danger' : 'bg-warning'))">
+                        <h6 class="mb-0"><i class="bi bi-flag me-2"></i>Estado</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        <h4 th:classappend="${liquidacion.estado.name() == 'PAGADA'} ? 'text-success' : 
+                                           (${liquidacion.estado.name() == 'APROBADA'} ? 'text-primary' : 
+                                           (${liquidacion.estado.name() == 'CANCELADA'} ? 'text-danger' : 'text-warning'))"
+                            th:text="${liquidacion.estado}">
+                        </h4>
+                        <p class="mb-0 small text-muted" 
+                           th:if="${liquidacion.estado.name() == 'PENDIENTE'}">
+                            En revisión por administración
+                        </p>
+                        <p class="mb-0 small text-muted" 
+                           th:if="${liquidacion.estado.name() == 'APROBADA'}">
+                            Aprobada, pendiente de pago
+                        </p>
+                        <p class="mb-0 small text-muted" 
+                           th:if="${liquidacion.estado.name() == 'PAGADA'}">
+                            Pago completado exitosamente
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Información del Árbitro -->
+                <div class="card shadow border-info">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0"><i class="bi bi-person me-2"></i>Árbitro</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1">
+                            <strong th:text="${arbitro.nombre + ' ' + arbitro.apellido}"></strong>
+                        </p>
+                        <p class="mb-1 small text-muted">
+                            <i class="bi bi-envelope me-1"></i>
+                            <span th:text="${arbitro.email}"></span>
+                        </p>
+                        <p class="mb-0 small text-muted" th:if="${arbitro.telefono != null}">
+                            <i class="bi bi-telephone me-1"></i>
+                            <span th:text="${arbitro.telefono}"></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div th:replace="fragments/layout :: scripts"></div>
+</body>
+</html>

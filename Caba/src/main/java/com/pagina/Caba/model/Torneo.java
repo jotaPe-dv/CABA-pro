@@ -40,6 +40,12 @@ public class Torneo {
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
     
+    @Column(name = "cerrado", nullable = false)
+    private Boolean cerrado = false;
+    
+    @Column(name = "campeon", length = 100)
+    private String campeon;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "administrador_id", nullable = false)
     private Administrador administrador;
@@ -62,9 +68,18 @@ public class Torneo {
     public void activar() { this.activo = true; }
     public void desactivar() { this.activo = false; }
     
+    public void cerrarTorneo(String campeon) {
+        this.cerrado = true;
+        this.campeon = campeon;
+    }
+    
     public boolean estaActivo() {
         LocalDate hoy = LocalDate.now();
-        return activo && (hoy.isEqual(fechaInicio) || hoy.isAfter(fechaInicio)) && (hoy.isBefore(fechaFin) || hoy.isEqual(fechaFin));
+        return activo && !cerrado && (hoy.isEqual(fechaInicio) || hoy.isAfter(fechaInicio)) && (hoy.isBefore(fechaFin) || hoy.isEqual(fechaFin));
+    }
+    
+    public boolean estaCerrado() {
+        return cerrado != null && cerrado;
     }
     
     // Getters y Setters
@@ -88,6 +103,12 @@ public class Torneo {
     
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }
+    
+    public Boolean getCerrado() { return cerrado; }
+    public void setCerrado(Boolean cerrado) { this.cerrado = cerrado; }
+    
+    public String getCampeon() { return campeon; }
+    public void setCampeon(String campeon) { this.campeon = campeon; }
     
     public Administrador getAdministrador() { return administrador; }
     public void setAdministrador(Administrador administrador) { this.administrador = administrador; }

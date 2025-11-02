@@ -4,10 +4,12 @@ import com.pagina.Caba.model.Tarifa;
 import com.pagina.Caba.repository.TarifaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.core.annotation.Order;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Component
+@Order(1) // Ejecutar primero (antes que CabaApplication @Order(2))
 public class DataLoader implements CommandLineRunner {
 
     private final TarifaRepository tarifaRepository;

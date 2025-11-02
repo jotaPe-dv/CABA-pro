@@ -7,45 +7,148 @@
     <div th:replace="fragments/layout :: navbar"></div>
     
     <div class="container main-content">
-        <div class="card shadow-sm mt-4">
-            <div class="card-header">
-                <h2 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Gestión de Asignaciones</h2>
+        <!-- Sección de Asignaciones Rechazadas -->
+        <div class="card shadow-sm mt-4 border-danger" th:if="${!#lists.isEmpty(asignacionesRechazadas)}">
+            <div class="card-header bg-danger text-white">
+                <h3 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Asignaciones Rechazadas - Requieren Reasignación
+                    <span class="badge bg-white text-danger ms-2" th:text="${#lists.size(asignacionesRechazadas)}">0</span>
+                </h3>
             </div>
             <div class="card-body">
-                <!-- Debug Info -->
-                <div class="alert alert-info">
-                    <strong>Debug Info:</strong> Total asignaciones encontradas: <span th:text="${#lists.size(asignaciones)}">0</span>
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Atención:</strong> Los siguientes árbitros rechazaron sus asignaciones. 
+                    Debes reasignar un nuevo árbitro para cada una antes de poder simular los partidos.
                 </div>
                 
-                <!-- Tabla Simplificada -->
                 <div class="table-responsive">
                     <table class="table table-striped table-hover align-middle">
-                        <thead class="table-primary">
+                        <thead class="table-danger">
                             <tr>
-                                <th>ID</th>
+                                <th>Partido</th>
+                                <th>Equipos</th>
+                                <th>Fase</th>
+                                <th>Árbitro que Rechazó</th>
                                 <th>Rol</th>
-                                <th>Estado</th>
-                                <th>Partido ID</th>
-                                <th>Árbitro</th>
-                                <th>Fecha Asignación</th>
+                                <th>Motivo</th>
+                                <th>Fecha Rechazo</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="asignacion : ${asignaciones}">
+                            <tr th:each="asignacion : ${asignacionesRechazadas}">
+                                <td>
+                                    <strong>#<span th:text="${asignacion.partido.id}">-</span></strong>
+                                </td>
+                                <td>
+                                    <small th:text="${asignacion.partido.equipoLocal + ' vs ' + asignacion.partido.equipoVisitante}">-</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info" th:text="${asignacion.partido.tipoPartido}">-</span>
+                                </td>
+                                <td>
+                                    <strong th:text="${asignacion.arbitro.nombre + ' ' + asignacion.arbitro.apellido}">-</strong>
+                                    <br>
+                                    <small class="text-muted" th:text="${asignacion.arbitro.email}">-</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary" th:text="${asignacion.rolEspecifico}">-</span>
+                                </td>
+                                <td>
+                                    <small th:text="${asignacion.comentarios ?: 'Sin motivo especificado'}">-</small>
+                                </td>
+                                <td>
+                                    <small th:text="${#temporals.format(asignacion.fechaRespuesta, 'dd/MM/yyyy HH:mm')}">-</small>
+                                </td>
+                                <td>
+                                    <a th:href="@{'/admin/asignaciones/reasignar-form/' + ${asignacion.id}}" 
+                                       class="btn btn-sm btn-success">
+                                        <i class="bi bi-arrow-repeat me-1"></i>Reasignar
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Todas las Asignaciones -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header">
+                <h2 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Todas las Asignaciones</h2>
+            </div>
+            <div class="card-body">
+                <!-- Filtros -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Filtrar por Estado:</label>
+                        <select class="form-select" id="filtroEstado" onchange="filtrarAsignaciones()">
+                            <option value="">Todos</option>
+                            <option value="PENDIENTE">Pendientes</option>
+                            <option value="ACEPTADA">Aceptadas</option>
+                            <option value="RECHAZADA">Rechazadas</option>
+                            <option value="COMPLETADA">Completadas</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Tabla de Asignaciones -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle" id="tablaAsignaciones">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>ID</th>
+                                <th>Partido</th>
+                                <th>Árbitro</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Monto</th>
+                                <th>Fecha Asignación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="asignacion : ${asignaciones}" th:attr="data-estado=${asignacion.estado.name()}">
                                 <td th:text="${asignacion.id}">-</td>
-                                <td th:text="${asignacion.rolEspecifico}">-</td>
+                                <td>
+                                    <strong>#<span th:text="${asignacion.partido?.id ?: 'N/A'}">-</span></strong>
+                                    <br>
+                                    <small th:if="${asignacion.partido != null}" 
+                                           th:text="${asignacion.partido.equipoLocal + ' vs ' + asignacion.partido.equipoVisitante}">-</small>
+                                </td>
+                                <td>
+                                    <span th:text="${asignacion.arbitro?.nombre + ' ' + asignacion.arbitro?.apellido ?: 'N/A'}">-</span>
+                                    <br>
+                                    <small class="text-muted" th:text="${asignacion.arbitro?.email}">-</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary" th:text="${asignacion.rolEspecifico}">-</span>
+                                </td>
                                 <td>
                                     <span class="badge" 
-                                          th:classappend="${asignacion.estado.name() == 'PENDIENTE' ? 'bg-warning' : 
-                                                          asignacion.estado.name() == 'ACEPTADA' ? 'bg-success' : 'bg-secondary'}"
+                                          th:classappend="${asignacion.estado.name() == 'PENDIENTE' ? 'bg-warning text-dark' : 
+                                                          asignacion.estado.name() == 'ACEPTADA' ? 'bg-success' : 
+                                                          asignacion.estado.name() == 'RECHAZADA' ? 'bg-danger' : 'bg-secondary'}"
                                           th:text="${asignacion.estado}">Estado</span>
                                 </td>
-                                <td th:text="${asignacion.partido?.id ?: 'N/A'}">-</td>
-                                <td th:text="${asignacion.arbitro?.nombre + ' ' + asignacion.arbitro?.apellido ?: 'N/A'}">-</td>
+                                <td>
+                                    <span class="text-success fw-bold" th:text="|$${#numbers.formatDecimal(asignacion.montoCalculado, 1, 2)}|">-</span>
+                                </td>
                                 <td th:text="${#temporals.format(asignacion.fechaAsignacion, 'dd/MM/yyyy HH:mm')}">-</td>
+                                <td>
+                                    <button th:if="${asignacion.estado.name() == 'RECHAZADA'}" 
+                                            class="btn btn-sm btn-success" 
+                                            th:onclick="'mostrarModalReasignacion(' + ${asignacion.id} + ', \'' + ${asignacion.rolEspecifico} + '\', \'' + ${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante} + '\')'">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </button>
+                                    <span th:unless="${asignacion.estado.name() == 'RECHAZADA'}" class="text-muted">-</span>
+                                </td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(asignaciones)}">
-                                <td colspan="6" class="text-center text-muted">
+                                <td colspan="8" class="text-center text-muted">
                                     <i class="bi bi-inbox"></i> No hay asignaciones registradas
                                 </td>
                             </tr>
@@ -61,5 +164,129 @@
             </div>
         </div>
     </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Función para filtrar asignaciones por estado
+        function filtrarAsignaciones() {
+            const filtro = document.getElementById('filtroEstado').value;
+            const filas = document.querySelectorAll('#tablaAsignaciones tbody tr[data-estado]');
+            
+            filas.forEach(fila => {
+                if (filtro === '' || fila.getAttribute('data-estado') === filtro) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+
+        // Función para mostrar el modal de reasignación
+        async function mostrarModalReasignacion(asignacionId, rol, partidoInfo) {
+            console.log('mostrarModalReasignacion llamado con:', {asignacionId, rol, partidoInfo});
+            
+            document.getElementById('asignacionIdReasignar').value = asignacionId;
+            document.getElementById('modalRolInfo').textContent = rol;
+            document.getElementById('modalPartidoInfo').textContent = partidoInfo;
+            document.getElementById('alertReasignacion').innerHTML = '';
+            
+            // Cargar árbitros disponibles
+            await cargarArbitrosDisponibles();
+            
+            const modal = new bootstrap.Modal(document.getElementById('modalReasignacion'));
+            modal.show();
+        }
+
+        // Función para cargar árbitros disponibles
+        async function cargarArbitrosDisponibles() {
+            try {
+                console.log('Cargando árbitros disponibles...');
+                const response = await fetch('/api/arbitros/disponibles');
+                const data = await response.json();
+                console.log('Respuesta de árbitros:', data);
+                
+                // El endpoint del chat devuelve {success: true, arbitros: [...]}
+                const arbitros = data.arbitros || [];
+                console.log('Árbitros disponibles:', arbitros.length);
+                
+                const select = document.getElementById('nuevoArbitroSelect');
+                select.innerHTML = '<option value="">-- Seleccione un árbitro --</option>';
+                
+                arbitros.forEach(arbitro => {
+                    const option = document.createElement('option');
+                    option.value = arbitro.id;
+                    option.textContent = `${arbitro.nombre} ${arbitro.apellido} - ${arbitro.escalafon} (${arbitro.email})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar árbitros:', error);
+                document.getElementById('alertReasignacion').innerHTML = 
+                    '<div class="alert alert-danger">Error al cargar la lista de árbitros disponibles</div>';
+            }
+        }
+
+        // Función para confirmar la reasignación
+        async function confirmarReasignacion() {
+            const asignacionId = document.getElementById('asignacionIdReasignar').value;
+            const nuevoArbitroId = document.getElementById('nuevoArbitroSelect').value;
+            
+            if (!nuevoArbitroId) {
+                document.getElementById('alertReasignacion').innerHTML = 
+                    '<div class="alert alert-warning">Debe seleccionar un árbitro</div>';
+                return;
+            }
+            
+            try {
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+                
+                const response = await fetch(`/admin/asignaciones/reasignar/${asignacionId}?nuevoArbitroId=${nuevoArbitroId}`, {
+                    method: 'POST',
+                    headers: {
+                        [csrfHeader]: csrfToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.ok) {
+                    alert('✅ ' + result.message + '\n\nLa nueva asignación ha sido creada en estado PENDIENTE.\nEl árbitro recibirá una notificación.');
+                    location.reload();
+                } else {
+                    document.getElementById('alertReasignacion').innerHTML = 
+                        `<div class="alert alert-danger">${result.error || 'Error al reasignar árbitro'}</div>`;
+                }
+            } catch (error) {
+                console.error('Error al reasignar:', error);
+                document.getElementById('alertReasignacion').innerHTML = 
+                    '<div class="alert alert-danger">Error de conexión al reasignar árbitro</div>';
+            }
+        }
+
+        // Obtener token CSRF
+        function getCsrfToken() {
+            return document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+        }
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Función para filtrar asignaciones por estado
+        function filtrarAsignaciones() {
+            const filtro = document.getElementById('filtroEstado').value;
+            const filas = document.querySelectorAll('#tablaAsignaciones tbody tr[data-estado]');
+            
+            filas.forEach(fila => {
+                if (filtro === '' || fila.getAttribute('data-estado') === filtro) {
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

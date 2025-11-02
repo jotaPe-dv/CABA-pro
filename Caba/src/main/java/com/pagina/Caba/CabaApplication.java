@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.pagina.Caba.model.Administrador;
@@ -29,6 +30,7 @@ public class CabaApplication {
 	}
 
 	@Bean
+	@Order(2) // Ejecutar después del DataLoader que tiene @Order(1)
 	public CommandLineRunner initTestUsers(
 		AdministradorRepository administradorRepository,
 		ArbitroRepository arbitroRepository,
@@ -50,20 +52,50 @@ public class CabaApplication {
 				   administradorRepository.save(admin);
 			}
 
-			// ARBITRO
-			if (!arbitroRepository.existsByEmail("arbitro@caba.com")) {
-				Arbitro arbitro = new Arbitro(
-					"Arbitro", "CABA", "arbitro@caba.com",
-					passwordEncoder.encode("arbitro123"),
+			// ARBITROS (Principal, Auxiliar, Mesa)
+			if (!arbitroRepository.existsByEmail("principal@caba.com")) {
+				Arbitro arbitroPrincipal = new Arbitro(
+					"Carlos", "Ramirez", "principal@caba.com",
+					passwordEncoder.encode("123456"),
 					"ARB12345",
-					"3000000000",
+					"3001234567",
 					"Principal",
 					"A",
-					"https://ejemplo.com/foto.jpg"
+					"https://ejemplo.com/foto1.jpg"
 				);
-				arbitro.setActivo(true);
-				arbitro.setDisponible(true);
-				arbitroRepository.save(arbitro);
+				arbitroPrincipal.setActivo(true);
+				arbitroPrincipal.setDisponible(true);
+				arbitroRepository.save(arbitroPrincipal);
+			}
+			
+			if (!arbitroRepository.existsByEmail("asistente@caba.com")) {
+				Arbitro arbitroAuxiliar = new Arbitro(
+					"Maria", "Lopez", "asistente@caba.com",
+					passwordEncoder.encode("123456"),
+					"ARB67890",
+					"3007654321",
+					"Auxiliar",
+					"B",
+					"https://ejemplo.com/foto2.jpg"
+				);
+				arbitroAuxiliar.setActivo(true);
+				arbitroAuxiliar.setDisponible(true);
+				arbitroRepository.save(arbitroAuxiliar);
+			}
+			
+			if (!arbitroRepository.existsByEmail("mesa@caba.com")) {
+				Arbitro arbitroMesa = new Arbitro(
+					"Juan", "Martinez", "mesa@caba.com",
+					passwordEncoder.encode("123456"),
+					"ARB11223",
+					"3009876543",
+					"Mesa",
+					"C",
+					"https://ejemplo.com/foto3.jpg"
+				);
+				arbitroMesa.setActivo(true);
+				arbitroMesa.setDisponible(true);
+				arbitroRepository.save(arbitroMesa);
 			}
 			// Crear un partido por defecto si no existe
 			// Buscar el administrador por email
@@ -86,31 +118,87 @@ public class CabaApplication {
 					torneoRepository.save(torneo);
 				}
 
-				// Verificar si ya existe un partido por defecto
-				String equipoLocal = "Equipo Local Default";
-				String equipoVisitante = "Equipo Visitante Default";
+				// Crear torneo de baloncesto estilo eliminación directa desde cuartos
 				var partidos = partidoRepository.findByTorneo(torneo);
-				boolean existe = partidos.stream().anyMatch(p -> 
-					equipoLocal.equals(p.getEquipoLocal()) && equipoVisitante.equals(p.getEquipoVisitante())
-				);
-				Partido partidoObj = null;
-				if (!existe) {
-					Partido partido = new Partido(
-						equipoLocal,
-						equipoVisitante,
-						java.time.LocalDateTime.now().plusDays(7),
-						"Estadio Central",
+				
+				// Si no hay partidos, crear torneo de 8 equipos (Cuartos, Semifinales, Final)
+				if (partidos.isEmpty()) {
+					String[] equipos = {
+						"Bulls Chicago", "Lakers Los Angeles",
+						"Celtics Boston", "Warriors Golden State",
+						"Heat Miami", "Nets Brooklyn",
+						"Bucks Milwaukee", "Mavericks Dallas"
+					};
+					
+					String estadio = "Arena Central";
+					System.out.println("🏀 Creando torneo de baloncesto - Eliminación Directa...");
+					
+					java.time.LocalDateTime fechaBase = java.time.LocalDateTime.now().plusDays(1);
+					
+					// CUARTOS DE FINAL (4 partidos)
+					System.out.println("📋 Fase: CUARTOS DE FINAL");
+					for (int i = 0; i < 4; i++) {
+						Partido cuarto = new Partido(
+							equipos[i * 2],
+							equipos[i * 2 + 1],
+							fechaBase.plusDays(i),
+							estadio,
+							torneo
+						);
+						cuarto.setTipoPartido("Oficial");
+						cuarto.setObservaciones("Cuartos de Final - Partido " + (i + 1));
+						partidoRepository.save(cuarto);
+						System.out.println("  ✓ Cuarto " + (i + 1) + ": " + equipos[i * 2] + " vs " + equipos[i * 2 + 1]);
+					}
+					
+					// SEMIFINALES (2 partidos)
+					System.out.println("📋 Fase: SEMIFINALES");
+					fechaBase = fechaBase.plusDays(5);
+					Partido semi1 = new Partido(
+						"Ganador Cuarto 1",
+						"Ganador Cuarto 2",
+						fechaBase,
+						estadio,
 						torneo
 					);
-					partido.setTipoPartido("Amistoso");
-					partido.setObservaciones("Partido creado por defecto al iniciar la aplicación");
-					partidoObj = partidoRepository.save(partido);
-				} else {
-					// Obtener el partido existente que coincide con los equipos por defecto
-					partidoObj = partidos.stream().filter(p ->
-						equipoLocal.equals(p.getEquipoLocal()) && equipoVisitante.equals(p.getEquipoVisitante())
-					).findFirst().orElse(partidos.get(0));
+					semi1.setTipoPartido("Oficial");
+					semi1.setObservaciones("Semifinal 1");
+					partidoRepository.save(semi1);
+					System.out.println("  ✓ Semifinal 1: Ganador Q1 vs Ganador Q2");
+					
+					Partido semi2 = new Partido(
+						"Ganador Cuarto 3",
+						"Ganador Cuarto 4",
+						fechaBase.plusHours(3),
+						estadio,
+						torneo
+					);
+					semi2.setTipoPartido("Oficial");
+					semi2.setObservaciones("Semifinal 2");
+					partidoRepository.save(semi2);
+					System.out.println("  ✓ Semifinal 2: Ganador Q3 vs Ganador Q4");
+					
+					// FINAL (1 partido)
+					System.out.println("📋 Fase: FINAL");
+					fechaBase = fechaBase.plusDays(3);
+					Partido finalPartido = new Partido(
+						"Ganador Semifinal 1",
+						"Ganador Semifinal 2",
+						fechaBase,
+						estadio,
+						torneo
+					);
+					finalPartido.setTipoPartido("Oficial");
+					finalPartido.setObservaciones("GRAN FINAL DEL TORNEO");
+					partidoRepository.save(finalPartido);
+					System.out.println("  ✓ FINAL: Ganador S1 vs Ganador S2");
+					
+					System.out.println("✅ Torneo creado: 4 Cuartos + 2 Semis + 1 Final = 7 partidos");
+					partidos = partidoRepository.findByTorneo(torneo);
 				}
+				
+				// Tomar el primer partido para crear asignaciones de ejemplo
+				Partido partidoObj = partidos.isEmpty() ? null : partidos.get(0);
 
 				// Crear asignaciones por defecto: Principal, Auxiliar, Mesa si hay árbitros disponibles
 				if (partidoObj != null) {

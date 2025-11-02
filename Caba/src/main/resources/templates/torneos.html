@@ -1,33 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Lista de Torneos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .simulation-section {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 10px;
-        }
-        .simulation-btn {
-            margin: 5px;
-        }
-        .badge-simulation {
-            font-size: 0.75rem;
-            margin-left: 5px;
-        }
-    </style>
+<head th:replace="fragments/layout :: head">
+    <title>Torneos - CABA Pro</title>
 </head>
 <body>
-<div class="container mt-4">
-    <h2><i class="fas fa-trophy"></i> Torneos</h2>
-    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
+    <div th:replace="fragments/layout :: navbar"></div>
+    
+    <div class="container main-content">
+        <div th:replace="fragments/layout :: alerts"></div>
+        
+        <h2><i class="bi bi-trophy me-2"></i>Torneos</h2>
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -55,16 +37,26 @@
                 </a>
             </td>
             <td>
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-info simulation-btn" 
-                            onclick="showBracketModal(this)" 
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-info" 
+                            onclick="showPlayoffsModal(this)" 
                             th:attr="data-torneo-id=${torneo.id}, data-torneo-nombre=${torneo.nombre}">
-                        <i class="fas fa-sitemap"></i> Generar Bracket
+                        <i class="fas fa-sitemap"></i> Generar Play-offs
                     </button>
-                    <button type="button" class="btn btn-sm btn-warning simulation-btn" 
-                            onclick="simularSiguientePartido(this)" 
-                            th:attr="data-torneo-id=${torneo.id}">
-                        <i class="fas fa-play"></i> Simular Siguiente
+                    <!-- Mostrar diferente botón si el torneo está cerrado -->
+                    <button type="button" 
+                            th:if="${torneo.cerrado}"
+                            class="btn btn-sm btn-secondary" 
+                            onclick="verResultadosFinales(this)" 
+                            th:attr="data-torneo-id=${torneo.id}, data-torneo-nombre=${torneo.nombre}, data-campeon=${torneo.campeon}">
+                        <i class="fas fa-trophy"></i> Ver Resultados
+                    </button>
+                    <button type="button" 
+                            th:unless="${torneo.cerrado}"
+                            class="btn btn-sm btn-success" 
+                            onclick="verEstadoTorneo(this)" 
+                            th:attr="data-torneo-id=${torneo.id}, data-torneo-nombre=${torneo.nombre}">
+                        <i class="fas fa-list"></i> Ver Partidos
                     </button>
                 </div>
             </td>
@@ -77,93 +69,520 @@
             <i class="fas fa-plus"></i> Nuevo Torneo
         </a>
         <button type="button" class="btn btn-secondary" onclick="window.location.href='/partidos'">
-            <i class="fas fa-futbol"></i> Ver Partidos
+            <i class="fas fa-basketball-ball"></i> Ver Partidos
         </button>
     </div>
+</div>
 
-    <!-- Panel de IA -->
-    <div class="simulation-section">
-        <h4><i class="fas fa-robot"></i> Herramientas de IA y Simulación Masiva</h4>
-        <div class="row mt-3">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title"><i class="fas fa-database"></i> Generar Dataset</h6>
-                        <p class="card-text small">Crea múltiples torneos automáticamente para entrenamiento de IA</p>
-                        <div class="input-group input-group-sm mb-2">
-                            <span class="input-group-text">Cantidad</span>
-                            <input type="number" class="form-control" id="numTorneos" value="10" min="1" max="1000">
+<!-- Modal para Generar Play-offs -->
+<div class="modal fade" id="bracketModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fas fa-sitemap"></i> Generar Play-offs - Cuartos de Final</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalTorneoId">
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    Selecciona <strong>8 equipos</strong> para los Cuartos de Final. Cada equipo solo puede participar una vez.
+                </div>
+
+                <!-- Cuartos de Final -->
+                <h6 class="text-primary mb-3"><i class="fas fa-basketball-ball"></i> Cuartos de Final (4 Partidos)</h6>
+                
+                <!-- Partido 1 -->
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-1">
+                                <span class="badge bg-secondary">QF1</span>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="1" data-posicion="local" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Local --</option>
+                                </select>
+                            </div>
+                            <div class="col-1 text-center">
+                                <strong>VS</strong>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="1" data-posicion="visitante" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Visitante --</option>
+                                </select>
+                            </div>
                         </div>
-                        <button class="btn btn-primary btn-sm w-100" onclick="generarBatch()">
-                            <i class="fas fa-cogs"></i> Generar Torneos
-                        </button>
                     </div>
                 </div>
+
+                <!-- Partido 2 -->
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-1">
+                                <span class="badge bg-secondary">QF2</span>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="2" data-posicion="local" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Local --</option>
+                                </select>
+                            </div>
+                            <div class="col-1 text-center">
+                                <strong>VS</strong>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="2" data-posicion="visitante" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Visitante --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partido 3 -->
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-1">
+                                <span class="badge bg-secondary">QF3</span>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="3" data-posicion="local" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Local --</option>
+                                </select>
+                            </div>
+                            <div class="col-1 text-center">
+                                <strong>VS</strong>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="3" data-posicion="visitante" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Visitante --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Partido 4 -->
+                <div class="card mb-3">
+                    <div class="card-body py-2">
+                        <div class="row align-items-center">
+                            <div class="col-1">
+                                <span class="badge bg-secondary">QF4</span>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="4" data-posicion="local" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Local --</option>
+                                </select>
+                            </div>
+                            <div class="col-1 text-center">
+                                <strong>VS</strong>
+                            </div>
+                            <div class="col-5">
+                                <select class="form-select form-select-sm bracket-team" data-partido="4" data-posicion="visitante" onchange="updateAvailableTeams()">
+                                    <option value="">-- Equipo Visitante --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> 
+                    <strong>Importante:</strong> Después de generar, se crearán automáticamente las semifinales (2 partidos) y la final (1 partido) con equipos TBD (Por Determinar).
+                </div>
+
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title"><i class="fas fa-file-export"></i> Exportar Datos</h6>
-                        <p class="card-text small">Exporta partidos a formato JSONL para ML</p>
-                        <button class="btn btn-success btn-sm w-100 mb-2" onclick="exportarDatos()">
-                            <i class="fas fa-download"></i> Exportar a JSONL
-                        </button>
-                        <button class="btn btn-info btn-sm w-100" onclick="verEstadisticas()">
-                            <i class="fas fa-chart-bar"></i> Ver Estadísticas
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title"><i class="fas fa-brain"></i> Predicción</h6>
-                        <p class="card-text small">Predice resultados usando IA</p>
-                        <button class="btn btn-warning btn-sm w-100 mb-2" onclick="showPredictModal()">
-                            <i class="fas fa-crystal-ball"></i> Predecir Partido
-                        </button>
-                        <button class="btn btn-danger btn-sm w-100" onclick="showChampionModal()">
-                            <i class="fas fa-crown"></i> Predecir Campeón
-                        </button>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" onclick="generarBracket()" id="btnGenerarBracket">
+                    <i class="fas fa-check"></i> Generar Bracket
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal para Generar Bracket -->
-<div class="modal fade" id="bracketModal" tabindex="-1">
-    <div class="modal-dialog">
+<!-- Modal para Ver Estado del Torneo y Simular Partidos -->
+<div class="modal fade" id="estadoTorneoModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-sitemap"></i> Generar Bracket</h5>
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-basketball-ball"></i> 
+                    <span id="tituloEstadoTorneo">Estado del Torneo</span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" id="modalTorneoId">
-                <p>Ingresa los 4 equipos participantes:</p>
-                <div class="mb-2">
-                    <label class="form-label">Equipo 1</label>
-                    <input type="text" class="form-control" id="equipo1" placeholder="Equipo A">
+                <input type="hidden" id="modalEstadoTorneoId">
+                
+                <!-- Resumen del torneo -->
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="alert alert-info mb-0" id="resumenTorneo">
+                            <strong>Fase Actual:</strong> <span id="faseActualTexto">-</span><br>
+                            <strong>Partidos Pendientes:</strong> <span id="partidosPendientesTexto">-</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <button id="btnPredecirCampeon" class="btn btn-warning w-100 h-100" onclick="predecirCampeon(event)" title="Predicción del campeón con IA">
+                            <i class="fas fa-crown"></i> <i class="fas fa-brain"></i>
+                            <br><strong>Predecir Campeón</strong>
+                        </button>
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label">Equipo 2</label>
-                    <input type="text" class="form-control" id="equipo2" placeholder="Equipo B">
+
+                <!-- Cuartos de Final -->
+                <div class="card mb-3" id="cardCuartos">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="fas fa-trophy"></i> Cuartos de Final</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Partido</th>
+                                        <th>Equipo Local</th>
+                                        <th>Resultado</th>
+                                        <th>Equipo Visitante</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaCuartos">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label">Equipo 3</label>
-                    <input type="text" class="form-control" id="equipo3" placeholder="Equipo C">
+
+                <!-- Semifinales -->
+                <div class="card mb-3" id="cardSemifinales" style="display: none;">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="fas fa-medal"></i> Semifinales</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Partido</th>
+                                        <th>Equipo Local</th>
+                                        <th>Resultado</th>
+                                        <th>Equipo Visitante</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaSemifinales">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label">Equipo 4</label>
-                    <input type="text" class="form-control" id="equipo4" placeholder="Equipo D">
+
+                <!-- Final -->
+                <div class="card mb-3" id="cardFinal" style="display: none;">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0"><i class="fas fa-crown"></i> Final</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Partido</th>
+                                        <th>Equipo Local</th>
+                                        <th>Resultado</th>
+                                        <th>Equipo Visitante</th>
+                                        <th>Estado</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaFinal">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Campeón -->
+                <div class="alert alert-success text-center" id="alertCampeon" style="display: none;">
+                    <h4><i class="fas fa-trophy"></i> ¡CAMPEÓN!</h4>
+                    <h2 id="nombreCampeon">-</h2>
+                </div>
+
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" onclick="generarBracket()">
-                    <i class="fas fa-check"></i> Generar
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Ver Resultados Finales (Torneos Cerrados) -->
+<div class="modal fade" id="resultadosFinalesModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-trophy"></i> 
+                    <span id="tituloResultadosFinales"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalResultadosFinalesTorneoId">
+                
+                <!-- Banner del Campeón -->
+                <div class="alert alert-success text-center py-4 mb-4" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); border: none;">
+                    <h2 class="mb-3" style="color: #000; font-weight: bold;">
+                        🏆 CAMPEÓN 🏆
+                    </h2>
+                    <h1 id="nombreCampeon" style="color: #000; font-size: 3rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
+                        <!-- Se llenará con JavaScript -->
+                    </h1>
+                </div>
+
+                <!-- Resumen del Torneo -->
+                <div class="card mb-4" style="border: 2px solid #FFD700;">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-info-circle"></i> Resumen del Torneo</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Total de Partidos:</strong> <span id="totalPartidosFinales"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Fecha de Cierre:</strong> <span id="fechaCierre"></span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Estado:</strong> <span class="badge bg-dark">FINALIZADO</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resultados por Fase -->
+                <div class="card mb-3" style="border-left: 5px solid #007bff;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-basketball-ball"></i> Cuartos de Final</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Partido</th>
+                                    <th>Equipo Local</th>
+                                    <th>Resultado</th>
+                                    <th>Equipo Visitante</th>
+                                    <th>Ganador</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaCuartosFinales"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card mb-3" style="border-left: 5px solid #ffc107;">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-star"></i> Semifinales</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Partido</th>
+                                    <th>Equipo Local</th>
+                                    <th>Resultado</th>
+                                    <th>Equipo Visitante</th>
+                                    <th>Ganador</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaSeemifinalesFinales"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card mb-3" style="border-left: 5px solid #dc3545; border: 3px solid #FFD700;">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0"><i class="fas fa-crown"></i> FINAL</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Equipo Local</th>
+                                    <th>Resultado</th>
+                                    <th>Equipo Visitante</th>
+                                    <th>Ganador</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaFinalFinales"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Configurar Semifinales -->
+<div class="modal fade" id="semiModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-trophy"></i> ¡Cuartos Completados! - Configurar Semifinales</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalSemiTorneoId">
+                
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> 
+                    <strong>¡Los 4 partidos de Cuartos de Final han sido completados!</strong>
+                    <br>Ahora debes seleccionar manualmente cómo enfrentar a los 4 ganadores en las Semifinales.
+                </div>
+
+                <h6 class="mb-3"><i class="fas fa-medal"></i> Ganadores de Cuartos de Final:</h6>
+                <div id="ganadoresCuartosList" class="mb-4">
+                    <!-- Se llenará dinámicamente con JavaScript -->
+                </div>
+
+                <h6 class="mb-3"><i class="fas fa-handshake"></i> Configura las Semifinales:</h6>
+                
+                <!-- Semifinal 1 -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><span class="badge bg-primary">Semifinal 1</span></h6>
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <label class="form-label">Equipo Local:</label>
+                                <select class="form-select semi-team" data-semi="1" data-posicion="local" id="semi1Local" onchange="updateSemiTeams()">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                            <div class="col-2 text-center">
+                                <strong class="text-muted">VS</strong>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Equipo Visitante:</label>
+                                <select class="form-select semi-team" data-semi="1" data-posicion="visitante" id="semi1Visitante" onchange="updateSemiTeams()">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Semifinal 2 -->
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title"><span class="badge bg-primary">Semifinal 2</span></h6>
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <label class="form-label">Equipo Local:</label>
+                                <select class="form-select semi-team" data-semi="2" data-posicion="local" id="semi2Local" onchange="updateSemiTeams()">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                            <div class="col-2 text-center">
+                                <strong class="text-muted">VS</strong>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Equipo Visitante:</label>
+                                <select class="form-select semi-team" data-semi="2" data-posicion="visitante" id="semi2Visitante" onchange="updateSemiTeams()">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-success" onclick="confirmarSemifinales()" id="btnConfirmarSemis" disabled>
+                    <i class="fas fa-check"></i> Confirmar Semifinales
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Configurar Final -->
+<div class="modal fade" id="finalModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="fas fa-crown"></i> ¡Semifinales Completadas! - Configurar Final</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalFinalTorneoId">
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-check-circle"></i> 
+                    <strong>¡Las 2 Semifinales han sido completadas!</strong>
+                    <br>Ahora debes seleccionar manualmente los 2 finalistas.
+                </div>
+
+                <h6 class="mb-3"><i class="fas fa-star"></i> Ganadores de Semifinales:</h6>
+                <div id="ganadoresSemisList" class="mb-4">
+                    <!-- Se llenará dinámicamente con JavaScript -->
+                </div>
+
+                <h6 class="mb-3"><i class="fas fa-trophy"></i> Configura la Final:</h6>
+                
+                <!-- Final -->
+                <div class="card mb-3 border-warning">
+                    <div class="card-body">
+                        <h6 class="card-title"><span class="badge bg-warning text-dark">FINAL</span></h6>
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <label class="form-label">Finalista 1:</label>
+                                <select class="form-select final-team" id="finalLocal" onchange="checkFinalComplete()">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                            <div class="col-2 text-center">
+                                <strong class="text-warning">VS</strong>
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label">Finalista 2:</label>
+                                <select class="form-select final-team" id="finalVisitante" onchange="checkFinalComplete()">
+                                    <option value="">-- Selecciona --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-warning text-dark" onclick="confirmarFinal()" id="btnConfirmarFinal" disabled>
+                    <i class="fas fa-check"></i> Confirmar Final
                 </button>
             </div>
         </div>
@@ -175,22 +594,46 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-crystal-ball"></i> Predecir Partido</h5>
+                <h5 class="modal-title"><i class="fas fa-crystal-ball"></i> Predecir Resultado del Partido</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-2">
-                    <label class="form-label">Equipo Local</label>
-                    <input type="text" class="form-control" id="predictLocal" placeholder="Equipo A">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Selecciona un partido de la lista para predecir su resultado usando IA
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Partido a Predecir</label>
+                    <select class="form-select" id="predictPartidoId" onchange="updatePartidoPreview()">
+                        <option value="">-- Selecciona un partido --</option>
+                    </select>
+                </div>
+                <div id="partidoPreview" class="card bg-light mb-3" style="display:none;">
+                    <div class="card-body">
+                        <h6 class="card-title mb-2">Vista Previa del Partido</h6>
+                        <div class="row">
+                            <div class="col-5 text-center">
+                                <span id="previewLocal" class="badge bg-primary fs-6"></span>
+                            </div>
+                            <div class="col-2 text-center">
+                                <strong>VS</strong>
+                            </div>
+                            <div class="col-5 text-center">
+                                <span id="previewVisitante" class="badge bg-danger fs-6"></span>
+                            </div>
+                        </div>
+                        <hr>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar"></i> <span id="previewFecha"></span><br>
+                            <i class="fas fa-map-marker-alt"></i> <span id="previewUbicacion"></span><br>
+                            <i class="fas fa-tag"></i> <span id="previewTipo"></span>
+                        </small>
+                    </div>
                 </div>
                 <div class="mb-2">
-                    <label class="form-label">Equipo Visitante</label>
-                    <input type="text" class="form-control" id="predictVisitante" placeholder="Equipo B">
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Fase</label>
+                    <label class="form-label">Fase del Torneo</label>
                     <select class="form-select" id="predictFase">
-                        <option value="Regular">Regular</option>
+                        <option value="Regular">Fase Regular</option>
+                        <option value="Cuartos">Cuartos de Final</option>
                         <option value="Semifinal">Semifinal</option>
                         <option value="Final">Final</option>
                     </select>
@@ -199,8 +642,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary" onclick="predecirPartido()">
-                    <i class="fas fa-magic"></i> Predecir
+                <button type="button" class="btn btn-primary" onclick="predecirPartido()" id="btnPredict" disabled>
+                    <i class="fas fa-magic"></i> Predecir Resultado
                 </button>
             </div>
         </div>
@@ -243,24 +686,101 @@
                document.querySelector('input[name="_csrf"]')?.value;
     }
 
-    function showBracketModal(button) {
+    // Lista de equipos de baloncesto disponibles
+    const equiposBaloncesto = [
+        "Lakers", "Warriors", "Celtics", "Heat",
+        "Bulls", "Nets", "Suns", "Mavs",
+        "Bucks", "76ers", "Nuggets", "Clippers",
+        "Rockets", "Spurs", "Knicks", "Raptors"
+    ];
+
+    function showPlayoffsModal(button) {
         const torneoId = button.getAttribute('data-torneo-id');
         const torneoNombre = button.getAttribute('data-torneo-nombre');
         document.getElementById('modalTorneoId').value = torneoId;
+        
+        // Inicializar los selectores con todos los equipos
+        initializeTeamSelectors();
+        
         new bootstrap.Modal(document.getElementById('bracketModal')).show();
+    }
+
+    function initializeTeamSelectors() {
+        const selectors = document.querySelectorAll('.bracket-team');
+        selectors.forEach(select => {
+            select.innerHTML = '<option value="">-- Selecciona --</option>';
+            equiposBaloncesto.forEach(equipo => {
+                const option = document.createElement('option');
+                option.value = equipo;
+                option.textContent = equipo;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    function updateAvailableTeams() {
+        // Obtener todos los equipos seleccionados
+        const selectors = document.querySelectorAll('.bracket-team');
+        const selectedTeams = [];
+        
+        selectors.forEach(select => {
+            if (select.value) {
+                selectedTeams.push(select.value);
+            }
+        });
+
+        // Actualizar cada selector
+        selectors.forEach(select => {
+            const currentValue = select.value;
+            const currentOptions = select.querySelectorAll('option');
+            
+            // Habilitar/deshabilitar opciones según disponibilidad
+            currentOptions.forEach(option => {
+                if (option.value === '') return; // Skip la opción vacía
+                
+                // Si el equipo está seleccionado en otro selector, deshabilitarlo
+                if (selectedTeams.includes(option.value) && option.value !== currentValue) {
+                    option.disabled = true;
+                    option.textContent = option.value + ' (Ya asignado)';
+                } else {
+                    option.disabled = false;
+                    option.textContent = option.value;
+                }
+            });
+        });
+
+        // Verificar si todos los equipos están seleccionados
+        checkPlayoffsComplete();
+    }
+
+    function checkPlayoffsComplete() {
+        const selectors = document.querySelectorAll('.bracket-team');
+        let allSelected = true;
+        
+        selectors.forEach(select => {
+            if (!select.value) {
+                allSelected = false;
+            }
+        });
+
+        document.getElementById('btnGenerarBracket').disabled = !allSelected;
     }
 
     async function generarBracket() {
         const torneoId = document.getElementById('modalTorneoId').value;
-        const equipos = [
-            document.getElementById('equipo1').value.trim(),
-            document.getElementById('equipo2').value.trim(),
-            document.getElementById('equipo3').value.trim(),
-            document.getElementById('equipo4').value.trim()
-        ];
+        
+        // Recopilar los equipos seleccionados (solo los primeros 8)
+        const equipos = [];
+        for (let i = 1; i <= 4; i++) {
+            const local = document.querySelector(`[data-partido="${i}"][data-posicion="local"]`).value;
+            const visitante = document.querySelector(`[data-partido="${i}"][data-posicion="visitante"]`).value;
+            
+            if (!equipos.includes(local)) equipos.push(local);
+            if (!equipos.includes(visitante)) equipos.push(visitante);
+        }
 
-        if (equipos.some(e => !e)) {
-            alert('Por favor ingresa los 4 equipos');
+        if (equipos.length !== 8) {
+            alert('⚠️ Debes seleccionar exactamente 8 equipos diferentes');
             return;
         }
 
@@ -276,11 +796,17 @@
 
             const result = await response.json();
             if (response.ok) {
-                alert(`✅ Bracket generado!\n${result.partidosCreados} partidos creados\n${result.asignacionesCreadas} asignaciones de árbitros`);
+                alert(`✅ Play-offs generados exitosamente!\n\n` +
+                      `🏀 Partidos creados: ${result.partidosCreados}\n` +
+                      `👨‍⚖️ Árbitros asignados: ${result.asignacionesCreadas}\n\n` +
+                      `Estructura del Torneo:\n` +
+                      `• Cuartos de Final: 4 partidos\n` +
+                      `• Semifinales: 2 partidos (pendientes de clasificados)\n` +
+                      `• Final: 1 partido (pendiente de clasificados)`);
                 bootstrap.Modal.getInstance(document.getElementById('bracketModal')).hide();
                 location.reload();
             } else {
-                alert('❌ Error: ' + (result.error || 'No se pudo generar el bracket'));
+                alert('❌ Error: ' + (result.error || 'No se pudo generar los play-offs'));
             }
         } catch (error) {
             alert('❌ Error de conexión: ' + error.message);
@@ -290,11 +816,28 @@
     async function simularSiguientePartido(button) {
         const torneoId = button.getAttribute('data-torneo-id');
         
-        if (!confirm('¿Simular el siguiente partido?\n\nREQUISITO: Todas las asignaciones deben estar ACEPTADAS')) {
-            return;
-        }
-
+        // Obtener estado actual del torneo
         try {
+            const estadoResponse = await fetch(`/api/torneos/simulacion/estado/${torneoId}`);
+            const estado = await estadoResponse.json();
+            
+            // Verificar si hay cuartos completos pero semifinales sin configurar
+            if (estado.cuartosCompletos && estado.fases['Semifinales'][0].equipoLocal === 'TBD') {
+                mostrarModalSemifinales(torneoId, estado.ganadoresCuartos);
+                return;
+            }
+            
+            // Verificar si hay semis completas pero final sin configurar
+            if (estado.semisCompletas && estado.fases['Final'][0].equipoLocal === 'TBD') {
+                mostrarModalFinal(torneoId, estado.ganadoresSemis);
+                return;
+            }
+            
+            // Si todo está configurado, simular siguiente partido
+            if (!confirm(`¿Simular el siguiente partido de ${estado.faseActual}?\n\nREQUISITO: Todas las asignaciones deben estar ACEPTADAS`)) {
+                return;
+            }
+
             const response = await fetch(`/api/torneos/simulacion/simular-siguiente/${torneoId}`, {
                 method: 'POST',
                 headers: {
@@ -303,9 +846,29 @@
             });
 
             const result = await response.json();
-            if (response.ok) {
-                alert(`✅ Partido simulado!\n\n${result.equipoLocal} ${result.marcadorLocal} - ${result.marcadorVisitante} ${result.equipoVisitante}\n\nGanador: ${result.ganador}\nFase: ${result.fase}`);
-                location.reload();
+            if (response.ok && result.ok) {
+                const mensaje = `✅ Partido simulado!\n\n` +
+                    `🏀 ${result.equipoLocal} ${result.marcadorLocal} - ${result.marcadorVisitante} ${result.equipoVisitante}\n\n` +
+                    `🏆 Ganador: ${result.ganador}`;
+                
+                alert(mensaje);
+                
+                // Recargar estado para verificar si se completó una fase
+                const nuevoEstado = await fetch(`/api/torneos/simulacion/estado/${torneoId}`).then(r => r.json());
+                
+                if (nuevoEstado.cuartosCompletos && !nuevoEstado.semisCompletas) {
+                    // Mostrar modal para configurar semifinales
+                    setTimeout(() => {
+                        mostrarModalSemifinales(torneoId, nuevoEstado.ganadoresCuartos);
+                    }, 500);
+                } else if (nuevoEstado.semisCompletas && nuevoEstado.fases['Final'][0].equipoLocal === 'TBD') {
+                    // Mostrar modal para configurar final
+                    setTimeout(() => {
+                        mostrarModalFinal(torneoId, nuevoEstado.ganadoresSemis);
+                    }, 500);
+                } else {
+                    location.reload();
+                }
             } else {
                 alert('❌ Error: ' + (result.error || result.message || 'No se pudo simular'));
             }
@@ -382,21 +945,71 @@
         }
     }
 
-    function showPredictModal() {
+    async function showPredictModal() {
+        // Cargar la lista de partidos disponibles
+        try {
+            const response = await fetch('/api/partidos');
+            if (response.ok) {
+                const partidos = await response.json();
+                const select = document.getElementById('predictPartidoId');
+                select.innerHTML = '<option value="">-- Selecciona un partido --</option>';
+                
+                partidos.forEach(partido => {
+                    const fecha = new Date(partido.fechaPartido).toLocaleDateString('es-ES');
+                    const option = document.createElement('option');
+                    option.value = partido.id;
+                    option.textContent = `${partido.equipoLocal} vs ${partido.equipoVisitante} - ${fecha}`;
+                    option.setAttribute('data-local', partido.equipoLocal);
+                    option.setAttribute('data-visitante', partido.equipoVisitante);
+                    option.setAttribute('data-fecha', fecha);
+                    option.setAttribute('data-ubicacion', partido.ubicacion || 'Sin definir');
+                    option.setAttribute('data-tipo', partido.tipoPartido || 'Regular');
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando partidos:', error);
+        }
+        
         new bootstrap.Modal(document.getElementById('predictModal')).show();
     }
 
-    async function predecirPartido() {
-        const data = {
-            equipoLocal: document.getElementById('predictLocal').value.trim(),
-            equipoVisitante: document.getElementById('predictVisitante').value.trim(),
-            fase: document.getElementById('predictFase').value
-        };
+    function updatePartidoPreview() {
+        const select = document.getElementById('predictPartidoId');
+        const selectedOption = select.options[select.selectedIndex];
+        const preview = document.getElementById('partidoPreview');
+        const btnPredict = document.getElementById('btnPredict');
+        
+        if (select.value) {
+            // Mostrar vista previa
+            document.getElementById('previewLocal').textContent = selectedOption.getAttribute('data-local');
+            document.getElementById('previewVisitante').textContent = selectedOption.getAttribute('data-visitante');
+            document.getElementById('previewFecha').textContent = selectedOption.getAttribute('data-fecha');
+            document.getElementById('previewUbicacion').textContent = selectedOption.getAttribute('data-ubicacion');
+            document.getElementById('previewTipo').textContent = selectedOption.getAttribute('data-tipo');
+            preview.style.display = 'block';
+            btnPredict.disabled = false;
+        } else {
+            preview.style.display = 'none';
+            btnPredict.disabled = true;
+        }
+    }
 
-        if (!data.equipoLocal || !data.equipoVisitante) {
-            alert('Por favor ingresa ambos equipos');
+    async function predecirPartido() {
+        const select = document.getElementById('predictPartidoId');
+        const selectedOption = select.options[select.selectedIndex];
+        const fase = document.getElementById('predictFase').value;
+        
+        if (!select.value) {
+            alert('Por favor selecciona un partido');
             return;
         }
+
+        const data = {
+            equipoLocal: selectedOption.getAttribute('data-local'),
+            equipoVisitante: selectedOption.getAttribute('data-visitante'),
+            fase: fase
+        };
 
         try {
             const response = await fetch('/api/torneos/ai/predict', {
@@ -411,17 +1024,31 @@
             const result = await response.json();
             if (response.ok) {
                 const html = `
-                    <div class="alert alert-info">
-                        <h6><i class="fas fa-futbol"></i> Predicción</h6>
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-futbol"></i> Predicción del Partido</h6>
                         <hr>
-                        <p><strong>Probabilidades:</strong></p>
-                        <p>${data.equipoLocal}: <span class="badge bg-primary">${(result.p_local * 100).toFixed(1)}%</span></p>
-                        <p>${data.equipoVisitante}: <span class="badge bg-secondary">${(result.p_visitante * 100).toFixed(1)}%</span></p>
+                        <div class="row text-center mb-3">
+                            <div class="col-5">
+                                <h5>${data.equipoLocal}</h5>
+                                <span class="badge bg-primary fs-4">${(result.p_local * 100).toFixed(1)}%</span>
+                            </div>
+                            <div class="col-2">
+                                <h6 class="mt-3">VS</h6>
+                            </div>
+                            <div class="col-5">
+                                <h5>${data.equipoVisitante}</h5>
+                                <span class="badge bg-danger fs-4">${(result.p_visitante * 100).toFixed(1)}%</span>
+                            </div>
+                        </div>
                         <hr>
-                        <p><strong>Marcador esperado:</strong> ${result.expected_score_local.toFixed(1)} - ${result.expected_score_visitante.toFixed(1)}</p>
-                        <p><strong>Ganador predicho:</strong> <span class="badge bg-success">${result.predicted_winner}</span></p>
-                        <p><strong>Margen:</strong> ${result.predicted_margin.toFixed(2)} goles</p>
-                        <p class="small text-muted">Modelo: ${result.modelo}</p>
+                        <p><strong>📊 Marcador Esperado:</strong> 
+                            <span class="badge bg-info">${result.expected_score_local.toFixed(1)} - ${result.expected_score_visitante.toFixed(1)}</span>
+                        </p>
+                        <p><strong>🏆 Ganador Predicho:</strong> 
+                            <span class="badge bg-success fs-5">${result.predicted_winner}</span>
+                        </p>
+                        <p><strong>📈 Margen:</strong> ${result.predicted_margin.toFixed(2)} goles</p>
+                        <p class="small text-muted mb-0"><i class="fas fa-robot"></i> Modelo: ${result.modelo}</p>
                     </div>
                 `;
                 document.getElementById('predictResult').innerHTML = html;
@@ -490,6 +1117,666 @@
             alert('❌ Error: ' + error.message);
         }
     }
+
+    // ============================================
+    // Funciones para Configuración de Semifinales
+    // ============================================
+    function mostrarModalSemifinales(torneoId, ganadores) {
+        document.getElementById('modalSemiTorneoId').value = torneoId;
+        
+        // Mostrar lista de ganadores
+        const lista = document.getElementById('ganadoresCuartosList');
+        lista.innerHTML = ganadores.map((equipo, idx) => 
+            `<span class="badge bg-success fs-6 me-2">${idx + 1}. ${equipo}</span>`
+        ).join('');
+        
+        // Poblar los dropdowns con los ganadores
+        const selects = document.querySelectorAll('.semi-team');
+        selects.forEach(select => {
+            select.innerHTML = '<option value="">-- Selecciona --</option>';
+            ganadores.forEach(equipo => {
+                const option = document.createElement('option');
+                option.value = equipo;
+                option.textContent = equipo;
+                select.appendChild(option);
+            });
+        });
+        
+        // Deshabilitar botón hasta que se seleccionen todos
+        document.getElementById('btnConfirmarSemis').disabled = true;
+        
+        new bootstrap.Modal(document.getElementById('semiModal')).show();
+    }
+
+    function updateSemiTeams() {
+        const selects = document.querySelectorAll('.semi-team');
+        const selectedTeams = [];
+        
+        // Recopilar equipos seleccionados
+        selects.forEach(select => {
+            if (select.value) {
+                selectedTeams.push(select.value);
+            }
+        });
+
+        // Deshabilitar opciones ya seleccionadas en otros dropdowns
+        selects.forEach(select => {
+            const currentValue = select.value;
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(option => {
+                if (option.value === '') return;
+                
+                if (selectedTeams.includes(option.value) && option.value !== currentValue) {
+                    option.disabled = true;
+                    option.textContent = option.value + ' (Ya asignado)';
+                } else {
+                    option.disabled = false;
+                    option.textContent = option.value;
+                }
+            });
+        });
+
+        // Verificar si todos están seleccionados
+        const allSelected = selectedTeams.length === 4 && new Set(selectedTeams).size === 4;
+        document.getElementById('btnConfirmarSemis').disabled = !allSelected;
+    }
+
+    async function confirmarSemifinales() {
+        const torneoId = document.getElementById('modalSemiTorneoId').value;
+        
+        // Recopilar equipos en orden: [semi1_local, semi1_visitante, semi2_local, semi2_visitante]
+        const equipos = [
+            document.getElementById('semi1Local').value,
+            document.getElementById('semi1Visitante').value,
+            document.getElementById('semi2Local').value,
+            document.getElementById('semi2Visitante').value
+        ];
+
+        if (equipos.some(e => !e)) {
+            alert('Por favor selecciona todos los equipos');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/torneos/simulacion/configurar-semifinales/${torneoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: JSON.stringify(equipos)
+            });
+
+            const result = await response.json();
+            if (response.ok && result.ok) {
+                alert(`✅ Semifinales configuradas!\n\n` +
+                      `🏀 Semi 1: ${result.semi1.equipoLocal} vs ${result.semi1.equipoVisitante}\n` +
+                      `🏀 Semi 2: ${result.semi2.equipoLocal} vs ${result.semi2.equipoVisitante}\n\n` +
+                      `Ya puedes simular los partidos de semifinales.`);
+                bootstrap.Modal.getInstance(document.getElementById('semiModal')).hide();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (result.error || result.message || 'No se pudieron configurar las semifinales'));
+            }
+        } catch (error) {
+            alert('❌ Error de conexión: ' + error.message);
+        }
+    }
+
+    // ============================================
+    // Funciones para Configuración de Final
+    // ============================================
+    function mostrarModalFinal(torneoId, ganadores) {
+        document.getElementById('modalFinalTorneoId').value = torneoId;
+        
+        // Mostrar lista de ganadores de semifinales
+        const lista = document.getElementById('ganadoresSemisList');
+        lista.innerHTML = ganadores.map((equipo, idx) => 
+            `<span class="badge bg-warning text-dark fs-6 me-2">${idx + 1}. ${equipo}</span>`
+        ).join('');
+        
+        // Poblar los dropdowns con los 2 ganadores
+        const selects = document.querySelectorAll('.final-team');
+        selects.forEach(select => {
+            select.innerHTML = '<option value="">-- Selecciona --</option>';
+            ganadores.forEach(equipo => {
+                const option = document.createElement('option');
+                option.value = equipo;
+                option.textContent = equipo;
+                select.appendChild(option);
+            });
+        });
+        
+        document.getElementById('btnConfirmarFinal').disabled = true;
+        
+        new bootstrap.Modal(document.getElementById('finalModal')).show();
+    }
+
+    function checkFinalComplete() {
+        const local = document.getElementById('finalLocal').value;
+        const visitante = document.getElementById('finalVisitante').value;
+        
+        const isValid = local && visitante && local !== visitante;
+        document.getElementById('btnConfirmarFinal').disabled = !isValid;
+        
+        // Validar que no sean el mismo equipo
+        if (local && visitante && local === visitante) {
+            alert('⚠️ No puedes seleccionar el mismo equipo dos veces');
+        }
+    }
+
+    async function confirmarFinal() {
+        const torneoId = document.getElementById('modalFinalTorneoId').value;
+        
+        const equipos = [
+            document.getElementById('finalLocal').value,
+            document.getElementById('finalVisitante').value
+        ];
+
+        if (equipos.some(e => !e) || equipos[0] === equipos[1]) {
+            alert('Por favor selecciona 2 equipos diferentes');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/torneos/simulacion/configurar-final/${torneoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken()
+                },
+                body: JSON.stringify(equipos)
+            });
+
+            const result = await response.json();
+            if (response.ok && result.ok) {
+                alert(`✅ Final configurada!\n\n` +
+                      `🏀 FINAL: ${result.final.equipoLocal} vs ${result.final.equipoVisitante}\n\n` +
+                      `🏆 ¡Ya puedes simular el partido final para determinar al campeón!`);
+                bootstrap.Modal.getInstance(document.getElementById('finalModal')).hide();
+                location.reload();
+            } else {
+                alert('❌ Error: ' + (result.error || result.message || 'No se pudo configurar la final'));
+            }
+        } catch (error) {
+            alert('❌ Error de conexión: ' + error.message);
+        }
+    }
+
+    // ============================================
+    // Funciones para Ver Estado del Torneo
+    // ============================================
+    async function verEstadoTorneo(button) {
+        const torneoId = button.getAttribute('data-torneo-id');
+        const torneoNombre = button.getAttribute('data-torneo-nombre');
+        
+        document.getElementById('modalEstadoTorneoId').value = torneoId;
+        document.getElementById('tituloEstadoTorneo').textContent = `${torneoNombre} - Simulación`;
+        
+        try {
+            const response = await fetch(`/api/torneos/simulacion/estado/${torneoId}`);
+            const estado = await response.json();
+            
+            if (response.ok) {
+                mostrarEstadoTorneo(estado);
+                new bootstrap.Modal(document.getElementById('estadoTorneoModal')).show();
+            } else {
+                alert('❌ Error: ' + (estado.message || 'No se pudo obtener el estado del torneo'));
+            }
+        } catch (error) {
+            alert('❌ Error de conexión: ' + error.message);
+        }
+    }
+
+    function mostrarEstadoTorneo(estado) {
+        // Actualizar resumen
+        document.getElementById('faseActualTexto').textContent = estado.faseActual || 'N/A';
+        document.getElementById('partidosPendientesTexto').textContent = estado.partidosPendientes || 0;
+        
+        // Mostrar Cuartos
+        const tablaCuartos = document.getElementById('tablaCuartos');
+        tablaCuartos.innerHTML = '';
+        estado.fases['Cuartos de Final'].forEach((partido, idx) => {
+            tablaCuartos.innerHTML += crearFilaPartido(partido, `QF${idx + 1}`);
+        });
+        
+        // Mostrar Semifinales
+        if (estado.fases['Semifinales'].length > 0) {
+            document.getElementById('cardSemifinales').style.display = 'block';
+            const tablaSemis = document.getElementById('tablaSemifinales');
+            tablaSemis.innerHTML = '';
+            estado.fases['Semifinales'].forEach((partido, idx) => {
+                tablaSemis.innerHTML += crearFilaPartido(partido, `SF${idx + 1}`);
+            });
+        }
+        
+        // Mostrar Final
+        if (estado.fases['Final'].length > 0) {
+            document.getElementById('cardFinal').style.display = 'block';
+            const tablaFinal = document.getElementById('tablaFinal');
+            tablaFinal.innerHTML = '';
+            estado.fases['Final'].forEach(partido => {
+                tablaFinal.innerHTML += crearFilaPartido(partido, 'FINAL');
+            });
+        }
+        
+        // Verificar si hay campeón
+        if (estado.partidosPendientes === 0 && estado.fases['Final'][0].completado) {
+            const campeon = estado.fases['Final'][0].ganador;
+            document.getElementById('nombreCampeon').textContent = campeon;
+            document.getElementById('alertCampeon').style.display = 'block';
+        }
+        
+        // Verificar transiciones de fase
+        if (estado.cuartosCompletos && estado.fases['Semifinales'][0].equipoLocal === 'TBD') {
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('estadoTorneoModal')).hide();
+                mostrarModalSemifinales(estado.torneoId, estado.ganadoresCuartos);
+            }, 1000);
+        } else if (estado.semisCompletas && estado.fases['Final'][0].equipoLocal === 'TBD') {
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('estadoTorneoModal')).hide();
+                mostrarModalFinal(estado.torneoId, estado.ganadoresSemis);
+            }, 1000);
+        }
+    }
+
+    function crearFilaPartido(partido, etiqueta) {
+        const completado = partido.completado;
+        const equipoLocal = partido.equipoLocal;
+        const equipoVisitante = partido.equipoVisitante;
+        const marcadorLocal = partido.marcadorLocal || '-';
+        const marcadorVisitante = partido.marcadorVisitante || '-';
+        
+        let estadoBadge = '';
+        let botonAccion = '';
+        
+        if (completado) {
+            estadoBadge = '<span class="badge bg-success">Completado</span>';
+            const ganador = partido.ganador;
+            botonAccion = `<span class="text-success"><i class="fas fa-trophy"></i> ${ganador}</span>`;
+        } else if (equipoLocal === 'TBD' || equipoVisitante === 'TBD') {
+            estadoBadge = '<span class="badge bg-secondary">Por Definir</span>';
+            botonAccion = '<span class="text-muted">-</span>';
+        } else {
+            estadoBadge = '<span class="badge bg-warning text-dark">Pendiente</span>';
+            botonAccion = `
+                <div class="btn-group" role="group">
+                    <button class="btn btn-sm btn-primary" onclick="simularPartidoEspecifico(${partido.id})" title="Simular partido">
+                        <i class="fas fa-play"></i> Simular
+                    </button>
+                    <button class="btn btn-sm btn-info" onclick="predecirPartido('${equipoLocal}', '${equipoVisitante}')" title="Predicción con IA">
+                        <i class="fas fa-brain"></i> Predecir
+                    </button>
+                </div>
+            `;
+        }
+        
+        return `
+            <tr>
+                <td><strong>${etiqueta}</strong></td>
+                <td>${equipoLocal}</td>
+                <td class="text-center">
+                    <span class="badge bg-dark fs-6">${marcadorLocal} - ${marcadorVisitante}</span>
+                </td>
+                <td>${equipoVisitante}</td>
+                <td>${estadoBadge}</td>
+                <td>${botonAccion}</td>
+            </tr>
+        `;
+    }
+
+    async function simularPartidoEspecifico(partidoId) {
+        if (!confirm('¿Deseas simular este partido?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/torneos/simulacion/simular-partido/${partidoId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+
+            const result = await response.json();
+            if (response.ok && result.ok) {
+                // Si el torneo se cerró, mostrar mensaje especial
+                if (result.torneoCerrado) {
+                    alert(`🏆🎉 ¡TORNEO FINALIZADO! 🎉🏆\n\n` +
+                          `🏀 FINAL: ${result.equipoLocal} ${result.marcadorLocal} - ${result.marcadorVisitante} ${result.equipoVisitante}\n\n` +
+                          `👑 ¡¡¡CAMPEÓN: ${result.campeon}!!!\n\n` +
+                          `El torneo ha sido cerrado. Ahora puedes ver los resultados completos.`);
+                    
+                    // Cerrar modal de simulación y recargar página para actualizar botones
+                    bootstrap.Modal.getInstance(document.getElementById('estadoTorneoModal')).hide();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert(`✅ ¡Partido simulado!\n\n` +
+                          `🏀 ${result.equipoLocal} ${result.marcadorLocal} - ${result.marcadorVisitante} ${result.equipoVisitante}\n\n` +
+                          `🏆 Ganador: ${result.ganador}\n` +
+                          `📋 Fase: ${result.tipoPartido}`);
+                    
+                    // Recargar estado del torneo
+                    const torneoId = document.getElementById('modalEstadoTorneoId').value;
+                    const estadoResponse = await fetch(`/api/torneos/simulacion/estado/${torneoId}`);
+                    const nuevoEstado = await estadoResponse.json();
+                    mostrarEstadoTorneo(nuevoEstado);
+                }
+            } else {
+                // Verificar si el error es por asignaciones rechazadas
+                if (result.asignacionesRechazadas && result.asignacionesRechazadas > 0) {
+                    if (confirm(`⚠️ ${result.message}\n\n¿Desea ver las asignaciones rechazadas?`)) {
+                        mostrarModalReasignacion(partidoId);
+                    }
+                } else {
+                    alert('❌ Error: ' + (result.message || 'No se pudo simular el partido'));
+                }
+            }
+        } catch (error) {
+            alert('❌ Error de conexión: ' + error.message);
+        }
+    }
+
+    // ============================================
+    // Funciones para Ver Resultados Finales (Torneos Cerrados)
+    // ============================================
+    async function verResultadosFinales(button) {
+        const torneoId = button.getAttribute('data-torneo-id');
+        const torneoNombre = button.getAttribute('data-torneo-nombre');
+        const campeon = button.getAttribute('data-campeon');
+        
+        document.getElementById('modalResultadosFinalesTorneoId').value = torneoId;
+        document.getElementById('tituloResultadosFinales').textContent = `${torneoNombre} - Resultados Finales`;
+        document.getElementById('nombreCampeon').textContent = campeon;
+        
+        try {
+            const response = await fetch(`/api/torneos/simulacion/estado/${torneoId}`);
+            const estado = await response.json();
+            
+            if (response.ok) {
+                mostrarResultadosFinales(estado);
+                new bootstrap.Modal(document.getElementById('resultadosFinalesModal')).show();
+            } else {
+                alert('❌ Error: ' + (estado.message || 'No se pudo obtener los resultados'));
+            }
+        } catch (error) {
+            alert('❌ Error de conexión: ' + error.message);
+        }
+    }
+
+    function mostrarResultadosFinales(estado) {
+        // Actualizar resumen
+        const totalPartidos = Object.values(estado.fases).flat().length;
+        document.getElementById('totalPartidosFinales').textContent = totalPartidos;
+        document.getElementById('fechaCierre').textContent = new Date().toLocaleDateString('es-ES');
+        
+        // Mostrar Cuartos
+        const tablaCuartosFinales = document.getElementById('tablaCuartosFinales');
+        tablaCuartosFinales.innerHTML = '';
+        estado.fases['Cuartos de Final'].forEach((partido, idx) => {
+            tablaCuartosFinales.innerHTML += crearFilaResultadoFinal(partido, `QF${idx + 1}`);
+        });
+        
+        // Mostrar Semifinales
+        const tablaSeemifinalesFinales = document.getElementById('tablaSeemifinalesFinales');
+        tablaSeemifinalesFinales.innerHTML = '';
+        estado.fases['Semifinales'].forEach((partido, idx) => {
+            tablaSeemifinalesFinales.innerHTML += crearFilaResultadoFinal(partido, `SF${idx + 1}`);
+        });
+        
+        // Mostrar Final
+        const tablaFinalFinales = document.getElementById('tablaFinalFinales');
+        tablaFinalFinales.innerHTML = '';
+        if (estado.fases['Final'].length > 0) {
+            const finalPartido = estado.fases['Final'][0];
+            tablaFinalFinales.innerHTML += crearFilaResultadoFinal(finalPartido, 'FINAL', true);
+        }
+    }
+
+    function crearFilaResultadoFinal(partido, etiqueta, esFinal = false) {
+        const equipoLocal = partido.equipoLocal || 'TBD';
+        const equipoVisitante = partido.equipoVisitante || 'TBD';
+        const marcadorLocal = partido.marcadorLocal !== null ? partido.marcadorLocal : '-';
+        const marcadorVisitante = partido.marcadorVisitante !== null ? partido.marcadorVisitante : '-';
+        const ganador = partido.ganador || '-';
+        
+        const ganadorHtml = ganador !== '-' 
+            ? `<strong style="color: #FFD700;"><i class="fas fa-trophy"></i> ${ganador}</strong>`
+            : '-';
+        
+        if (esFinal) {
+            return `
+                <tr style="background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,165,0,0.1) 100%);">
+                    <td><strong style="font-size: 1.2rem;">${equipoLocal}</strong></td>
+                    <td class="text-center">
+                        <span class="badge bg-dark fs-5">${marcadorLocal} - ${marcadorVisitante}</span>
+                    </td>
+                    <td><strong style="font-size: 1.2rem;">${equipoVisitante}</strong></td>
+                    <td>${ganadorHtml}</td>
+                </tr>
+            `;
+        }
+        
+        return `
+            <tr>
+                <td><strong>${etiqueta}</strong></td>
+                <td>${equipoLocal}</td>
+                <td class="text-center">
+                    <span class="badge bg-dark">${marcadorLocal} - ${marcadorVisitante}</span>
+                </td>
+                <td>${equipoVisitante}</td>
+                <td>${ganadorHtml}</td>
+            </tr>
+        `;
+    }
+
+    // ===========================================
+    // Funciones de Predicción con IA
+    // ===========================================
+
+    /**
+     * Predice el resultado de un partido específico usando IA
+     */
+    async function predecirPartido(equipoLocal, equipoVisitante) {
+        try {
+            const response = await fetch('/api/torneos/ai/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    equipoLocal: equipoLocal,
+                    equipoVisitante: equipoVisitante,
+                    fase: 'Play-offs'
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al obtener predicción');
+            }
+
+            const data = await response.json();
+            
+            // Formatear y mostrar la predicción
+            let mensaje = `🤖 PREDICCIÓN CON IA\n\n`;
+            mensaje += `${equipoLocal} vs ${equipoVisitante}\n\n`;
+            mensaje += `📊 Probabilidades:\n`;
+            mensaje += `• ${equipoLocal}: ${(data.p_local * 100).toFixed(1)}%\n`;
+            mensaje += `• ${equipoVisitante}: ${(data.p_visitante * 100).toFixed(1)}%\n\n`;
+            mensaje += `⭐ Favorito: ${data.predicted_winner}`;
+
+            alert(mensaje);
+        } catch (error) {
+            console.error('Error al predecir partido:', error);
+            alert('❌ Error al obtener la predicción del partido. Por favor, intente nuevamente.');
+        }
+    }
+
+    /**
+     * Predice el campeón del torneo usando simulación Monte Carlo
+     */
+    async function predecirCampeon(event) {
+        const torneoId = document.getElementById('modalEstadoTorneoId').value;
+        
+        if (!torneoId) {
+            alert('⚠️ No hay un torneo seleccionado');
+            return;
+        }
+
+        // Mostrar indicador de carga
+        const boton = event.target.closest('button');
+        const originalText = boton.innerHTML;
+        boton.disabled = true;
+        boton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...';
+
+        try {
+            const response = await fetch(`/api/torneos/ai/predict-champion/${torneoId}?simulations=1000`, {
+                method: 'GET'
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al obtener predicción del campeón');
+            }
+
+            const data = await response.json();
+            
+            if (data.error) {
+                alert('⚠️ ' + data.error);
+                return;
+            }
+            
+            // Formatear y mostrar la predicción del campeón
+            let mensaje = `🤖 PREDICCIÓN DEL CAMPEÓN\n`;
+            mensaje += `(Basado en ${data.numSimulaciones || 1000} simulaciones Monte Carlo)\n\n`;
+            mensaje += `🏆 Top 3 Favoritos:\n\n`;
+            
+            if (data.probabilidades) {
+                const equipos = Object.entries(data.probabilidades);
+                const top3 = equipos.slice(0, 3);
+                
+                top3.forEach(([equipo, prob], index) => {
+                    const medalla = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                    mensaje += `${medalla} ${equipo}: ${(prob * 100).toFixed(1)}%\n`;
+                });
+            }
+            
+            mensaje += `\n👑 Campeón Predicho: ${data.favoritoPrediccion || 'N/A'}`;
+            mensaje += `\n📊 Probabilidad: ${((data.probabilidadFavorito || 0) * 100).toFixed(1)}%`;
+
+            alert(mensaje);
+        } catch (error) {
+            console.error('Error al predecir campeón:', error);
+            alert('❌ Error al obtener la predicción del campeón. Por favor, intente nuevamente.');
+        } finally {
+            // Restaurar el botón
+            boton.disabled = false;
+            boton.innerHTML = originalText;
+        }
+    }
+
+    // ============================================
+    // Funciones para Reasignación de Árbitros
+    // ============================================
+    
+    async function verificarReasignaciones(partidoId) {
+        try {
+            const response = await fetch(`/admin/asignaciones/rechazadas/${partidoId}`);
+            
+            if (!response.ok) {
+                console.error('Error al obtener asignaciones rechazadas');
+                return null;
+            }
+            
+            const asignaciones = await response.json();
+            return asignaciones && asignaciones.length > 0 ? asignaciones : null;
+        } catch (error) {
+            console.error('Error al verificar reasignaciones:', error);
+            return null;
+        }
+    }
+
+    async function mostrarModalReasignacion(partidoId) {
+        try {
+            const response = await fetch(`/admin/asignaciones/rechazadas/${partidoId}`);
+            
+            if (!response.ok) {
+                alert('❌ Error al obtener asignaciones rechazadas');
+                return;
+            }
+            
+            const asignaciones = await response.json();
+            
+            if (asignaciones.length === 0) {
+                alert('✅ No hay asignaciones rechazadas para este partido');
+                return;
+            }
+            
+            // Construir mensaje con las asignaciones rechazadas
+            let mensaje = `👨‍⚖️ ÁRBITROS QUE RECHAZARON LA ASIGNACIÓN\n\n`;
+            
+            asignaciones.forEach((asig, index) => {
+                mensaje += `${index + 1}. ${asig.arbitro.nombre} ${asig.arbitro.apellido}\n`;
+                mensaje += `   Rol: ${asig.rolEspecifico}\n`;
+                mensaje += `   ID Asignación: ${asig.id}\n\n`;
+            });
+            
+            mensaje += `⚠️ Debe reasignar estos árbitros antes de poder simular el partido.\n\n`;
+            mensaje += `Vaya a la sección de Asignaciones para realizar la reasignación.`;
+            
+            alert(mensaje);
+            
+        } catch (error) {
+            console.error('Error al mostrar modal de reasignación:', error);
+            alert('❌ Error de conexión al obtener asignaciones rechazadas');
+        }
+    }
+
+    async function reasignarArbitro(asignacionId, nuevoArbitroId) {
+        try {
+            const response = await fetch(`/admin/asignaciones/reasignar/${asignacionId}?nuevoArbitroId=${nuevoArbitroId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': getCsrfToken()
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.ok) {
+                alert(`✅ ${result.message}`);
+                return true;
+            } else {
+                alert(`❌ Error: ${result.error || 'No se pudo reasignar el árbitro'}`);
+                return false;
+            }
+        } catch (error) {
+            console.error('Error al reasignar árbitro:', error);
+            alert('❌ Error de conexión al reasignar árbitro');
+            return false;
+        }
+    }
+
 </script>
+
+<div th:replace="fragments/layout :: scripts"></div>
+
+<style>
+    .simulation-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 10px;
+    }
+    .simulation-btn {
+        margin: 5px;
+    }
+    .badge-simulation {
+        font-size: 0.75rem;
+        margin-left: 5px;
+    }
+</style>
+
 </body>
 </html>

@@ -41,4 +41,8 @@ public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
                                           @Param("estados") List<EstadoAsignacion> estados);
     
     Optional<Asignacion> findByArbitroAndPartido(Arbitro arbitro, Partido partido);
+    
+    // Consulta para obtener asignaciones rechazadas de un partido
+    @Query("SELECT a FROM Asignacion a WHERE a.partido = :partido AND a.estado = 'RECHAZADA'")
+    List<Asignacion> findAsignacionesRechazadasByPartido(@Param("partido") Partido partido);
 }

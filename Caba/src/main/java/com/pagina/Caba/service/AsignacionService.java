@@ -199,6 +199,48 @@ public class AsignacionService {
         return 0;
     }
     
+    /**
+     * Obtiene las asignaciones rechazadas de un partido específico
+     */
+    public List<Asignacion> obtenerAsignacionesRechazadas(Long partidoId) {
+        Partido partido = partidoRepository.findById(partidoId)
+            .orElseThrow(() -> new IllegalArgumentException("Partido no encontrado"));
+        return asignacionRepository.findAsignacionesRechazadasByPartido(partido);
+    }
+    
+    /**
+     * Reasigna un árbitro que rechazó una asignación
+     */
+    @Transactional
+    public Asignacion reasignarArbitro(Long asignacionId, Long nuevoArbitroId) {
+        // Obtener la asignación rechazada
+        Asignacion asignacionRechazada = asignacionRepository.findById(asignacionId)
+            .orElseThrow(() -> new IllegalArgumentException("Asignación no encontrada"));
+        
+        if (asignacionRechazada.getEstado() != EstadoAsignacion.RECHAZADA) {
+            throw new IllegalStateException("Solo se pueden reasignar asignaciones rechazadas");
+        }
+        
+        // Obtener el nuevo árbitro
+        Arbitro nuevoArbitro = arbitroRepository.findById(nuevoArbitroId)
+            .orElseThrow(() -> new IllegalArgumentException("Árbitro no encontrado"));
+        
+        // Validar el nuevo árbitro
+        validarAsignacion(asignacionRechazada.getPartido(), nuevoArbitro);
+        
+        // Crear nueva asignación con el nuevo árbitro
+        Asignacion nuevaAsignacion = new Asignacion();
+        nuevaAsignacion.setPartido(asignacionRechazada.getPartido());
+        nuevaAsignacion.setArbitro(nuevoArbitro);
+        nuevaAsignacion.setRolEspecifico(asignacionRechazada.getRolEspecifico());
+        nuevaAsignacion.setTarifa(asignacionRechazada.getTarifa());
+        nuevaAsignacion.setMontoCalculado(asignacionRechazada.getMontoCalculado());
+        nuevaAsignacion.setEstado(EstadoAsignacion.PENDIENTE);
+        nuevaAsignacion.setFechaAsignacion(LocalDateTime.now());
+        
+        return asignacionRepository.save(nuevaAsignacion);
+    }
+    
     // Validaciones privadas
     private void validarAsignacion(Partido partido, Arbitro arbitro) {
         // Verificar que el árbitro esté disponible

@@ -75,6 +75,10 @@ public class MainController {
             return "redirect:/login";
         }
         Long arbitroId = arbitro.getId();
+        
+        // Agregar estado de disponibilidad
+        model.addAttribute("arbitro", arbitro);
+        model.addAttribute("disponible", arbitro.getDisponible());
 
         // Estadísticas
     var asignacionesPendientesList = asignacionService.obtenerAsignacionesPendientesArbitro(arbitroId);

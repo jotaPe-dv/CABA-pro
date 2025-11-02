@@ -1,9 +1,17 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" data-bs-theme="light">
 <head th:fragment="head">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${pageTitle != null ? pageTitle + ' - CABA Pro' : 'CABA Pro - Sistema de Gestión Integral de Arbitraje de Baloncesto'}">CABA Pro</title>
+    
+    <!-- CRITICAL: Apply theme IMMEDIATELY to prevent flash -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        })();
+    </script>
     
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -17,6 +25,23 @@
             --caba-success: #28a745;
             --caba-warning: #ffc107;
             --caba-danger: #dc3545;
+        }
+        
+        /* Dark mode custom adjustments */
+        [data-bs-theme="dark"] {
+            --caba-primary: #0d6efd;
+            --caba-success: #198754;
+            --caba-warning: #ffc107;
+            --caba-danger: #dc3545;
+        }
+        
+        [data-bs-theme="dark"] .sidebar {
+            background-color: #212529;
+        }
+        
+        [data-bs-theme="dark"] .card-header {
+            background-color: var(--caba-primary);
+            color: white;
         }
         
         .navbar-brand {
@@ -58,6 +83,16 @@
         .badge-estado {
             font-size: 0.75rem;
         }
+        
+        /* Theme toggle button */
+        .theme-toggle {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 
@@ -72,32 +107,80 @@
         </button>
         
         <div class="collapse navbar-collapse" id="navbarNav">
-            <!-- ✅ CORREGIDO: Los items del chat deben estar DENTRO de <ul> -->
-            <ul class="navbar-nav me-auto">
-                <!-- Dashboard Admin -->
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                    <a class="nav-link" href="/admin/dashboard">
-                        <i class="bi bi-speedometer2 me-1"></i>Dashboard Admin
+            <!-- MENÚ ADMINISTRADOR -->
+            <ul class="navbar-nav me-auto" sec:authorize="hasRole('ADMIN')">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-shield-fill-check me-1"></i>ADMINISTRACIÓN
                     </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/admin/dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/arbitros">
+                            <i class="bi bi-people-fill me-2"></i>Árbitros
+                        </a></li>
+                        <li><a class="dropdown-item" href="/admin/asignaciones">
+                            <i class="bi bi-clipboard-check me-2"></i>Asignaciones
+                        </a></li>
+                        <li><a class="dropdown-item" href="/liquidaciones">
+                            <i class="bi bi-cash-coin me-2"></i>Liquidaciones
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/torneos">
+                            <i class="bi bi-trophy me-2"></i>Torneos
+                        </a></li>
+                        <li><a class="dropdown-item" href="/partidos">
+                            <i class="bi bi-calendar-event me-2"></i>Partidos
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/tarifas">
+                            <i class="bi bi-currency-dollar me-2"></i>Tarifas
+                        </a></li>
+                        <li><a class="dropdown-item" href="/especialidades">
+                            <i class="bi bi-award me-2"></i>Especialidades
+                        </a></li>
+                    </ul>
                 </li>
                 
-                <!-- Dashboard Árbitro -->
-                <li class="nav-item" sec:authorize="hasRole('ARBITRO')">
-                    <a class="nav-link" href="/arbitro/dashboard">
-                        <i class="bi bi-person-badge me-1"></i>Dashboard Árbitro
-                    </a>
-                </li>
-                
-                <!-- ✅ Chat Admin -->
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                <!-- Chat Admin -->
+                <li class="nav-item">
                     <a class="nav-link" href="/admin/chat">
                         <i class="bi bi-chat-dots-fill me-1"></i>Chat
                         <span id="navbar-badge-chat" class="badge bg-danger ms-1" style="display: none;">0</span>
                     </a>
                 </li>
+            </ul>
+            
+            <!-- MENÚ ÁRBITRO -->
+            <ul class="navbar-nav me-auto" sec:authorize="hasRole('ARBITRO')">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-badge-fill me-1"></i>ÁRBITRO
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/arbitro/dashboard">
+                            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/arbitro/asignaciones">
+                            <i class="bi bi-clipboard-check me-2"></i>Mis Asignaciones
+                        </a></li>
+                        <li><a class="dropdown-item" href="/arbitro/perfil">
+                            <i class="bi bi-person-circle me-2"></i>Mi Perfil
+                        </a></li>
+                        <li><a class="dropdown-item" href="/arbitro/disponibilidad">
+                            <i class="bi bi-calendar-check me-2"></i>Disponibilidad
+                        </a></li>
+                        <li><a class="dropdown-item" href="/arbitro/liquidaciones">
+                            <i class="bi bi-cash-coin me-2"></i>Mis Liquidaciones
+                        </a></li>
+                    </ul>
+                </li>
                 
-                <!-- ✅ Chat Árbitro -->
-                <li class="nav-item" sec:authorize="hasRole('ARBITRO')">
+                <!-- Chat Árbitro -->
+                <li class="nav-item">
                     <a class="nav-link" href="/arbitro/chat">
                         <i class="bi bi-chat-dots-fill me-1"></i>Chat
                         <span id="navbar-badge-chat" class="badge bg-danger ms-1" style="display: none;">0</span>
@@ -107,13 +190,22 @@
             
             <!-- Menú de usuario (derecha) -->
             <ul class="navbar-nav" sec:authorize="isAuthenticated()">
+                <!-- Theme Toggle Button -->
+                <li class="nav-item me-2">
+                    <button id="theme-toggle" class="btn btn-outline-light theme-toggle" title="Cambiar tema">
+                        <i id="theme-icon" class="bi bi-moon-stars-fill"></i>
+                    </button>
+                </li>
+                
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle me-1"></i>
                         <span sec:authentication="name">Usuario</span>
                     </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Perfil</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#" sec:authorize="hasRole('ARBITRO')" th:href="@{/arbitro/perfil}">
+                            <i class="bi bi-person me-2"></i>Mi Perfil
+                        </a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form th:action="@{/logout}" method="post" class="d-inline">
@@ -162,17 +254,59 @@
     
     <!-- Custom Scripts -->
     <script>
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            var alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                var bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
+        // ============================================
+        // DARK MODE TOGGLE
+        // ============================================
         
-        // Confirm delete actions
+        // Get saved theme or default to 'light'
+        const getStoredTheme = () => localStorage.getItem('theme') || 'light';
+        const setStoredTheme = theme => localStorage.setItem('theme', theme);
+        
+        // Set theme and update icon
+        const setTheme = theme => {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            updateThemeIcon(theme);
+        };
+        
+        // Update theme icon
+        const updateThemeIcon = theme => {
+            const themeIcon = document.getElementById('theme-icon');
+            if (themeIcon) {
+                themeIcon.className = theme === 'dark' 
+                    ? 'bi bi-sun-fill' 
+                    : 'bi bi-moon-stars-fill';
+            }
+        };
+        
+        // Initialize theme immediately (before DOM loads)
+        document.documentElement.setAttribute('data-bs-theme', getStoredTheme());
+        
+        // Setup everything when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 Dark Mode: DOM loaded');
+            console.log('🔧 Current theme:', document.documentElement.getAttribute('data-bs-theme'));
+            
+            // Initialize theme icon
+            updateThemeIcon(getStoredTheme());
+            
+            // Theme toggle button click handler
+            const themeToggle = document.getElementById('theme-toggle');
+            console.log('🔧 Theme toggle button:', themeToggle);
+            
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    console.log('🔧 Theme toggle clicked!');
+                    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    console.log('🔧 Changing theme from', currentTheme, 'to', newTheme);
+                    setTheme(newTheme);
+                    setStoredTheme(newTheme);
+                });
+            } else {
+                console.error('❌ Theme toggle button NOT found!');
+            }
+            
+            // Confirm delete actions
             var deleteButtons = document.querySelectorAll('.btn-delete');
             deleteButtons.forEach(function(button) {
                 button.addEventListener('click', function(e) {
@@ -182,6 +316,19 @@
                 });
             });
         });
+        
+        // ============================================
+        // OTHER SCRIPTS
+        // ============================================
+        
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
         
         // ✅ NUEVO: Actualizar contador de mensajes no leídos en el navbar
         function actualizarContadorNavbar() {
