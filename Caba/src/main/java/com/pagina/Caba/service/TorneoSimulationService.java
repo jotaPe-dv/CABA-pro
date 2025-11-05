@@ -27,6 +27,9 @@ public class TorneoSimulationService {
 
     @Autowired
     private TarifaRepository tarifaRepository;
+    
+    @Autowired
+    private ConfiguracionService configuracionService;
 
     /**
      * Genera la estructura de play-offs de baloncesto: Cuartos (4 partidos), Semifinales (2 partidos), Final (1 partido)
@@ -121,8 +124,8 @@ public class TorneoSimulationService {
         Torneo torneo = torneoRepository.findById(torneoId)
                 .orElseThrow(() -> new IllegalArgumentException("Torneo no encontrado: " + torneoId));
 
-        // buscar el siguiente partido no completado ordenado por id
-        Optional<Partido> siguienteOpt = torneo.getPartidos().stream()
+        // Buscar el siguiente partido no completado ordenado por fecha de creación
+        Optional<Partido> siguienteOpt = partidoRepository.findByTorneoId(torneoId).stream()
                 .filter(p -> p.getCompletado() == null || !p.getCompletado())
                 .sorted(Comparator.comparing(Partido::getFechaCreacion))
                 .findFirst();
@@ -142,15 +145,24 @@ public class TorneoSimulationService {
             return res;
         }
 
-        // Verificar que todas las asignaciones estén aceptadas
-        boolean todasAceptadas = asignaciones.stream().allMatch(a -> a.getEstado() == EstadoAsignacion.ACEPTADA);
-        if (!todasAceptadas) {
-            res.put("ok", false);
-            res.put("message", "No todas las asignaciones están aceptadas. No se puede simular el partido.");
-            res.put("partidoId", p.getId());
-            res.put("asignacionesPendientes", asignaciones.stream().filter(a -> a.getEstado() != EstadoAsignacion.ACEPTADA).count());
-            return res;
+        // Verificar configuración: ¿se debe validar que los árbitros hayan aceptado?
+        boolean debeValidarArbitros = configuracionService.debeValidarArbitrosParaSimulacion();
+        
+        if (debeValidarArbitros) {
+            // Modo NORMAL: Verificar que todas las asignaciones estén aceptadas
+            boolean todasAceptadas = asignaciones.stream()
+                    .allMatch(a -> a.getEstado() == EstadoAsignacion.ACEPTADA);
+            if (!todasAceptadas) {
+                res.put("ok", false);
+                res.put("message", "No todas las asignaciones están aceptadas. No se puede simular el partido.");
+                res.put("partidoId", p.getId());
+                res.put("asignacionesPendientes", asignaciones.stream()
+                        .filter(a -> a.getEstado() != EstadoAsignacion.ACEPTADA)
+                        .count());
+                return res;
+            }
         }
+        // Si debeValidarArbitros = false, se simula sin verificar (modo libre)
 
         // Simular resultado REALISTA de baloncesto (rangos 70-120 puntos)
         Random rnd = new Random();
@@ -314,7 +326,8 @@ public class TorneoSimulationService {
         Torneo torneo = torneoRepository.findById(torneoId)
                 .orElseThrow(() -> new IllegalArgumentException("Torneo no encontrado: " + torneoId));
 
-        List<Partido> partidos = torneo.getPartidos().stream()
+        // Buscar partidos directamente del repositorio en lugar de la colección del torneo
+        List<Partido> partidos = partidoRepository.findByTorneoId(torneoId).stream()
                 .sorted(Comparator.comparing(Partido::getFechaPartido))
                 .toList();
 
@@ -400,8 +413,8 @@ public class TorneoSimulationService {
         Torneo torneo = torneoRepository.findById(torneoId)
                 .orElseThrow(() -> new IllegalArgumentException("Torneo no encontrado: " + torneoId));
 
-        // Obtener partidos de semifinales (los que tienen equipos TBD)
-        List<Partido> semifinales = torneo.getPartidos().stream()
+        // Obtener partidos de semifinales directamente del repositorio
+        List<Partido> semifinales = partidoRepository.findByTorneoId(torneoId).stream()
                 .filter(p -> "Semifinales".equals(p.getTipoPartido()))
                 .filter(p -> "TBD".equals(p.getEquipoLocal()))
                 .sorted(Comparator.comparing(Partido::getFechaPartido))
@@ -451,8 +464,8 @@ public class TorneoSimulationService {
         Torneo torneo = torneoRepository.findById(torneoId)
                 .orElseThrow(() -> new IllegalArgumentException("Torneo no encontrado: " + torneoId));
 
-        // Obtener partido de final (el que tiene equipos TBD)
-        Partido finalPartido = torneo.getPartidos().stream()
+        // Obtener partido de final directamente del repositorio
+        Partido finalPartido = partidoRepository.findByTorneoId(torneoId).stream()
                 .filter(p -> "Final".equals(p.getTipoPartido()))
                 .filter(p -> "TBD".equals(p.getEquipoLocal()))
                 .findFirst()

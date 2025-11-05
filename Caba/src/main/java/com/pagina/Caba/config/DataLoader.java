@@ -2,6 +2,7 @@ package com.pagina.Caba.config;
 
 import com.pagina.Caba.model.Tarifa;
 import com.pagina.Caba.repository.TarifaRepository;
+import com.pagina.Caba.service.ConfiguracionService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.core.annotation.Order;
@@ -13,14 +14,20 @@ import java.time.LocalDateTime;
 public class DataLoader implements CommandLineRunner {
 
     private final TarifaRepository tarifaRepository;
+    private final ConfiguracionService configuracionService;
 
-    public DataLoader(TarifaRepository tarifaRepository) {
+    public DataLoader(TarifaRepository tarifaRepository, ConfiguracionService configuracionService) {
         this.tarifaRepository = tarifaRepository;
+        this.configuracionService = configuracionService;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("🎯 DEBUG DataLoader: Iniciando carga de tarifas de prueba...");
+        System.out.println("🎯 DEBUG DataLoader: Iniciando carga de datos de prueba...");
+        
+        // Inicializar configuraciones del sistema
+        configuracionService.inicializarConfiguraciones();
+        System.out.println("✅ DEBUG DataLoader: Configuraciones del sistema inicializadas");
         
         // Solo insertar tarifas si no existen
         if (tarifaRepository.count() == 0) {

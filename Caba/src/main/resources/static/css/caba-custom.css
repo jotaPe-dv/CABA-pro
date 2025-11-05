@@ -1,0 +1,748 @@
+/**
+ * CABA Pro - Custom Styles
+ * Sistema de Gestión Integral de Arbitraje de Baloncesto
+ * 
+ * This file contains custom styles to ensure consistent design
+ * and improved usability across all views.
+ */
+
+/* ========================================
+   1. CSS VARIABLES (Design System)
+   ======================================== */
+:root {
+    /* Brand Colors */
+    --caba-primary: #007bff;
+    --caba-primary-dark: #0056b3;
+    --caba-primary-light: #4da3ff;
+    --caba-secondary: #6c757d;
+    --caba-success: #28a745;
+    --caba-danger: #dc3545;
+    --caba-warning: #ffc107;
+    --caba-info: #17a2b8;
+    
+    /* Background Colors */
+    --caba-bg-light: #f8f9fa;
+    --caba-bg-white: #ffffff;
+    --caba-bg-card: #ffffff;
+    
+    /* Text Colors */
+    --caba-text-primary: #212529;
+    --caba-text-secondary: #6c757d;
+    --caba-text-muted: #868e96;
+    
+    /* Border Colors */
+    --caba-border-color: #dee2e6;
+    --caba-border-radius: 0.375rem;
+    --caba-border-radius-lg: 0.5rem;
+    --caba-border-radius-sm: 0.25rem;
+    
+    /* Shadows */
+    --caba-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --caba-shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    --caba-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+    
+    /* Spacing */
+    --caba-spacing-xs: 0.25rem;
+    --caba-spacing-sm: 0.5rem;
+    --caba-spacing-md: 1rem;
+    --caba-spacing-lg: 1.5rem;
+    --caba-spacing-xl: 3rem;
+    
+    /* Typography */
+    --caba-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --caba-font-size-base: 1rem;
+    --caba-font-size-sm: 0.875rem;
+    --caba-font-size-lg: 1.125rem;
+    --caba-line-height: 1.5;
+    
+    /* Transitions */
+    --caba-transition: all 0.3s ease;
+    --caba-transition-fast: all 0.15s ease;
+}
+
+/* Dark Mode Variables */
+[data-bs-theme="dark"] {
+    --caba-primary: #0d6efd;
+    --caba-primary-dark: #0a58ca;
+    --caba-primary-light: #6ea8fe;
+    
+    --caba-bg-light: #212529;
+    --caba-bg-white: #343a40;
+    --caba-bg-card: #2b3035;
+    
+    --caba-text-primary: #f8f9fa;
+    --caba-text-secondary: #adb5bd;
+    --caba-text-muted: #6c757d;
+    
+    --caba-border-color: #495057;
+    
+    --caba-shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+    --caba-shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
+    --caba-shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   2. GLOBAL STYLES
+   ======================================== */
+body {
+    font-family: var(--caba-font-family);
+    font-size: var(--caba-font-size-base);
+    line-height: var(--caba-line-height);
+    color: var(--caba-text-primary);
+    background-color: var(--caba-bg-light);
+}
+
+/* ========================================
+   3. TYPOGRAPHY
+   ======================================== */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--caba-spacing-md);
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem; }
+
+.text-muted {
+    color: var(--caba-text-muted) !important;
+}
+
+/* ========================================
+   4. NAVBAR
+   ======================================== */
+.navbar {
+    box-shadow: var(--caba-shadow-sm);
+    padding: var(--caba-spacing-md) 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: var(--caba-spacing-sm);
+    transition: var(--caba-transition-fast);
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.navbar-brand i {
+    font-size: 1.75rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: var(--caba-transition-fast);
+    padding: 0.5rem 1rem !important;
+    border-radius: var(--caba-border-radius-sm);
+}
+
+.nav-link:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.nav-link.active {
+    background-color: var(--caba-primary);
+    color: white !important;
+}
+
+/* Theme Toggle Button */
+#theme-toggle {
+    border: none;
+    background: transparent;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: var(--caba-transition-fast);
+    padding: 0.5rem;
+    border-radius: var(--caba-border-radius);
+}
+
+#theme-toggle:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    transform: scale(1.1);
+}
+
+/* ========================================
+   5. CARDS
+   ======================================== */
+.card {
+    border-radius: var(--caba-border-radius-lg);
+    box-shadow: var(--caba-shadow-sm);
+    transition: var(--caba-transition);
+    border: 1px solid var(--caba-border-color);
+    background-color: var(--caba-bg-card);
+}
+
+.card:hover {
+    box-shadow: var(--caba-shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--caba-primary) 0%, var(--caba-primary-dark) 100%);
+    color: white;
+    font-weight: 600;
+    border-radius: var(--caba-border-radius-lg) var(--caba-border-radius-lg) 0 0 !important;
+    padding: var(--caba-spacing-md) var(--caba-spacing-lg);
+    border-bottom: none;
+}
+
+.card-body {
+    padding: var(--caba-spacing-lg);
+}
+
+.card-footer {
+    background-color: var(--caba-bg-light);
+    border-top: 1px solid var(--caba-border-color);
+    padding: var(--caba-spacing-md) var(--caba-spacing-lg);
+}
+
+/* Stat Cards */
+.stat-card {
+    border-left: 4px solid var(--caba-primary);
+    transition: var(--caba-transition-fast);
+}
+
+.stat-card:hover {
+    border-left-width: 6px;
+    box-shadow: var(--caba-shadow-md);
+}
+
+.stat-card .stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.3;
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--caba-primary);
+}
+
+.stat-card .stat-label {
+    font-size: 0.875rem;
+    color: var(--caba-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ========================================
+   6. FORMS
+   ======================================== */
+.form-label {
+    font-weight: 600;
+    margin-bottom: var(--caba-spacing-sm);
+    color: var(--caba-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--caba-spacing-xs);
+}
+
+.form-label i {
+    color: var(--caba-primary);
+}
+
+.form-label .required {
+    color: var(--caba-danger);
+    margin-left: var(--caba-spacing-xs);
+}
+
+.form-control,
+.form-select {
+    border-radius: var(--caba-border-radius);
+    border: 1px solid var(--caba-border-color);
+    padding: 0.625rem 0.75rem;
+    transition: var(--caba-transition-fast);
+    font-size: var(--caba-font-size-base);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--caba-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--caba-danger);
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.invalid-feedback {
+    display: flex;
+    align-items: center;
+    gap: var(--caba-spacing-xs);
+    font-size: var(--caba-font-size-sm);
+    margin-top: var(--caba-spacing-xs);
+}
+
+.invalid-feedback i {
+    font-size: 1rem;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: var(--caba-spacing-lg);
+}
+
+/* Input Groups */
+.input-group {
+    border-radius: var(--caba-border-radius);
+}
+
+.input-group-text {
+    background-color: var(--caba-bg-light);
+    border-color: var(--caba-border-color);
+    color: var(--caba-text-secondary);
+}
+
+/* Floating Labels */
+.form-floating > .form-control,
+.form-floating > .form-select {
+    height: calc(3.5rem + 2px);
+}
+
+.form-floating > label {
+    color: var(--caba-text-muted);
+}
+
+/* ========================================
+   7. BUTTONS
+   ======================================== */
+.btn {
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--caba-border-radius);
+    transition: var(--caba-transition-fast);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--caba-spacing-sm);
+    text-decoration: none;
+}
+
+.btn i {
+    font-size: 1.125rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--caba-shadow-sm);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Button Sizes */
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: var(--caba-font-size-sm);
+}
+
+.btn-lg {
+    padding: 0.875rem 1.75rem;
+    font-size: var(--caba-font-size-lg);
+}
+
+/* Button Variants */
+.btn-primary {
+    background: linear-gradient(135deg, var(--caba-primary) 0%, var(--caba-primary-dark) 100%);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--caba-primary-dark) 0%, #003d82 100%);
+}
+
+/* ========================================
+   8. TABLES
+   ======================================== */
+.table {
+    border-radius: var(--caba-border-radius);
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: var(--caba-primary);
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: var(--caba-spacing-md);
+    text-transform: uppercase;
+    font-size: var(--caba-font-size-sm);
+    letter-spacing: 0.05em;
+}
+
+.table tbody tr {
+    transition: var(--caba-transition-fast);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+
+.table tbody td {
+    vertical-align: middle;
+    padding: var(--caba-spacing-md);
+    border-color: var(--caba-border-color);
+}
+
+/* Responsive Tables */
+.table-responsive {
+    border-radius: var(--caba-border-radius);
+    box-shadow: var(--caba-shadow-sm);
+}
+
+/* ========================================
+   9. BADGES
+   ======================================== */
+.badge {
+    font-weight: 600;
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--caba-border-radius-sm);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--caba-spacing-xs);
+}
+
+.badge i {
+    font-size: 0.875rem;
+}
+
+/* Badge Variants */
+.badge-success {
+    background-color: var(--caba-success);
+}
+
+.badge-danger {
+    background-color: var(--caba-danger);
+}
+
+.badge-warning {
+    background-color: var(--caba-warning);
+    color: #000;
+}
+
+.badge-info {
+    background-color: var(--caba-info);
+}
+
+/* ========================================
+   10. ALERTS
+   ======================================== */
+.alert {
+    border-radius: var(--caba-border-radius);
+    border: none;
+    padding: var(--caba-spacing-md) var(--caba-spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--caba-spacing-md);
+    box-shadow: var(--caba-shadow-sm);
+}
+
+.alert i {
+    font-size: 1.5rem;
+}
+
+.alert-dismissible .btn-close {
+    padding: var(--caba-spacing-md);
+}
+
+/* ========================================
+   11. BREADCRUMBS
+   ======================================== */
+.breadcrumb {
+    background-color: transparent;
+    padding: var(--caba-spacing-md) 0;
+    margin-bottom: var(--caba-spacing-lg);
+}
+
+.breadcrumb-item {
+    font-size: var(--caba-font-size-sm);
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    font-size: 1.25rem;
+    color: var(--caba-text-muted);
+}
+
+.breadcrumb-item a {
+    color: var(--caba-primary);
+    text-decoration: none;
+    transition: var(--caba-transition-fast);
+}
+
+.breadcrumb-item a:hover {
+    color: var(--caba-primary-dark);
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: var(--caba-text-secondary);
+}
+
+/* ========================================
+   12. PAGINATION
+   ======================================== */
+.pagination {
+    gap: var(--caba-spacing-xs);
+}
+
+.page-link {
+    border-radius: var(--caba-border-radius-sm);
+    border: 1px solid var(--caba-border-color);
+    color: var(--caba-primary);
+    padding: 0.5rem 0.75rem;
+    transition: var(--caba-transition-fast);
+}
+
+.page-link:hover {
+    background-color: var(--caba-primary);
+    color: white;
+    border-color: var(--caba-primary);
+}
+
+.page-item.active .page-link {
+    background-color: var(--caba-primary);
+    border-color: var(--caba-primary);
+}
+
+/* ========================================
+   13. MODALS
+   ======================================== */
+.modal-content {
+    border-radius: var(--caba-border-radius-lg);
+    border: none;
+    box-shadow: var(--caba-shadow-lg);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--caba-primary) 0%, var(--caba-primary-dark) 100%);
+    color: white;
+    border-radius: var(--caba-border-radius-lg) var(--caba-border-radius-lg) 0 0;
+    padding: var(--caba-spacing-lg);
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: var(--caba-spacing-lg);
+}
+
+.modal-footer {
+    padding: var(--caba-spacing-md) var(--caba-spacing-lg);
+    border-top: 1px solid var(--caba-border-color);
+}
+
+/* ========================================
+   14. SIDEBAR (for admin/arbitro panels)
+   ======================================== */
+.sidebar {
+    background-color: var(--caba-bg-card);
+    border-right: 1px solid var(--caba-border-color);
+    min-height: calc(100vh - 56px);
+    padding: var(--caba-spacing-lg);
+    box-shadow: var(--caba-shadow-sm);
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: var(--caba-spacing-sm);
+}
+
+.sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: var(--caba-spacing-md);
+    padding: var(--caba-spacing-md);
+    color: var(--caba-text-primary);
+    text-decoration: none;
+    border-radius: var(--caba-border-radius);
+    transition: var(--caba-transition-fast);
+    font-weight: 500;
+}
+
+.sidebar-nav a:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: var(--caba-primary);
+}
+
+.sidebar-nav a.active {
+    background-color: var(--caba-primary);
+    color: white;
+}
+
+.sidebar-nav i {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
+}
+
+/* ========================================
+   15. FOOTER
+   ======================================== */
+.footer {
+    background-color: var(--caba-bg-card);
+    border-top: 1px solid var(--caba-border-color);
+    padding: var(--caba-spacing-xl) 0;
+    margin-top: var(--caba-spacing-xl);
+    color: var(--caba-text-secondary);
+}
+
+.footer a {
+    color: var(--caba-primary);
+    text-decoration: none;
+    transition: var(--caba-transition-fast);
+}
+
+.footer a:hover {
+    color: var(--caba-primary-dark);
+    text-decoration: underline;
+}
+
+/* ========================================
+   16. UTILITIES
+   ======================================== */
+.shadow-sm { box-shadow: var(--caba-shadow-sm) !important; }
+.shadow-md { box-shadow: var(--caba-shadow-md) !important; }
+.shadow-lg { box-shadow: var(--caba-shadow-lg) !important; }
+
+.rounded { border-radius: var(--caba-border-radius) !important; }
+.rounded-lg { border-radius: var(--caba-border-radius-lg) !important; }
+.rounded-sm { border-radius: var(--caba-border-radius-sm) !important; }
+
+.text-primary { color: var(--caba-primary) !important; }
+.bg-primary { background-color: var(--caba-primary) !important; }
+
+/* Loading Spinner */
+.spinner-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--caba-spacing-xl);
+}
+
+.spinner-border {
+    color: var(--caba-primary);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--caba-spacing-xl);
+    color: var(--caba-text-muted);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    opacity: 0.3;
+    margin-bottom: var(--caba-spacing-lg);
+}
+
+.empty-state h3 {
+    color: var(--caba-text-secondary);
+    margin-bottom: var(--caba-spacing-md);
+}
+
+/* ========================================
+   17. RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+    .sidebar {
+        min-height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--caba-border-color);
+    }
+    
+    .card-body {
+        padding: var(--caba-spacing-md);
+    }
+    
+    .table {
+        font-size: var(--caba-font-size-sm);
+    }
+    
+    .btn {
+        padding: 0.5rem 1rem;
+    }
+    
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.75rem; }
+    h3 { font-size: 1.5rem; }
+}
+
+/* ========================================
+   18. ANIMATIONS
+   ======================================== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease;
+}
+
+/* ========================================
+   19. PRINT STYLES
+   ======================================== */
+@media print {
+    .navbar,
+    .sidebar,
+    .footer,
+    .btn,
+    #theme-toggle {
+        display: none !important;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+    
+    body {
+        background-color: white;
+        color: black;
+    }
+}

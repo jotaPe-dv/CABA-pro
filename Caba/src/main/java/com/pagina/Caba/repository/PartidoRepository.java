@@ -13,6 +13,10 @@ import java.util.List;
 public interface PartidoRepository extends JpaRepository<Partido, Long> {
     
     List<Partido> findByTorneo(Torneo torneo);
+    
+    @Query("SELECT p FROM Partido p WHERE p.torneo.id = :torneoId")
+    List<Partido> findByTorneoId(@Param("torneoId") Long torneoId);
+    
     List<Partido> findByCompletadoTrue();
     List<Partido> findByCompletadoFalse();
     List<Partido> findByEquipoLocalContainingIgnoreCaseOrEquipoVisitanteContainingIgnoreCase(

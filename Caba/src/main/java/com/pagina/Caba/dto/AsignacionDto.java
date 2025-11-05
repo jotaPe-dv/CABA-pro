@@ -1,95 +1,40 @@
 package com.pagina.Caba.dto;
 
 import com.pagina.Caba.model.EstadoAsignacion;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
-
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
- * DTO para transferencia de datos de Asignación.
+ * DTO para transferencia de datos de Asignación
  */
 public class AsignacionDto {
 
     private Long id;
-
-    @NotNull(message = "El rol específico es obligatorio")
-    private String rolEspecifico;
-
-    @NotNull(message = "El pago calculado es obligatorio")
-    @DecimalMin(value = "0.0", inclusive = false, message = "El pago debe ser mayor que cero")
-    private BigDecimal pagoCalculado;
-
-    @NotNull(message = "El estado es obligatorio")
-    private EstadoAsignacion estado;
-
     private Long arbitroId;
     private String arbitroNombre;
-    private String arbitroEscalafon;
-
+    private String arbitroEmail;
     private Long partidoId;
-    private String equipoLocal;
-    private String equipoVisitante;
+    private String partidoDescripcion;
+    private String torneoNombre;
+    private LocalDateTime fechaPartido;
+    private String lugarPartido;
+    private String rolEspecifico;
+    private EstadoAsignacion estado;
+    private BigDecimal montoCalculado;
+    private LocalDateTime fechaAsignacion;
+    private LocalDateTime fechaRespuesta;
+    private String comentarios;
 
-    private Long liquidacionId;
+    // Constructor vacío
+    public AsignacionDto() {}
 
-    // ============================
-    // Constructores
-    // ============================
-
-    public AsignacionDto() {
-    }
-
-    public AsignacionDto(String rolEspecifico, BigDecimal pagoCalculado, EstadoAsignacion estado) {
-        this.rolEspecifico = rolEspecifico;
-        this.pagoCalculado = pagoCalculado;
-        this.estado = estado;
-    }
-
-    public AsignacionDto(Long id, String rolEspecifico, BigDecimal pagoCalculado, 
-                        EstadoAsignacion estado, Long arbitroId, String arbitroNombre) {
-        this.id = id;
-        this.rolEspecifico = rolEspecifico;
-        this.pagoCalculado = pagoCalculado;
-        this.estado = estado;
-        this.arbitroId = arbitroId;
-        this.arbitroNombre = arbitroNombre;
-    }
-
-    // ============================
     // Getters y Setters
-    // ============================
-
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getRolEspecifico() {
-        return rolEspecifico;
-    }
-
-    public void setRolEspecifico(String rolEspecifico) {
-        this.rolEspecifico = rolEspecifico;
-    }
-
-    public BigDecimal getPagoCalculado() {
-        return pagoCalculado;
-    }
-
-    public void setPagoCalculado(BigDecimal pagoCalculado) {
-        this.pagoCalculado = pagoCalculado;
-    }
-
-    public EstadoAsignacion getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoAsignacion estado) {
-        this.estado = estado;
     }
 
     public Long getArbitroId() {
@@ -108,12 +53,12 @@ public class AsignacionDto {
         this.arbitroNombre = arbitroNombre;
     }
 
-    public String getArbitroEscalafon() {
-        return arbitroEscalafon;
+    public String getArbitroEmail() {
+        return arbitroEmail;
     }
 
-    public void setArbitroEscalafon(String arbitroEscalafon) {
-        this.arbitroEscalafon = arbitroEscalafon;
+    public void setArbitroEmail(String arbitroEmail) {
+        this.arbitroEmail = arbitroEmail;
     }
 
     public Long getPartidoId() {
@@ -124,39 +69,83 @@ public class AsignacionDto {
         this.partidoId = partidoId;
     }
 
-    public String getEquipoLocal() {
-        return equipoLocal;
+    public String getPartidoDescripcion() {
+        return partidoDescripcion;
     }
 
-    public void setEquipoLocal(String equipoLocal) {
-        this.equipoLocal = equipoLocal;
+    public void setPartidoDescripcion(String partidoDescripcion) {
+        this.partidoDescripcion = partidoDescripcion;
     }
 
-    public String getEquipoVisitante() {
-        return equipoVisitante;
+    public String getTorneoNombre() {
+        return torneoNombre;
     }
 
-    public void setEquipoVisitante(String equipoVisitante) {
-        this.equipoVisitante = equipoVisitante;
+    public void setTorneoNombre(String torneoNombre) {
+        this.torneoNombre = torneoNombre;
     }
 
-    public Long getLiquidacionId() {
-        return liquidacionId;
+    public LocalDateTime getFechaPartido() {
+        return fechaPartido;
     }
 
-    public void setLiquidacionId(Long liquidacionId) {
-        this.liquidacionId = liquidacionId;
+    public void setFechaPartido(LocalDateTime fechaPartido) {
+        this.fechaPartido = fechaPartido;
     }
 
-    @Override
-    public String toString() {
-        return "AsignacionDto{" +
-                "id=" + id +
-                ", rolEspecifico='" + rolEspecifico + '\'' +
-                ", pagoCalculado=" + pagoCalculado +
-                ", estado=" + estado +
-                ", arbitroId=" + arbitroId +
-                ", partidoId=" + partidoId +
-                '}';
+    public String getLugarPartido() {
+        return lugarPartido;
+    }
+
+    public void setLugarPartido(String lugarPartido) {
+        this.lugarPartido = lugarPartido;
+    }
+
+    public String getRolEspecifico() {
+        return rolEspecifico;
+    }
+
+    public void setRolEspecifico(String rolEspecifico) {
+        this.rolEspecifico = rolEspecifico;
+    }
+
+    public EstadoAsignacion getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoAsignacion estado) {
+        this.estado = estado;
+    }
+
+    public BigDecimal getMontoCalculado() {
+        return montoCalculado;
+    }
+
+    public void setMontoCalculado(BigDecimal montoCalculado) {
+        this.montoCalculado = montoCalculado;
+    }
+
+    public LocalDateTime getFechaAsignacion() {
+        return fechaAsignacion;
+    }
+
+    public void setFechaAsignacion(LocalDateTime fechaAsignacion) {
+        this.fechaAsignacion = fechaAsignacion;
+    }
+
+    public LocalDateTime getFechaRespuesta() {
+        return fechaRespuesta;
+    }
+
+    public void setFechaRespuesta(LocalDateTime fechaRespuesta) {
+        this.fechaRespuesta = fechaRespuesta;
+    }
+
+    public String getComentarios() {
+        return comentarios;
+    }
+
+    public void setComentarios(String comentarios) {
+        this.comentarios = comentarios;
     }
 }
