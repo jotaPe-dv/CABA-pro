@@ -55,7 +55,6 @@ public class SecurityConfig {
                 .requestMatchers("/administradores/**").hasRole("ADMIN")
                 .requestMatchers("/torneos/**").hasRole("ADMIN")
                 .requestMatchers("/partidos/**").hasRole("ADMIN")
-                .requestMatchers("/tarifas/**").hasRole("ADMIN")
                 .requestMatchers("/liquidaciones/**").hasRole("ADMIN")
                 
                 // Rutas para ARBITRO
@@ -67,6 +66,7 @@ public class SecurityConfig {
                 // Rutas compartidas
                 .requestMatchers("/asignaciones/**").hasAnyRole("ADMIN", "ARBITRO")
                 .requestMatchers("/especialidades/**").hasAnyRole("ADMIN", "ARBITRO")
+                .requestMatchers("/tarifas").hasAnyRole("ADMIN", "ARBITRO")
                 
                 // ⚠️ IMPORTANTE: anyRequest() SIEMPRE AL FINAL
                 .anyRequest().authenticated()
