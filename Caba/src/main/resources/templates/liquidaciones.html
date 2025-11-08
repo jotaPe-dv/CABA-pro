@@ -9,19 +9,19 @@
     <div class="container main-content">
         <div th:replace="fragments/layout :: alerts"></div>
         
-        <h1><i class="bi bi-cash-stack me-2"></i>Liquidaciones</h1>
+        <h1><i class="bi bi-cash-stack me-2"></i><span th:text="#{liquidaciones.title}">Liquidaciones</span></h1>
     <table class="table table-striped">
         <thead>
         <tr>
             <th>ID</th>
-            <th>Asignación</th>
-            <th>Monto</th>
-            <th>Estado</th>
-            <th>Fecha Creación</th>
-            <th>Fecha Pago</th>
-            <th>Método Pago</th>
-            <th>Referencia Pago</th>
-            <th>Observaciones</th>
+            <th th:text="#{liquidaciones.asignacion}">Asignación</th>
+            <th th:text="#{liquidaciones.monto}">Monto</th>
+            <th th:text="#{liquidaciones.estado}">Estado</th>
+            <th th:text="#{liquidaciones.fecha.creacion}">Fecha Creación</th>
+            <th th:text="#{liquidaciones.fecha.pago}">Fecha Pago</th>
+            <th th:text="#{liquidaciones.metodo.pago}">Método Pago</th>
+            <th th:text="#{liquidaciones.referencia.pago}">Referencia Pago</th>
+            <th th:text="#{liquidaciones.observaciones}">Observaciones</th>
         </tr>
         </thead>
         <tbody>

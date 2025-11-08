@@ -71,7 +71,7 @@ public class LocaleConfig implements WebMvcConfigurer {
     
     /**
      * Configura la fuente de mensajes para la internacionalización.
-     * Lee los archivos messages_es.properties y messages_en.properties
+     * Lee los archivos messages.properties, messages_es.properties y messages_en.properties
      * 
      * @return MessageSource configurado
      */
@@ -87,11 +87,14 @@ public class LocaleConfig implements WebMvcConfigurer {
         messageSource.setDefaultEncoding("UTF-8");
         
         // Caché de mensajes (en producción usar tiempo mayor, ej: 3600)
-        // -1 = sin caché (útil en desarrollo para ver cambios inmediatamente)
-        messageSource.setCacheSeconds(3600);
+        // En desarrollo, usar -1 para ver cambios inmediatamente
+        messageSource.setCacheSeconds(-1);
         
         // Si no encuentra una clave, usar el código de la clave como fallback
         messageSource.setUseCodeAsDefaultMessage(true);
+        
+        // No usar fallback al locale del sistema
+        messageSource.setFallbackToSystemLocale(false);
         
         return messageSource;
     }

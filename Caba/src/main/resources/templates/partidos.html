@@ -9,15 +9,15 @@
     <div class="container main-content">
         <div th:replace="fragments/layout :: alerts"></div>
         
-        <h2><i class="bi bi-calendar-event me-2"></i>Partidos</h2>
+        <h2><i class="bi bi-calendar-event me-2"></i><span th:text="#{partidos.title}">Partidos</span></h2>
     <table class="table table-striped">
         <thead>
         <tr>
             <th>ID</th>
-            <th>Fecha</th>
-            <th>Local</th>
-            <th>Visitante</th>
-            <th>Acciones</th>
+            <th th:text="#{partidos.fecha}">Fecha</th>
+            <th th:text="#{partidos.equipoLocal}">Local</th>
+            <th th:text="#{partidos.equipoVisitante}">Visitante</th>
+            <th th:text="#{partidos.acciones}">Acciones</th>
         </tr>
         </thead>
         <tbody>
@@ -27,13 +27,13 @@
             <td th:text="${partido.equipoLocal}"></td>
             <td th:text="${partido.equipoVisitante}"></td>
             <td>
-                <a th:href="@{'/partidos/editar/' + ${partido.id}}" class="btn btn-sm btn-primary">Editar</a>
-                <a th:href="@{'/partidos/eliminar/' + ${partido.id}}" class="btn btn-sm btn-danger">Eliminar</a>
+                <a th:href="@{'/partidos/editar/' + ${partido.id}}" class="btn btn-sm btn-primary" th:text="#{btn.edit}">Editar</a>
+                <a th:href="@{'/partidos/eliminar/' + ${partido.id}}" class="btn btn-sm btn-danger" th:text="#{btn.delete}">Eliminar</a>
             </td>
         </tr>
         </tbody>
     </table>
-    <a href="/partidos/nuevo" class="btn btn-success"><i class="bi bi-plus-circle me-2"></i>Nuevo Partido</a>
+    <a href="/partidos/nuevo" class="btn btn-success"><i class="bi bi-plus-circle me-2"></i><span th:text="#{partidos.nuevo}">Nuevo Partido</span></a>
 </div>
 
 <div th:replace="fragments/layout :: scripts"></div>

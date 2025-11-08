@@ -8,18 +8,25 @@
     <div class="container main-content">
         <div class="card shadow-sm mt-4">
             <div class="card-header">
-                <h2 class="mb-0"><i class="bi bi-cash-coin me-2"></i>Lista de Tarifas</h2>
+                <h2 class="mb-0"><i class="bi bi-cash-coin me-2"></i><span th:text="#{tarifas.list}">Lista de Tarifas</span></h2>
             </div>
             <div class="card-body">
+                <!-- Mensaje de error si existe -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span th:text="${error}">Error</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
                 <div class="table-responsive">
                     <table class="table table-striped table-hover align-middle">
                         <thead class="table-primary">
                             <tr>
                                 <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Escalafón</th>
-                                <th>Monto</th>
-                                <th>Torneo</th>
+                                <th th:text="#{tarifas.nombre}">Nombre</th>
+                                <th th:text="#{tarifas.escalafon}">Escalafón</th>
+                                <th th:text="#{tarifas.monto}">Monto</th>
+                                <th th:text="#{tarifas.torneo}">Torneo</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -31,6 +38,12 @@
                                     <span class="badge bg-success" th:text="${#numbers.formatDecimal(tarifa.monto, 1, 'COMMA', 2, 'POINT')}"></span>
                                 </td>
                                 <td th:text="${tarifa.torneoNombre}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(tarifas)}">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-3"></i>
+                                    <p class="mt-2">No hay tarifas registradas</p>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

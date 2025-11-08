@@ -15,8 +15,20 @@ public class TarifasWebController {
 
     @GetMapping("/tarifas")
     public String listarTarifas(Model model) {
-        List<TarifaDto> tarifas = tarifaService.findAll();
-        model.addAttribute("tarifas", tarifas);
-        return "tarifas";
+        try {
+            List<TarifaDto> tarifas = tarifaService.findAll();
+            System.out.println("[DEBUG] Tarifas encontradas: " + (tarifas != null ? tarifas.size() : "null"));
+            if (tarifas == null) {
+                tarifas = new java.util.ArrayList<>();
+            }
+            model.addAttribute("tarifas", tarifas);
+            return "tarifas";
+        } catch (Exception e) {
+            System.err.println("[ERROR] Error al cargar tarifas: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("tarifas", new java.util.ArrayList<>());
+            model.addAttribute("error", "Error al cargar las tarifas: " + e.getMessage());
+            return "tarifas";
+        }
     }
 }

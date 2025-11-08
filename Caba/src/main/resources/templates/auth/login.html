@@ -10,51 +10,51 @@
                 <div class="card shadow">
                     <div class="card-header text-center">
                         <h3 class="mb-0">
-                            <i class="bi bi-trophy-fill me-2"></i>CABA Pro
+                            <i class="bi bi-trophy-fill me-2"></i><span th:text="#{app.name}">CABA Pro</span>
                         </h3>
-                        <p class="mb-0 mt-2 text-white-50">Sistema de Gestión de Arbitraje</p>
+                        <p class="mb-0 mt-2 text-white-50" th:text="#{login.subtitle}">Sistema de Gestión de Arbitraje</p>
                     </div>
                     
                     <div class="card-body p-4">
                         <!-- Mensajes de error -->
                         <div th:if="${param.error}" class="alert alert-danger" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            Credenciales incorrectas. Verifique su email y contraseña.
+                            <span th:text="#{auth.login.error}">Credenciales incorrectas. Verifique su email y contraseña.</span>
                         </div>
                         
                         <!-- Mensaje de logout -->
                         <div th:if="${param.logout}" class="alert alert-success" role="alert">
                             <i class="bi bi-check-circle-fill me-2"></i>
-                            Ha cerrado sesión exitosamente.
+                            <span th:text="#{auth.logout.success}">Ha cerrado sesión exitosamente.</span>
                         </div>
                         
                         <form th:action="@{/login}" method="post">
                             <div class="mb-3">
                                 <label for="username" class="form-label">
-                                    <i class="bi bi-envelope me-1"></i>Email
+                                    <i class="bi bi-envelope me-1"></i><span th:text="#{auth.login.username}">Email</span>
                                 </label>
                                 <input type="email" class="form-control" id="username" name="username" 
-                                       placeholder="correo@ejemplo.com" required>
+                                       th:placeholder="#{login.email.placeholder}" required>
                             </div>
                             
                             <div class="mb-3">
                                 <label for="password" class="form-label">
-                                    <i class="bi bi-lock me-1"></i>Contraseña
+                                    <i class="bi bi-lock me-1"></i><span th:text="#{auth.login.password}">Contraseña</span>
                                 </label>
                                 <input type="password" class="form-control" id="password" name="password" 
-                                       placeholder="Ingrese su contraseña" required>
+                                       th:placeholder="#{login.password.placeholder}" required>
                             </div>
                             
                             <div class="mb-3 form-check">
                                 <input type="checkbox" class="form-check-input" id="remember-me" name="remember-me">
-                                <label class="form-check-label" for="remember-me">
+                                <label class="form-check-label" for="remember-me" th:text="#{auth.login.remember}">
                                     Recordarme
                                 </label>
                             </div>
                             
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-caba btn-lg">
-                                    <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                                    <i class="bi bi-box-arrow-in-right me-2"></i><span th:text="#{auth.login.submit}">Iniciar Sesión</span>
                                 </button>
                             </div>
                         </form>
@@ -63,7 +63,7 @@
                     <div class="card-footer text-center bg-light">
                         <small class="text-muted">
                             <i class="bi bi-shield-check me-1"></i>
-                            Sistema seguro con autenticación por roles
+                            <span th:text="#{login.secure.system}">Sistema seguro con autenticación por roles</span>
                         </small>
                     </div>
                 </div>
@@ -71,16 +71,16 @@
                 <!-- Demo credentials info -->
                 <div class="card mt-3 border-info">
                     <div class="card-header bg-info text-white">
-                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Credenciales de Prueba</h6>
+                        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i><span th:text="#{login.demo.credentials}">Credenciales de Prueba</span></h6>
                     </div>
                     <div class="card-body">
                         <div class="row">
                             <div class="col-6">
-                                <strong>Administrador:</strong><br>
+                                <strong th:text="#{rol.admin}">Administrador:</strong><br>
                                 <small class="text-muted">admin@caba.com<br>admin123</small>
                             </div>
                             <div class="col-6">
-                                <strong>Árbitro:</strong><br>
+                                <strong th:text="#{rol.arbitro}">Árbitro:</strong><br>
                                 <small class="text-muted">arbitro@caba.com<br>arbitro123</small>
                             </div>
                         </div>

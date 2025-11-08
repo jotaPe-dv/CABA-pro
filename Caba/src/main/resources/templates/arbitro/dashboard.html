@@ -11,32 +11,32 @@
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 sidebar">
                 <div class="d-flex flex-column p-3">
-                    <h6 class="text-muted mb-3">ÁRBITRO</h6>
+                    <h6 class="text-muted mb-3" th:text="#{nav.arbitro}">ÁRBITRO</h6>
                     
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li class="nav-item">
                             <a href="/arbitro/dashboard" class="nav-link active">
-                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                                <i class="bi bi-speedometer2 me-2"></i><span th:text="#{nav.dashboard}">Dashboard</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/asignaciones/mis-asignaciones" class="nav-link">
-                                <i class="bi bi-calendar-check me-2"></i>Mis Asignaciones
+                                <i class="bi bi-calendar-check me-2"></i><span th:text="#{arbitro.mis.asignaciones}">Mis Asignaciones</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/arbitro/perfil" class="nav-link">
-                                <i class="bi bi-person me-2"></i>Mi Perfil
+                                <i class="bi bi-person me-2"></i><span th:text="#{nav.profile}">Mi Perfil</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/arbitro/disponibilidad" class="nav-link">
-                                <i class="bi bi-calendar3 me-2"></i>Disponibilidad
+                                <i class="bi bi-calendar3 me-2"></i><span th:text="#{nav.disponibilidad}">Disponibilidad</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/arbitro/liquidaciones" class="nav-link">
-                                <i class="bi bi-cash-coin me-2"></i>Mis Liquidaciones
+                                <i class="bi bi-cash-coin me-2"></i><span th:text="#{arbitro.mis.liquidaciones}">Mis Liquidaciones</span>
                             </a>
                         </li>
                     </ul>
@@ -47,11 +47,11 @@
             <div class="col-md-9 col-lg-10 main-content">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1>
-                        <i class="bi bi-person-badge me-2"></i>Panel de Árbitro
+                        <i class="bi bi-person-badge me-2"></i><span th:text="#{dashboard.arbitro.title}">Panel de Árbitro</span>
                     </h1>
                     <div class="text-muted">
                         <i class="bi bi-person-circle me-1"></i>
-                        Bienvenido, <span sec:authentication="name">Árbitro</span>
+                        <span th:text="#{dashboard.welcome}">Bienvenido</span>, <span sec:authentication="name">Árbitro</span>
                     </div>
                 </div>
                 
@@ -64,12 +64,12 @@
                                     <div>
                                         <h5 class="card-title mb-1" th:classappend="${disponible} ? 'text-success' : 'text-warning'">
                                             <i class="bi" th:classappend="${disponible} ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill'"></i>
-                                            <span class="ms-2">Estado: </span>
-                                            <strong th:text="${disponible} ? 'DISPONIBLE' : 'NO DISPONIBLE'"></strong>
+                                            <span class="ms-2" th:text="#{arbitro.status}">Estado</span>: 
+                                            <strong th:text="${disponible} ? #{estado.disponible} : #{estado.no.disponible}"></strong>
                                         </h5>
                                         <p class="card-text text-muted mb-0" th:text="${disponible} ? 
-                                            'Puede recibir nuevas asignaciones de partidos.' : 
-                                            'No está recibiendo asignaciones automáticas.'">
+                                            #{arbitro.status.available.msg} : 
+                                            #{arbitro.status.unavailable.msg}">
                                         </p>
                                     </div>
                                     <div>
@@ -79,7 +79,7 @@
                                             <input type="hidden" name="disponible" value="true" />
                                             <input type="hidden" name="returnTo" value="dashboard" />
                                             <button type="submit" class="btn btn-success">
-                                                <i class="bi bi-check-circle me-1"></i>Marcar como Disponible
+                                                <i class="bi bi-check-circle me-1"></i><span th:text="#{arbitro.mark.available}">Marcar como Disponible</span>
                                             </button>
                                         </form>
                                         
@@ -89,7 +89,7 @@
                                             <input type="hidden" name="disponible" value="false" />
                                             <input type="hidden" name="returnTo" value="dashboard" />
                                             <button type="submit" class="btn btn-warning">
-                                                <i class="bi bi-pause-circle me-1"></i>Marcar como No Disponible
+                                                <i class="bi bi-pause-circle me-1"></i><span th:text="#{arbitro.mark.unavailable}">Marcar como No Disponible</span>
                                             </button>
                                         </form>
                                     </div>
@@ -106,7 +106,7 @@
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" th:text="#{asignaciones.pendientes}">
                                             Asignaciones Pendientes
                                         </div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${asignacionesPendientes}">0</div>
@@ -124,7 +124,7 @@
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1" th:text="#{arbitro.partidos.completados}">
                                             Partidos Completados
                                         </div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${partidosCompletados}">0</div>
@@ -142,7 +142,7 @@
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1" th:text="#{liquidaciones.pendientes}">
                                             Liquidaciones Pendientes
                                         </div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${liquidacionesPendientes}">0</div>
