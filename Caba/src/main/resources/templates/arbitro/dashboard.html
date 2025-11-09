@@ -2,7 +2,7 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head}"></head>
 <body>
-    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
     
     <div th:replace="~{fragments/layout :: alerts}"></div>
     
@@ -160,7 +160,7 @@
                             <div class="card-body">
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1" th:text="#{arbitro.dashboard.income.month}">
                                             Ingresos del Mes
                                         </div>
                                         <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${ingresosMes} + ' €'">0</div>
@@ -180,24 +180,23 @@
                         <div class="card shadow">
                             <div class="card-header">
                                 <h5 class="mb-0">
-                                    <i class="bi bi-clock-history me-2"></i>Asignaciones Pendientes de Respuesta
+                                    <i class="bi bi-clock-history me-2"></i><span th:text="#{arbitro.dashboard.pending.response}">Asignaciones Pendientes de Respuesta</span>
                                 </h5>
                             </div>
                             <div class="card-body">
                                 <div class="alert alert-info" role="alert">
                                     <i class="bi bi-info-circle me-2"></i>
-                                    Tiene <strong th:text="${asignacionesPendientes}">0</strong> asignaciones esperando su respuesta. 
-                                    Por favor, revise y responda lo antes posible.
+                                    <span th:text="#{arbitro.dashboard.pending.info(${asignacionesPendientes})}">Tiene <strong>0</strong> asignaciones esperando su respuesta. Por favor, revise y responda lo antes posible.</span>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Partido</th>
-                                                <th>Fecha</th>
-                                                <th>Tipo</th>
-                                                <th>Monto</th>
-                                                <th>Acciones</th>
+                                                <th th:text="#{arbitro.dashboard.match}">Partido</th>
+                                                <th th:text="#{arbitro.dashboard.date}">Fecha</th>
+                                                <th th:text="#{arbitro.dashboard.type}">Tipo</th>
+                                                <th th:text="#{arbitro.dashboard.amount}">Monto</th>
+                                                <th th:text="#{arbitro.dashboard.actions}">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -205,20 +204,20 @@
                                                 <td th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}">Partido</td>
                                                 <td th:text="${#temporals.format(asignacion.partido.fechaPartido, 'dd/MM/yyyy HH:mm')}">Fecha</td>
                                                 <td th:text="${asignacion.partido.tipoPartido}">Tipo</td>
-                                                <td th:text="'$' + #numbers.formatDecimal(asignacion.montoCalculado, 1, 2)">$0.00</td>
+                                                <td th:text="${asignacion.montoCalculado != null ? '$' + #numbers.formatDecimal(asignacion.montoCalculado, 1, 2) : 'N/A'}">$0.00</td>
                                                 <td>
                                                     <div class="btn-group btn-group-sm">
                                                         <a th:href="@{'/asignaciones/aceptar/' + ${asignacion.id}}" class="btn btn-success">
-                                                            <i class="bi bi-check"></i> Aceptar
+                                                            <i class="bi bi-check"></i> <span th:text="#{arbitro.dashboard.accept}">Aceptar</span>
                                                         </a>
                                                         <a th:href="@{'/asignaciones/rechazar/' + ${asignacion.id}}" class="btn btn-danger">
-                                                            <i class="bi bi-x"></i> Rechazar
+                                                            <i class="bi bi-x"></i> <span th:text="#{arbitro.dashboard.reject}">Rechazar</span>
                                                         </a>
                                                     </div>
                                                 </td>
                                             </tr>
                                             <tr th:if="${asignacionesPendientesList.size()} == 0">
-                                                <td colspan="5" class="text-center text-muted">No hay asignaciones pendientes.</td>
+                                                <td colspan="5" class="text-center text-muted" th:text="#{arbitro.dashboard.no.pending}">No hay asignaciones pendientes.</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -226,7 +225,7 @@
                                 
                                 <div class="text-center">
                                     <a href="/asignaciones/mis-asignaciones" class="btn btn-caba">
-                                        <i class="bi bi-eye me-2"></i>Ver Todas las Asignaciones
+                                        <i class="bi bi-eye me-2"></i><span th:text="#{arbitro.dashboard.view.all}">Ver Todas las Asignaciones</span>
                                     </a>
                                 </div>
                             </div>
@@ -237,7 +236,7 @@
                         <div class="card shadow">
                             <div class="card-header">
                                 <h5 class="mb-0">
-                                    <i class="bi bi-calendar-week me-2"></i>Próximos Partidos
+                                    <i class="bi bi-calendar-week me-2"></i><span th:text="#{arbitro.dashboard.upcoming}">Próximos Partidos</span>
                                 </h5>
                             </div>
                             <div class="card-body">
@@ -249,16 +248,16 @@
                                         </div>
                                         <span class="badge rounded-pill"
                                               th:classappend="${asignacion.estado.name() == 'ACEPTADA'} ? 'bg-success' : 'bg-primary'"
-                                              th:text="${asignacion.estado.name() == 'ACEPTADA'} ? 'Confirmado' : 'Programado'">Estado</span>
+                                              th:text="${asignacion.estado.name() == 'ACEPTADA'} ? #{arbitro.dashboard.confirmed} : #{arbitro.dashboard.scheduled}">Estado</span>
                                     </div>
-                                    <div th:if="${proximosPartidos.size()} == 0" class="list-group-item text-center text-muted">
+                                    <div th:if="${proximosPartidos.size()} == 0" class="list-group-item text-center text-muted" th:text="#{arbitro.dashboard.no.upcoming}">
                                         No hay próximos partidos.
                                     </div>
                                 </div>
                                 
                                 <div class="text-center mt-3">
                                     <a href="/arbitro/calendario" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-calendar3 me-1"></i>Ver Calendario Completo
+                                        <i class="bi bi-calendar3 me-1"></i><span th:text="#{arbitro.dashboard.view.calendar}">Ver Calendario Completo</span>
                                     </a>
                                 </div>
                             </div>
@@ -269,13 +268,13 @@
         </div>
     </div>
     
-    <script th:replace="~{fragments/layout :: scripts}"></script>
-    
     <style>
         .border-left-primary { border-left: 0.25rem solid #007bff !important; }
         .border-left-success { border-left: 0.25rem solid #28a745 !important; }
         .border-left-warning { border-left: 0.25rem solid #ffc107 !important; }
         .border-left-info { border-left: 0.25rem solid #17a2b8 !important; }
     </style>
+    
+    <script th:replace="~{fragments/layout :: scripts}"></script>
 </body>
 </html>

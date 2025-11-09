@@ -9,7 +9,7 @@
     <div class="container main-content">
         <div th:replace="fragments/layout :: alerts"></div>
         
-        <h2><i class="bi bi-receipt me-2"></i>Mis Liquidaciones</h2>
+        <h2><i class="bi bi-receipt me-2"></i><span th:text="#{liquidaciones.titulo}">Mis Liquidaciones</span></h2>
         
         <!-- Tarjetas de resumen -->
         <div class="row mb-4">
@@ -17,7 +17,7 @@
                 <div class="card border-warning">
                     <div class="card-body">
                         <h6 class="text-muted mb-2">
-                            <i class="bi bi-clock-history me-1"></i>Pendientes de Pago
+                            <i class="bi bi-clock-history me-1"></i><span th:text="#{liquidaciones.pendientes.pago}">Pendientes de Pago</span>
                         </h6>
                         <h3 class="text-warning mb-0">
                             $<span th:text="${#numbers.formatDecimal(totalPendiente, 1, 'POINT', 2, 'COMMA')}">0.00</span>
@@ -29,7 +29,7 @@
                 <div class="card border-success">
                     <div class="card-body">
                         <h6 class="text-muted mb-2">
-                            <i class="bi bi-check-circle me-1"></i>Total Pagado
+                            <i class="bi bi-check-circle me-1"></i><span th:text="#{liquidaciones.total.pagado}">Total Pagado</span>
                         </h6>
                         <h3 class="text-success mb-0">
                             $<span th:text="${#numbers.formatDecimal(totalPagado, 1, 'POINT', 2, 'COMMA')}">0.00</span>
@@ -42,25 +42,25 @@
         <!-- Tabla de liquidaciones -->
         <div class="card shadow">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i>Historial de Liquidaciones</h5>
+                <h5 class="mb-0"><i class="bi bi-list-ul me-2"></i><span th:text="#{liquidaciones.historial}">Historial de Liquidaciones</span></h5>
             </div>
             <div class="card-body">
                 <div th:if="${liquidaciones.isEmpty()}" class="alert alert-info">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>No hay liquidaciones registradas</strong>
-                    <p class="mb-0">Aún no tienes liquidaciones generadas. Las liquidaciones se generan cuando completas asignaciones de partidos.</p>
+                    <strong th:text="#{liquidaciones.no.hay.titulo}">No hay liquidaciones registradas</strong>
+                    <p class="mb-0" th:text="#{liquidaciones.no.hay.texto}">Aún no tienes liquidaciones generadas. Las liquidaciones se generan cuando completas asignaciones de partidos.</p>
                 </div>
                 
                 <div th:if="${!liquidaciones.isEmpty()}" class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>Período</th>
-                                <th>Fecha Generación</th>
-                                <th class="text-center">Asignaciones</th>
-                                <th class="text-end">Monto Total</th>
-                                <th class="text-center">Estado</th>
-                                <th class="text-center">Acciones</th>
+                                <th th:text="#{liquidaciones.periodo}">Período</th>
+                                <th th:text="#{liquidaciones.fecha.generacion}">Fecha Generación</th>
+                                <th class="text-center" th:text="#{liquidaciones.asignaciones}">Asignaciones</th>
+                                <th class="text-end" th:text="#{liquidaciones.monto.total}">Monto Total</th>
+                                <th class="text-center" th:text="#{liquidaciones.estado}">Estado</th>
+                                <th class="text-center" th:text="#{liquidaciones.acciones}">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -68,7 +68,7 @@
                                 <td>
                                     <strong th:text="${#temporals.format(liquidacion.fechaCreacion, 'dd/MM/yyyy')}"></strong>
                                     <br/>
-                                    <small class="text-muted">Liquidación</small>
+                                    <small class="text-muted" th:text="#{liquidaciones.liquidacion}">Liquidación</small>
                                 </td>
                                 <td th:text="${#temporals.format(liquidacion.fechaCreacion, 'dd/MM/yyyy HH:mm')}"></td>
                                 <td class="text-center">
@@ -84,13 +84,13 @@
                                           th:classappend="${liquidacion.estado.name() == 'PAGADA'} ? 'bg-success' : 
                                                          (${liquidacion.estado.name() == 'APROBADA'} ? 'bg-primary' : 
                                                          (${liquidacion.estado.name() == 'CANCELADA'} ? 'bg-danger' : 'bg-warning'))"
-                                          th:text="${liquidacion.estado}">
+                                          th:text="${#messages.msg('liquidaciones.estado.' + liquidacion.estado.name())}">
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <a th:href="@{/arbitro/liquidaciones/{id}(id=${liquidacion.id})}" 
                                        class="btn btn-sm btn-outline-primary"
-                                       title="Ver detalle">
+                                       th:title="#{liquidaciones.ver.detalle}">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                 </td>
@@ -104,12 +104,12 @@
         <!-- Información adicional -->
         <div class="card mt-3 border-info">
             <div class="card-body">
-                <h6 class="text-info"><i class="bi bi-info-circle me-2"></i>Información sobre Liquidaciones</h6>
+                <h6 class="text-info"><i class="bi bi-info-circle me-2"></i><span th:text="#{liquidaciones.informacion}">Información sobre Liquidaciones</span></h6>
                 <ul class="mb-0">
-                    <li><strong>PENDIENTE:</strong> La liquidación está siendo procesada por el administrador.</li>
-                    <li><strong>APROBADA:</strong> La liquidación fue aprobada y está pendiente de pago.</li>
-                    <li><strong>PAGADA:</strong> El pago fue realizado exitosamente.</li>
-                    <li><strong>CANCELADA:</strong> La liquidación fue cancelada.</li>
+                    <li><strong th:text="#{liquidaciones.estado.titulo.PENDIENTE}">PENDIENTE:</strong> <span th:text="#{liquidaciones.estado.pendiente}">La liquidación está siendo procesada por el administrador.</span></li>
+                    <li><strong th:text="#{liquidaciones.estado.titulo.APROBADA}">APROBADA:</strong> <span th:text="#{liquidaciones.estado.aprobada}">La liquidación fue aprobada y está pendiente de pago.</span></li>
+                    <li><strong th:text="#{liquidaciones.estado.titulo.PAGADA}">PAGADA:</strong> <span th:text="#{liquidaciones.estado.pagada}">El pago fue realizado exitosamente.</span></li>
+                    <li><strong th:text="#{liquidaciones.estado.titulo.CANCELADA}">CANCELADA:</strong> <span th:text="#{liquidaciones.estado.cancelada}">La liquidación fue cancelada.</span></li>
                 </ul>
             </div>
         </div>

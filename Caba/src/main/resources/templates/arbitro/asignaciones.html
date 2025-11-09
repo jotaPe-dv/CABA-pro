@@ -2,7 +2,7 @@
 <html lang="es" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head}"></head>
 <body>
-    <nav th:replace="~{fragments/layout :: navbar}"></nav>
+    <div th:replace="~{fragments/layout :: navbar}"></div>
     
     <div th:replace="~{fragments/layout :: alerts}"></div>
     
@@ -11,27 +11,27 @@
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 sidebar">
                 <div class="d-flex flex-column p-3">
-                    <h6 class="text-muted mb-3">ÁRBITRO</h6>
+                    <h6 class="text-muted mb-3" th:text="#{nav.arbitro}">ÁRBITRO</h6>
                     
                     <ul class="nav nav-pills flex-column mb-auto">
                         <li class="nav-item">
                             <a href="/arbitro/dashboard" class="nav-link">
-                                <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                                <i class="bi bi-speedometer2 me-2"></i><span th:text="#{nav.dashboard}">Dashboard</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/asignaciones/mis-asignaciones" class="nav-link active">
-                                <i class="bi bi-calendar-check me-2"></i>Mis Asignaciones
+                                <i class="bi bi-calendar-check me-2"></i><span th:text="#{arbitro.mis.asignaciones}">Mis Asignaciones</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/arbitro/perfil" class="nav-link">
-                                <i class="bi bi-person me-2"></i>Mi Perfil
+                                <i class="bi bi-person me-2"></i><span th:text="#{nav.profile}">Mi Perfil</span>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="/arbitro/disponibilidad" class="nav-link">
-                                <i class="bi bi-calendar3 me-2"></i>Disponibilidad
+                                <i class="bi bi-calendar3 me-2"></i><span th:text="#{nav.disponibilidad}">Disponibilidad</span>
                             </a>
                         </li>
                     </ul>
@@ -42,14 +42,14 @@
             <div class="col-md-9 col-lg-10 main-content">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1>
-                        <i class="bi bi-calendar-check me-2"></i>Mis Asignaciones
+                        <i class="bi bi-calendar-check me-2"></i><span th:text="#{arbitro.mis.asignaciones}">Mis Asignaciones</span>
                     </h1>
                     <div>
                         <span class="badge bg-warning me-2">
-                            <i class="bi bi-clock"></i> Pendientes: <span th:text="${#lists.size(pendientes)}">0</span>
+                            <i class="bi bi-clock"></i> <span th:text="#{arbitro.asignaciones.pendientes}">Pendientes</span>: <span th:text="${#lists.size(pendientes)}">0</span>
                         </span>
                         <span class="badge bg-success">
-                            <i class="bi bi-check"></i> Aceptadas: <span th:text="${#lists.size(aceptadas)}">0</span>
+                            <i class="bi bi-check"></i> <span th:text="#{arbitro.asignaciones.aceptadas}">Aceptadas</span>: <span th:text="${#lists.size(aceptadas)}">0</span>
                         </span>
                     </div>
                 </div>
@@ -58,25 +58,25 @@
                 <ul class="nav nav-tabs mb-3" id="asignacionesTabs" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="pendientes-tab" data-bs-toggle="tab" data-bs-target="#pendientes-pane" type="button">
-                            <i class="bi bi-clock-history me-1"></i>Pendientes
+                            <i class="bi bi-clock-history me-1"></i><span th:text="#{arbitro.asignaciones.pendientes}">Pendientes</span>
                             <span class="badge bg-warning ms-1" th:text="${#lists.size(pendientes)}">0</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="aceptadas-tab" data-bs-toggle="tab" data-bs-target="#aceptadas-pane" type="button">
-                            <i class="bi bi-check-circle me-1"></i>Aceptadas
+                            <i class="bi bi-check-circle me-1"></i><span th:text="#{arbitro.asignaciones.aceptadas}">Aceptadas</span>
                             <span class="badge bg-success ms-1" th:text="${#lists.size(aceptadas)}">0</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="completadas-tab" data-bs-toggle="tab" data-bs-target="#completadas-pane" type="button">
-                            <i class="bi bi-flag-fill me-1"></i>Completadas
+                            <i class="bi bi-flag-fill me-1"></i><span th:text="#{arbitro.asignaciones.completadas}">Completadas</span>
                             <span class="badge bg-primary ms-1" th:text="${#lists.size(completadas)}">0</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="rechazadas-tab" data-bs-toggle="tab" data-bs-target="#rechazadas-pane" type="button">
-                            <i class="bi bi-x-circle me-1"></i>Rechazadas
+                            <i class="bi bi-x-circle me-1"></i><span th:text="#{arbitro.asignaciones.rechazadas}">Rechazadas</span>
                             <span class="badge bg-danger ms-1" th:text="${#lists.size(rechazadas)}">0</span>
                         </button>
                     </li>
@@ -88,22 +88,22 @@
                     <div class="tab-pane fade show active" id="pendientes-pane" role="tabpanel">
                         <div class="card shadow">
                             <div class="card-header bg-warning text-dark">
-                                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Asignaciones Pendientes - Requieren tu respuesta</h5>
+                                <h5 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i><span th:text="#{arbitro.asignaciones.pendientes.title}">Asignaciones Pendientes - Requieren tu respuesta</span></h5>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Partido</th>
-                                                <th>Fecha</th>
-                                                <th>Rol</th>
-                                                <th>Compensación</th>
-                                                <th width="180">Acciones</th>
+                                                <th th:text="#{arbitro.asignaciones.partido}">Partido</th>
+                                                <th th:text="#{arbitro.asignaciones.fecha}">Fecha</th>
+                                                <th th:text="#{arbitro.asignaciones.rol}">Rol</th>
+                                                <th th:text="#{arbitro.asignaciones.compensacion}">Compensación</th>
+                                                <th width="180" th:text="#{arbitro.asignaciones.acciones}">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr th:each="asignacion : ${pendientes}">
+                                            <tr th:each="asignacion : ${pendientes}" th:if="${asignacion.partido != null}">
                                                 <td>
                                                     <div class="fw-bold" th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}"></div>
                                                     <small class="text-muted" th:text="${asignacion.partido.tipoPartido}"></small>
@@ -118,12 +118,12 @@
                                                     <div class="d-flex gap-2">
                                                         <a th:href="@{'/asignaciones/aceptar/' + ${asignacion.id}}" 
                                                            class="btn btn-success btn-sm"
-                                                           onclick="return confirm('¿Confirmas que aceptas esta asignación?')">
-                                                            ✓ Aceptar
+                                                           th:attr="onclick=|return confirm('#{arbitro.asignaciones.aceptar.confirm}')|">
+                                                            ✓ <span th:text="#{arbitro.asignaciones.aceptar}">Aceptar</span>
                                                         </a>
                                                         <a th:href="@{'/asignaciones/rechazar/' + ${asignacion.id}}" 
                                                            class="btn btn-danger btn-sm">
-                                                            ✗ Rechazar
+                                                            ✗ <span th:text="#{arbitro.asignaciones.rechazar}">Rechazar</span>
                                                         </a>
                                                     </div>
                                                 </td>
@@ -131,7 +131,7 @@
                                             <tr th:if="${#lists.isEmpty(pendientes)}">
                                                 <td colspan="5" class="text-center text-muted py-4">
                                                     <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
-                                                    <p class="mt-2 mb-0">No tienes asignaciones pendientes. ¡Estás al día!</p>
+                                                    <p class="mt-2 mb-0" th:text="#{arbitro.asignaciones.no.pendientes}">No tienes asignaciones pendientes. ¡Estás al día!</p>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -145,22 +145,22 @@
                     <div class="tab-pane fade" id="aceptadas-pane" role="tabpanel">
                         <div class="card shadow">
                             <div class="card-header bg-success text-white">
-                                <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i>Asignaciones Aceptadas - Partidos Confirmados</h5>
+                                <h5 class="mb-0"><i class="bi bi-check-circle me-2"></i><span th:text="#{arbitro.asignaciones.aceptadas.title}">Asignaciones Aceptadas - Partidos Confirmados</span></h5>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Partido</th>
-                                                <th>Fecha</th>
-                                                <th>Ubicación</th>
-                                                <th>Rol</th>
-                                                <th>Compensación</th>
+                                                <th th:text="#{arbitro.asignaciones.partido}">Partido</th>
+                                                <th th:text="#{arbitro.asignaciones.fecha}">Fecha</th>
+                                                <th th:text="#{arbitro.asignaciones.ubicacion}">Ubicación</th>
+                                                <th th:text="#{arbitro.asignaciones.rol}">Rol</th>
+                                                <th th:text="#{arbitro.asignaciones.compensacion}">Compensación</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr th:each="asignacion : ${aceptadas}">
+                                            <tr th:each="asignacion : ${aceptadas}" th:if="${asignacion.partido != null}">
                                                 <td>
                                                     <div class="fw-bold" th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}"></div>
                                                     <small class="text-muted" th:text="${asignacion.partido.tipoPartido}"></small>
@@ -171,12 +171,12 @@
                                                 </td>
                                                 <td th:text="${asignacion.partido.ubicacion ?: 'Por confirmar'}"></td>
                                                 <td><span class="badge bg-info" th:text="${asignacion.rolEspecifico}"></span></td>
-                                                <td class="fw-bold text-success" th:text="'$' + #numbers.formatDecimal(asignacion.montoCalculado, 1, 2)"></td>
+                                                <td class="fw-bold text-success" th:text="${asignacion.montoCalculado != null ? '$' + #numbers.formatDecimal(asignacion.montoCalculado, 1, 2) : 'N/A'}"></td>
                                             </tr>
                                             <tr th:if="${#lists.isEmpty(aceptadas)}">
                                                 <td colspan="5" class="text-center text-muted py-4">
                                                     <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
-                                                    <p class="mt-2 mb-0">No tienes partidos confirmados próximamente</p>
+                                                    <p class="mt-2 mb-0" th:text="#{arbitro.asignaciones.no.aceptadas}">No tienes partidos confirmados próximamente</p>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -190,22 +190,22 @@
                     <div class="tab-pane fade" id="completadas-pane" role="tabpanel">
                         <div class="card shadow">
                             <div class="card-header bg-primary text-white">
-                                <h5 class="mb-0"><i class="bi bi-flag-fill me-2"></i>Partidos Completados - Historial</h5>
+                                <h5 class="mb-0"><i class="bi bi-flag-fill me-2"></i><span th:text="#{arbitro.asignaciones.completadas.title}">Partidos Completados - Historial</span></h5>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Partido</th>
-                                                <th>Fecha</th>
-                                                <th>Resultado</th>
-                                                <th>Rol</th>
-                                                <th>Compensación</th>
+                                                <th th:text="#{arbitro.asignaciones.partido}">Partido</th>
+                                                <th th:text="#{arbitro.asignaciones.fecha}">Fecha</th>
+                                                <th th:text="#{partido.resultado}">Resultado</th>
+                                                <th th:text="#{arbitro.asignaciones.rol}">Rol</th>
+                                                <th th:text="#{arbitro.asignaciones.compensacion}">Compensación</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr th:each="asignacion : ${completadas}">
+                                            <tr th:each="asignacion : ${completadas}" th:if="${asignacion.partido != null}">
                                                 <td>
                                                     <div class="fw-bold" th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}"></div>
                                                     <small class="text-muted" th:text="${asignacion.partido.tipoPartido}"></small>
@@ -218,12 +218,12 @@
                                                     <span th:unless="${asignacion.partido.marcadorLocal != null}" class="text-muted">-</span>
                                                 </td>
                                                 <td><span class="badge bg-info" th:text="${asignacion.rolEspecifico}"></span></td>
-                                                <td class="fw-bold text-success" th:text="'$' + #numbers.formatDecimal(asignacion.montoCalculado, 1, 2)"></td>
+                                                <td class="fw-bold text-success" th:text="${asignacion.montoCalculado != null ? '$' + #numbers.formatDecimal(asignacion.montoCalculado, 1, 2) : 'N/A'}"></td>
                                             </tr>
                                             <tr th:if="${#lists.isEmpty(completadas)}">
                                                 <td colspan="5" class="text-center text-muted py-4">
                                                     <i class="bi bi-archive" style="font-size: 2rem;"></i>
-                                                    <p class="mt-2 mb-0">Aún no has completado ningún partido</p>
+                                                    <p class="mt-2 mb-0" th:text="#{arbitro.asignaciones.no.completadas}">Aún no has completado ningún partido</p>
                                                 </td>
                                             </tr>
                                         </tbody>
@@ -237,21 +237,21 @@
                     <div class="tab-pane fade" id="rechazadas-pane" role="tabpanel">
                         <div class="card shadow">
                             <div class="card-header bg-danger text-white">
-                                <h5 class="mb-0"><i class="bi bi-x-circle me-2"></i>Asignaciones Rechazadas</h5>
+                                <h5 class="mb-0"><i class="bi bi-x-circle me-2"></i><span th:text="#{arbitro.asignaciones.rechazadas.title}">Asignaciones Rechazadas</span></h5>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th>Partido</th>
-                                                <th>Fecha</th>
-                                                <th>Rol</th>
-                                                <th>Motivo del Rechazo</th>
+                                                <th th:text="#{arbitro.asignaciones.partido}">Partido</th>
+                                                <th th:text="#{arbitro.asignaciones.fecha}">Fecha</th>
+                                                <th th:text="#{arbitro.asignaciones.rol}">Rol</th>
+                                                <th th:text="#{arbitro.asignaciones.motivo}">Motivo del Rechazo</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr th:each="asignacion : ${rechazadas}">
+                                            <tr th:each="asignacion : ${rechazadas}" th:if="${asignacion.partido != null}">
                                                 <td>
                                                     <div class="fw-bold" th:text="${asignacion.partido.equipoLocal} + ' vs ' + ${asignacion.partido.equipoVisitante}"></div>
                                                     <small class="text-muted" th:text="${asignacion.partido.tipoPartido}"></small>
@@ -265,7 +265,7 @@
                                             <tr th:if="${#lists.isEmpty(rechazadas)}">
                                                 <td colspan="4" class="text-center text-muted py-4">
                                                     <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
-                                                    <p class="mt-2 mb-0">No has rechazado ninguna asignación</p>
+                                                    <p class="mt-2 mb-0" th:text="#{arbitro.asignaciones.no.rechazadas}">No has rechazado ninguna asignación</p>
                                                 </td>
                                             </tr>
                                         </tbody>
