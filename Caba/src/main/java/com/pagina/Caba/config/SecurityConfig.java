@@ -38,6 +38,9 @@ public class SecurityConfig {
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
                 .requestMatchers("/", "/login", "/register").permitAll()
                 
+                // ✅ API pública del clima - SIN AUTENTICACIÓN
+                .requestMatchers("/api/v1/clima", "/api/v1/clima/**").permitAll()
+                
                 // ✅ WebSocket - ANTES de anyRequest()
                 .requestMatchers("/ws-chat/**").permitAll()
                 

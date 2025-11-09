@@ -80,6 +80,33 @@ public class WeatherApiController {
     }
 
     /**
+     * Obtiene el clima actual sin autenticación (para el widget del navbar)
+     */
+    @GetMapping
+    @Operation(summary = "Obtener clima público",
+               description = "Endpoint público para obtener el clima de una ciudad. Usado por el widget del navbar.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Clima obtenido exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Ciudad no encontrada")
+    })
+    public ResponseEntity<WeatherService.WeatherData> obtenerClimaPublico(
+            @Parameter(description = "Nombre de la ciudad (opcional, default: Medellin)", example = "Medellin")
+            @RequestParam(required = false, defaultValue = "Medellin") String ciudad) {
+        
+        System.out.println("🌤️ [WEATHER API] Solicitud de clima para: " + ciudad);
+        
+        WeatherService.WeatherData clima = weatherService.obtenerClimaPorCiudad(ciudad);
+        
+        if (clima == null || "No disponible".equals(clima.getCiudad())) {
+            System.out.println("❌ [WEATHER API] Clima no disponible para: " + ciudad);
+            return ResponseEntity.notFound().build();
+        }
+        
+        System.out.println("✅ [WEATHER API] Clima enviado: " + clima.getCiudad() + " - " + clima.getTemperaturaFormateada());
+        return ResponseEntity.ok(clima);
+    }
+
+    /**
      * Endpoint de prueba para verificar la configuración de la API
      */
     @GetMapping("/test")
