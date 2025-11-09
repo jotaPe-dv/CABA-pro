@@ -98,11 +98,11 @@
                             <table class="table table-hover table-striped">
                                 <thead class="table-dark">
                                     <tr>
-                                        <th>Clave</th>
-                                        <th>Valor</th>
-                                        <th>Descripción</th>
-                                        <th>Última Modificación</th>
-                                        <th>Modificado Por</th>
+                                        <th th:text="#{config.table.key}">Clave</th>
+                                        <th th:text="#{config.table.value}">Valor</th>
+                                        <th th:text="#{config.table.description}">Descripción</th>
+                                        <th th:text="#{config.table.last.modified}">Última Modificación</th>
+                                        <th th:text="#{config.table.modified.by}">Modificado Por</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -127,7 +127,7 @@
                                     <tr th:if="${#lists.isEmpty(configuraciones)}">
                                         <td colspan="5" class="text-center text-muted">
                                             <i class="bi bi-inbox"></i>
-                                            No hay configuraciones registradas
+                                            <span th:text="#{config.table.empty}">No hay configuraciones registradas</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -144,11 +144,11 @@
                 <div class="card border-info">
                     <div class="card-body">
                         <h6 class="card-title text-info">
-                            <i class="bi bi-lightbulb"></i> ¿Cuándo activar la validación?
+                            <i class="bi bi-lightbulb"></i> <span th:text="#{config.info.when.title}">¿Cuándo activar la validación?</span>
                         </h6>
                         <ul class="small mb-0">
-                            <li><strong>ACTIVADO:</strong> Para torneos oficiales donde se requiere confirmación de árbitros</li>
-                            <li><strong>DESACTIVADO:</strong> Para pruebas, demos o torneos amistosos sin restricciones</li>
+                            <li><strong th:text="#{config.status.enabled}">ACTIVADO</strong>: <span th:text="#{config.info.enabled}">Para torneos oficiales donde se requiere confirmación de árbitros</span></li>
+                            <li><strong th:text="#{config.status.disabled}">DESACTIVADO</strong>: <span th:text="#{config.info.disabled}">Para pruebas, demos o torneos amistosos sin restricciones</span></li>
                         </ul>
                     </div>
                 </div>
@@ -157,9 +157,9 @@
                 <div class="card border-warning">
                     <div class="card-body">
                         <h6 class="card-title text-warning">
-                            <i class="bi bi-exclamation-triangle"></i> Precaución
+                            <i class="bi bi-exclamation-triangle"></i> <span th:text="#{config.warning.title}">Precaución</span>
                         </h6>
-                        <p class="small mb-0">
+                        <p class="small mb-0" th:text="#{config.warning.msg}">
                             Desactivar la validación permite simular partidos aunque los árbitros no hayan aceptado. 
                             Esto puede afectar la integridad de las liquidaciones.
                         </p>
@@ -172,7 +172,6 @@
     <!-- Footer -->
     <div th:replace="~{fragments/layout :: footer}"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Función para mostrar alertas dinámicas
         function showAlert(message, type = 'success') {
@@ -269,5 +268,7 @@
             }
         }
     </script>
+
+    <div th:replace="fragments/layout :: scripts"></div>
 </body>
 </html>
