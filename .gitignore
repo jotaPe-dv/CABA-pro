@@ -1,2 +1,15 @@
 # Ignore the progress document for entregable 2
 PROGRESO_ENTREGABLE_2.md
+
+# Archivos de prueba y temporales
+test-*.ps1
+*_TEST.md
+*.postman_collection.json
+
+# Documentación temporal
+ARQUITECTURA_*.md
+CHECKLIST_*.md
+API_ANALYSIS.md
+COMO_PROBAR_*.md
+JWT_IMPLEMENTATION_STATUS.md
+PRUEBAS_*.md

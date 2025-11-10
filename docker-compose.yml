@@ -12,7 +12,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATASOURCE_URL=jdbc:h2:mem:cabadb
-      - JWT_SECRET=miClaveSecretaSuperSeguraParaJWT2024
+      - JWT_SECRET=CABAProSecretKeyForJWTAuthentication2025ThisMustBeLongEnoughForHS512Algorithm
     networks:
       - caba-network
     healthcheck:
@@ -34,7 +34,6 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - SPRING_API_URL=http://springboot-api:8081
-      - JWT_SECRET=miClaveSecretaSuperSeguraParaJWT2024
     depends_on:
       springboot-api:
         condition: service_healthy
