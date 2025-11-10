@@ -30,6 +30,9 @@ public class TorneoSimulationService {
     
     @Autowired
     private ConfiguracionService configuracionService;
+    
+    @Autowired
+    private LiquidacionService liquidacionService;
 
     /**
      * Genera la estructura de play-offs de baloncesto: Cuartos (4 partidos), Semifinales (2 partidos), Final (1 partido)
@@ -192,6 +195,15 @@ public class TorneoSimulationService {
             try { a.completar(); } catch (Exception ignored) {}
             asignacionRepository.save(a);
         }
+        
+        // Generar liquidaciones automáticamente para los árbitros
+        try {
+            List<Liquidacion> liquidacionesGeneradas = liquidacionService.generarLiquidacionesParaPartido(p.getId());
+            res.put("liquidacionesGeneradas", liquidacionesGeneradas.size());
+        } catch (Exception e) {
+            res.put("liquidacionesGeneradas", 0);
+            res.put("liquidacionesError", e.getMessage());
+        }
 
         String ganador = local > visitante ? p.getEquipoLocal() : p.getEquipoVisitante();
         res.put("ok", true);
@@ -246,27 +258,33 @@ public class TorneoSimulationService {
             return res;
         }
         
-        // Verificar que todas las asignaciones estén aceptadas (los 3 árbitros)
-        boolean todasAceptadas = asignaciones.stream().allMatch(a -> a.getEstado() == EstadoAsignacion.ACEPTADA);
-        if (!todasAceptadas) {
-            long pendientes = asignaciones.stream().filter(a -> a.getEstado() == EstadoAsignacion.PENDIENTE).count();
-            long rechazadas = asignaciones.stream().filter(a -> a.getEstado() == EstadoAsignacion.RECHAZADA).count();
-            
-            String mensaje = "No se puede simular el partido. ";
-            if (rechazadas > 0) {
-                mensaje += rechazadas + " árbitro(s) rechazaron la asignación. ";
+        // Verificar configuración: ¿se debe validar que los árbitros hayan aceptado?
+        boolean debeValidarArbitros = configuracionService.debeValidarArbitrosParaSimulacion();
+        
+        if (debeValidarArbitros) {
+            // Modo NORMAL: Verificar que todas las asignaciones estén aceptadas
+            boolean todasAceptadas = asignaciones.stream().allMatch(a -> a.getEstado() == EstadoAsignacion.ACEPTADA);
+            if (!todasAceptadas) {
+                long pendientes = asignaciones.stream().filter(a -> a.getEstado() == EstadoAsignacion.PENDIENTE).count();
+                long rechazadas = asignaciones.stream().filter(a -> a.getEstado() == EstadoAsignacion.RECHAZADA).count();
+                
+                String mensaje = "No se puede simular el partido. ";
+                if (rechazadas > 0) {
+                    mensaje += rechazadas + " árbitro(s) rechazaron la asignación. ";
+                }
+                if (pendientes > 0) {
+                    mensaje += pendientes + " árbitro(s) aún no han respondido.";
+                }
+                
+                res.put("ok", false);
+                res.put("message", mensaje);
+                res.put("partidoId", p.getId());
+                res.put("asignacionesPendientes", pendientes);
+                res.put("asignacionesRechazadas", rechazadas);
+                return res;
             }
-            if (pendientes > 0) {
-                mensaje += pendientes + " árbitro(s) aún no han respondido.";
-            }
-            
-            res.put("ok", false);
-            res.put("message", mensaje);
-            res.put("partidoId", p.getId());
-            res.put("asignacionesPendientes", pendientes);
-            res.put("asignacionesRechazadas", rechazadas);
-            return res;
         }
+        // Si debeValidarArbitros = false, se simula sin verificar (modo libre)
 
         // Simular resultado REALISTA de baloncesto (rangos 70-120 puntos)
         Random rnd = new Random();
@@ -293,6 +311,15 @@ public class TorneoSimulationService {
         for (Asignacion a : asignaciones) {
             try { a.completar(); } catch (Exception ignored) {}
             asignacionRepository.save(a);
+        }
+        
+        // Generar liquidaciones automáticamente para los árbitros
+        try {
+            List<Liquidacion> liquidacionesGeneradas = liquidacionService.generarLiquidacionesParaPartido(p.getId());
+            res.put("liquidacionesGeneradas", liquidacionesGeneradas.size());
+        } catch (Exception e) {
+            res.put("liquidacionesGeneradas", 0);
+            res.put("liquidacionesError", e.getMessage());
         }
 
         String ganador = local > visitante ? p.getEquipoLocal() : p.getEquipoVisitante();

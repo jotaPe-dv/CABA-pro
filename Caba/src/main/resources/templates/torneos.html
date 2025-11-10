@@ -980,12 +980,19 @@
         const btnPredict = document.getElementById('btnPredict');
         
         if (select.value) {
-            // Mostrar vista previa
-            document.getElementById('previewLocal').textContent = selectedOption.getAttribute('data-local');
-            document.getElementById('previewVisitante').textContent = selectedOption.getAttribute('data-visitante');
-            document.getElementById('previewFecha').textContent = selectedOption.getAttribute('data-fecha');
-            document.getElementById('previewUbicacion').textContent = selectedOption.getAttribute('data-ubicacion');
-            document.getElementById('previewTipo').textContent = selectedOption.getAttribute('data-tipo');
+            // Mostrar vista previa (con validación de elementos)
+            const previewLocal = document.getElementById('previewLocal');
+            const previewVisitante = document.getElementById('previewVisitante');
+            const previewFecha = document.getElementById('previewFecha');
+            const previewUbicacion = document.getElementById('previewUbicacion');
+            const previewTipo = document.getElementById('previewTipo');
+            
+            if (previewLocal) previewLocal.textContent = selectedOption.getAttribute('data-local');
+            if (previewVisitante) previewVisitante.textContent = selectedOption.getAttribute('data-visitante');
+            if (previewFecha) previewFecha.textContent = selectedOption.getAttribute('data-fecha');
+            if (previewUbicacion) previewUbicacion.textContent = selectedOption.getAttribute('data-ubicacion');
+            if (previewTipo) previewTipo.textContent = selectedOption.getAttribute('data-tipo');
+            
             preview.style.display = 'block';
             btnPredict.disabled = false;
         } else {
@@ -1329,9 +1336,16 @@
     }
 
     function mostrarEstadoTorneo(estado) {
-        // Actualizar resumen
-        document.getElementById('faseActualTexto').textContent = estado.faseActual || 'N/A';
-        document.getElementById('partidosPendientesTexto').textContent = estado.partidosPendientes || 0;
+        // Actualizar resumen (con validación)
+        const faseActualTexto = document.getElementById('faseActualTexto');
+        const partidosPendientesTexto = document.getElementById('partidosPendientesTexto');
+        
+        if (faseActualTexto) {
+            faseActualTexto.textContent = estado.faseActual || 'N/A';
+        }
+        if (partidosPendientesTexto) {
+            partidosPendientesTexto.textContent = estado.partidosPendientes || 0;
+        }
         
         // Mostrar Cuartos
         const tablaCuartos = document.getElementById('tablaCuartos');
@@ -1363,8 +1377,15 @@
         // Verificar si hay campeón
         if (estado.partidosPendientes === 0 && estado.fases['Final'][0].completado) {
             const campeon = estado.fases['Final'][0].ganador;
-            document.getElementById('nombreCampeon').textContent = campeon;
-            document.getElementById('alertCampeon').style.display = 'block';
+            const nombreCampeonElement = document.getElementById('nombreCampeon');
+            const alertCampeonElement = document.getElementById('alertCampeon');
+            
+            if (nombreCampeonElement) {
+                nombreCampeonElement.textContent = campeon;
+            }
+            if (alertCampeonElement) {
+                alertCampeonElement.style.display = 'block';
+            }
         }
         
         // Verificar transiciones de fase
@@ -1487,8 +1508,16 @@
         const campeon = button.getAttribute('data-campeon');
         
         document.getElementById('modalResultadosFinalesTorneoId').value = torneoId;
-        document.getElementById('tituloResultadosFinales').textContent = `${torneoNombre} - Resultados Finales`;
-        document.getElementById('nombreCampeon').textContent = campeon;
+        
+        const tituloResultadosFinales = document.getElementById('tituloResultadosFinales');
+        const nombreCampeon = document.getElementById('nombreCampeon');
+        
+        if (tituloResultadosFinales) {
+            tituloResultadosFinales.textContent = `${torneoNombre} - Resultados Finales`;
+        }
+        if (nombreCampeon) {
+            nombreCampeon.textContent = campeon;
+        }
         
         try {
             const response = await fetch(`/api/torneos/simulacion/estado/${torneoId}`);
@@ -1506,10 +1535,18 @@
     }
 
     function mostrarResultadosFinales(estado) {
-        // Actualizar resumen
+        // Actualizar resumen (con validación)
         const totalPartidos = Object.values(estado.fases).flat().length;
-        document.getElementById('totalPartidosFinales').textContent = totalPartidos;
-        document.getElementById('fechaCierre').textContent = new Date().toLocaleDateString('es-ES');
+        
+        const totalPartidosFinales = document.getElementById('totalPartidosFinales');
+        const fechaCierre = document.getElementById('fechaCierre');
+        
+        if (totalPartidosFinales) {
+            totalPartidosFinales.textContent = totalPartidos;
+        }
+        if (fechaCierre) {
+            fechaCierre.textContent = new Date().toLocaleDateString('es-ES');
+        }
         
         // Mostrar Cuartos
         const tablaCuartosFinales = document.getElementById('tablaCuartosFinales');

@@ -17,18 +17,95 @@
             <th th:text="#{partidos.fecha}">Fecha</th>
             <th th:text="#{partidos.equipoLocal}">Local</th>
             <th th:text="#{partidos.equipoVisitante}">Visitante</th>
+            <th th:text="#{partidos.estado}">Estado</th>
             <th th:text="#{partidos.acciones}">Acciones</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="partido : ${partidos}">
             <td th:text="${partido.id}"></td>
-            <td th:text="${partido.fechaPartido}"></td>
+            <td th:text="${#temporals.format(partido.fechaPartido, 'dd/MM/yyyy HH:mm')}"></td>
             <td th:text="${partido.equipoLocal}"></td>
             <td th:text="${partido.equipoVisitante}"></td>
             <td>
-                <a th:href="@{'/partidos/editar/' + ${partido.id}}" class="btn btn-sm btn-primary" th:text="#{btn.edit}">Editar</a>
-                <a th:href="@{'/partidos/eliminar/' + ${partido.id}}" class="btn btn-sm btn-danger" th:text="#{btn.delete}">Eliminar</a>
+                <span th:if="${partido.completado}" class="badge bg-success">
+                    <i class="bi bi-check-circle me-1"></i>Completado
+                </span>
+                <span th:unless="${partido.completado}" class="badge bg-warning text-dark">
+                    <i class="bi bi-clock me-1"></i>Pendiente
+                </span>
+            </td>
+            <td>
+                <div class="btn-group" role="group">
+                    <a th:href="@{'/partidos/editar/' + ${partido.id}}" 
+                       class="btn btn-sm btn-primary" 
+                       th:title="#{btn.edit}">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a th:href="@{'/partidos/eliminar/' + ${partido.id}}" 
+                       class="btn btn-sm btn-danger" 
+                       th:title="#{btn.delete}">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    <button th:if="${!partido.completado}"
+                            type="button"
+                            class="btn btn-sm btn-success"
+                            data-bs-toggle="modal"
+                            th:data-bs-target="'#modalCompletar' + ${partido.id}"
+                            th:title="#{partidos.completar}">
+                        <i class="bi bi-flag-fill"></i> Completar
+                    </button>
+                </div>
+                
+                <!-- Modal para completar partido -->
+                <div class="modal fade" th:id="'modalCompletar' + ${partido.id}" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-flag-fill me-2"></i>Completar Partido
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <form th:action="@{'/partidos/completar/' + ${partido.id}}" method="post">
+                                <div class="modal-body">
+                                    <p class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Al completar este partido se generarán automáticamente las liquidaciones 
+                                        para los árbitros asignados.
+                                    </p>
+                                    <div class="mb-3">
+                                        <h6><strong th:text="${partido.equipoLocal}">Local</strong> vs 
+                                            <strong th:text="${partido.equipoVisitante}">Visitante</strong></h6>
+                                        <small class="text-muted" th:text="${#temporals.format(partido.fechaPartido, 'dd/MM/yyyy HH:mm')}"></small>
+                                    </div>
+                                    <hr/>
+                                    <h6>Marcador Final (opcional)</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label" th:text="${partido.equipoLocal}">Local</label>
+                                            <input type="number" class="form-control" name="marcadorLocal" 
+                                                   placeholder="0" min="0">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label" th:text="${partido.equipoVisitante}">Visitante</label>
+                                            <input type="number" class="form-control" name="marcadorVisitante" 
+                                                   placeholder="0" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="bi bi-check-circle me-1"></i>Completar y Generar Liquidaciones
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </td>
         </tr>
         </tbody>

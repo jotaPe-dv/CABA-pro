@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Configuraciones del Sistema - CABA Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -197,21 +199,43 @@
         // Función para toggle de validación de árbitros
         async function toggleValidacionArbitros() {
             const btn = document.getElementById('btnToggleValidacion');
+            const originalContent = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
             
             try {
+                console.log('🔧 Iniciando petición toggle...');
+                
+                // Obtener token CSRF si existe
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                
+                const headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                };
+                
+                // Agregar CSRF si existe
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                    console.log('🔧 CSRF token agregado');
+                }
+                
                 const response = await fetch('/admin/configuraciones/api/toggle-validacion-arbitros', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
+                    headers: headers,
                     body: 'modificadoPor=admin@caba.com'
                 });
                 
-                if (!response.ok) throw new Error('Error al actualizar configuración');
+                console.log('🔧 Respuesta recibida, status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+                    throw new Error(`Error ${response.status}: ${errorText}`);
+                }
                 
                 const data = await response.json();
+                console.log('🔧 Datos recibidos:', data);
                 
                 if (data.ok) {
                     showAlert(data.mensaje, 'success');
@@ -219,6 +243,8 @@
                     // Actualizar UI
                     const estadoDiv = document.getElementById('estadoActual');
                     const nuevoValor = data.nuevoValor;
+                    
+                    console.log('🔧 Actualizando UI con nuevoValor:', nuevoValor);
                     
                     if (nuevoValor) {
                         // Activado
@@ -255,16 +281,23 @@
                             minute: '2-digit' 
                         });
                     
+                    btn.disabled = false;
+                    
+                    console.log('✅ Configuración actualizada exitosamente');
+                    
                     // Recargar página después de 2 segundos para actualizar la tabla
-                    setTimeout(() => location.reload(), 2000);
+                    setTimeout(() => {
+                        console.log('🔄 Recargando página...');
+                        location.reload();
+                    }, 2000);
                 } else {
-                    throw new Error(data.mensaje || 'Error desconocido');
+                    throw new Error(data.mensaje || 'Error desconocido en la respuesta');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('❌ Error completo:', error);
                 showAlert('❌ Error al actualizar la configuración: ' + error.message, 'danger');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-toggle-off"></i> Reintentar';
+                btn.innerHTML = originalContent;
             }
         }
     </script>

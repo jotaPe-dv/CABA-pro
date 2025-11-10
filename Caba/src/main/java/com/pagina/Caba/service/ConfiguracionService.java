@@ -46,17 +46,28 @@ public class ConfiguracionService {
      * Establece o actualiza una configuración booleana
      */
     public void setConfigBoolean(String clave, boolean valor, String descripcion, String modificadoPor) {
+        System.out.println("🔧 ConfiguracionService.setConfigBoolean - Inicio");
+        System.out.println("🔧 Clave: " + clave + ", Valor: " + valor);
+        
         Configuracion config = configuracionRepository.findByClave(clave)
                 .orElseGet(() -> {
+                    System.out.println("🔧 Configuración NO encontrada, creando nueva");
                     Configuracion nueva = new Configuracion();
                     nueva.setClave(clave);
                     nueva.setDescripcion(descripcion);
                     return nueva;
                 });
         
+        System.out.println("🔧 Configuración antes de modificar: " + config);
+        
         config.setValorBoolean(valor);
         config.setModificadoPor(modificadoPor);
-        configuracionRepository.save(config);
+        
+        System.out.println("🔧 Configuración después de modificar: " + config);
+        
+        Configuracion guardada = configuracionRepository.save(config);
+        System.out.println("🔧 Configuración guardada en DB: " + guardada);
+        System.out.println("🔧 ID: " + guardada.getId() + ", Valor: " + guardada.getValor());
     }
     
     /**
@@ -80,9 +91,28 @@ public class ConfiguracionService {
      * Toggle (invertir) una configuración booleana
      */
     public boolean toggleConfig(String clave, String descripcion, String modificadoPor) {
+        System.out.println("🔧 ConfiguracionService.toggleConfig - Inicio");
+        System.out.println("🔧 Clave: " + clave);
+        System.out.println("🔧 Modificado por: " + modificadoPor);
+        
         boolean valorActual = getConfigBoolean(clave, true);
+        System.out.println("🔧 Valor actual obtenido: " + valorActual);
+        
         boolean nuevoValor = !valorActual;
+        System.out.println("🔧 Nuevo valor calculado: " + nuevoValor);
+        
         setConfigBoolean(clave, nuevoValor, descripcion, modificadoPor);
+        System.out.println("🔧 setConfigBoolean ejecutado");
+        
+        // Verificar que se guardó correctamente
+        boolean valorGuardado = getConfigBoolean(clave, true);
+        System.out.println("🔧 Valor después de guardar: " + valorGuardado);
+        
+        if (valorGuardado != nuevoValor) {
+            System.err.println("❌ ERROR: El valor no se guardó correctamente!");
+            System.err.println("❌ Esperado: " + nuevoValor + ", Obtenido: " + valorGuardado);
+        }
+        
         return nuevoValor;
     }
     

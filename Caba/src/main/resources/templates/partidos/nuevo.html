@@ -4,64 +4,264 @@
     <meta charset="UTF-8">
     <title>Nuevo Partido</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 <div class="container mt-4">
-    <h2>Nuevo Partido</h2>
+    <h2><i class="bi bi-calendar-plus me-2"></i>Nuevo Partido</h2>
     <form th:action="@{/partidos/guardar}" th:object="${partido}" method="post" novalidate>
         <div th:if="${#fields.hasErrors()}" class="alert alert-danger">
             <ul>
                 <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
             </ul>
         </div>
+        
+        <!-- Equipo Local con Modal -->
         <div class="mb-3">
-            <label class="form-label">Equipo Local</label>
-            <input type="text" class="form-control" th:field="*{equipoLocal}" required />
+            <label class="form-label">
+                <i class="bi bi-house-fill me-1"></i>Equipo Local (Home)
+            </label>
+            <div class="input-group">
+                <input type="text" class="form-control" th:field="*{equipoLocal}" 
+                       id="equipoLocalInput" required readonly />
+                <button type="button" class="btn btn-outline-primary" 
+                        data-bs-toggle="modal" data-bs-target="#modalEquipoLocal">
+                    <i class="bi bi-search"></i> Seleccionar
+                </button>
+            </div>
+            <small class="form-text text-muted">Click en "Seleccionar" para elegir un equipo</small>
         </div>
+        
+        <!-- Equipo Visitante con Modal -->
         <div class="mb-3">
-            <label class="form-label">Equipo Visitante</label>
-            <input type="text" class="form-control" th:field="*{equipoVisitante}" required />
+            <label class="form-label">
+                <i class="bi bi-airplane me-1"></i>Equipo Visitante (Away)
+            </label>
+            <div class="input-group">
+                <input type="text" class="form-control" th:field="*{equipoVisitante}" 
+                       id="equipoVisitanteInput" required readonly />
+                <button type="button" class="btn btn-outline-success" 
+                        data-bs-toggle="modal" data-bs-target="#modalEquipoVisitante">
+                    <i class="bi bi-search"></i> Seleccionar
+                </button>
+            </div>
+            <small class="form-text text-muted">Click en "Seleccionar" para elegir un equipo</small>
         </div>
+        
         <div class="mb-3">
-            <label class="form-label">Fecha y Hora</label>
+            <label class="form-label"><i class="bi bi-calendar-event me-1"></i>Fecha y Hora</label>
             <input type="datetime-local" class="form-control" th:field="*{fechaPartido}" required />
         </div>
         <div class="mb-3">
-            <label class="form-label">Ubicación</label>
+            <label class="form-label"><i class="bi bi-geo-alt-fill me-1"></i>Ubicación</label>
             <input type="text" class="form-control" th:field="*{ubicacion}" required />
         </div>
         <div class="mb-3">
-            <label class="form-label">Tipo de Partido</label>
+            <label class="form-label"><i class="bi bi-trophy me-1"></i>Tipo de Partido</label>
             <select class="form-select" th:field="*{tipoPartido}" id="tipoPartidoSelect" required>
                 <option value="Oficial">Oficial</option>
                 <option value="Amistoso">Amistoso</option>
             </select>
         </div>
         <div class="mb-3" id="torneoSelectDiv">
-            <label class="form-label">Torneo</label>
+            <label class="form-label"><i class="bi bi-award me-1"></i>Torneo</label>
             <select class="form-select" name="torneoId" id="torneoIdSelect">
                 <option th:each="torneo : ${torneos}" th:value="${torneo.id}" th:text="${torneo.nombre}" th:selected="${partido.torneo != null} ? ${torneo.id} == ${partido.torneo.id} : false"></option>
             </select>
         </div>
         <input type="hidden" id="torneoAmistosoId" name="torneoAmistosoId" th:value="${torneoAmistosoId}" />
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tipoSelect = document.getElementById('tipoPartidoSelect');
-            const torneoDiv = document.getElementById('torneoSelectDiv');
-            function toggleTorneo() {
-                if (tipoSelect.value === 'Amistoso') {
-                    torneoDiv.style.display = 'none';
-                } else {
-                    torneoDiv.style.display = 'block';
-                }
-            }
-            tipoSelect.addEventListener('change', toggleTorneo);
-            toggleTorneo();
-        });
-        </script>
-        <button type="submit" class="btn btn-success">Guardar</button>
-        <a th:href="@{/partidos}" class="btn btn-secondary">Cancelar</a>
+        
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-save me-1"></i>Guardar
+        </button>
+        <a th:href="@{/partidos}" class="btn btn-secondary">
+            <i class="bi bi-x-circle me-1"></i>Cancelar
+        </a>
     </form>
 </div>
+
+<!-- Modal para Equipo Local -->
+<div class="modal fade" id="modalEquipoLocal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-house-fill me-2"></i>Seleccionar Equipo Local (Home)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="searchEquipoLocal" 
+                       placeholder="🔍 Buscar equipo...">
+                <div class="list-group" id="listaEquiposLocal">
+                    <button type="button" class="list-group-item list-group-item-action equipo-item-local"
+                            th:each="equipo : ${equiposDisponibles}"
+                            th:data-equipo="${equipo}"
+                            th:text="${equipo}">
+                    </button>
+                    <div th:if="${#lists.isEmpty(equiposDisponibles)}" class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No hay equipos registrados. Puedes escribir el nombre manualmente.
+                    </div>
+                </div>
+                <hr/>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="nuevoEquipoLocal" 
+                           placeholder="O escribe un nuevo equipo...">
+                    <button type="button" class="btn btn-primary" id="btnAgregarEquipoLocal">
+                        <i class="bi bi-plus-circle me-1"></i>Agregar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Equipo Visitante -->
+<div class="modal fade" id="modalEquipoVisitante" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-airplane me-2"></i>Seleccionar Equipo Visitante (Away)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control mb-3" id="searchEquipoVisitante" 
+                       placeholder="🔍 Buscar equipo...">
+                <div class="list-group" id="listaEquiposVisitante">
+                    <button type="button" class="list-group-item list-group-item-action equipo-item-visitante"
+                            th:each="equipo : ${equiposDisponibles}"
+                            th:data-equipo="${equipo}"
+                            th:text="${equipo}">
+                    </button>
+                    <div th:if="${#lists.isEmpty(equiposDisponibles)}" class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        No hay equipos registrados. Puedes escribir el nombre manualmente.
+                    </div>
+                </div>
+                <hr/>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="nuevoEquipoVisitante" 
+                           placeholder="O escribe un nuevo equipo...">
+                    <button type="button" class="btn btn-success" id="btnAgregarEquipoVisitante">
+                        <i class="bi bi-plus-circle me-1"></i>Agregar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Funciones para seleccionar equipos desde la lista
+    function seleccionarEquipoLocal(equipo) {
+        document.getElementById('equipoLocalInput').value = equipo;
+        bootstrap.Modal.getInstance(document.getElementById('modalEquipoLocal')).hide();
+    }
+    
+    function seleccionarEquipoVisitante(equipo) {
+        document.getElementById('equipoVisitanteInput').value = equipo;
+        bootstrap.Modal.getInstance(document.getElementById('modalEquipoVisitante')).hide();
+    }
+    
+    // Funciones para agregar nuevos equipos
+    function seleccionarNuevoEquipoLocal() {
+        const nuevoEquipo = document.getElementById('nuevoEquipoLocal').value.trim();
+        if (nuevoEquipo) {
+            document.getElementById('equipoLocalInput').value = nuevoEquipo;
+            bootstrap.Modal.getInstance(document.getElementById('modalEquipoLocal')).hide();
+        } else {
+            alert('Por favor, escribe el nombre del equipo');
+        }
+    }
+    
+    function seleccionarNuevoEquipoVisitante() {
+        const nuevoEquipo = document.getElementById('nuevoEquipoVisitante').value.trim();
+        if (nuevoEquipo) {
+            document.getElementById('equipoVisitanteInput').value = nuevoEquipo;
+            bootstrap.Modal.getInstance(document.getElementById('modalEquipoVisitante')).hide();
+        } else {
+            alert('Por favor, escribe el nombre del equipo');
+        }
+    }
+    
+    // Búsqueda en tiempo real para equipo local
+    document.getElementById('searchEquipoLocal').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('.equipo-item-local');
+        
+        items.forEach(item => {
+            const equipoNombre = item.getAttribute('data-equipo').toLowerCase();
+            if (equipoNombre.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+    
+    // Búsqueda en tiempo real para equipo visitante
+    document.getElementById('searchEquipoVisitante').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const items = document.querySelectorAll('.equipo-item-visitante');
+        
+        items.forEach(item => {
+            const equipoNombre = item.getAttribute('data-equipo').toLowerCase();
+            if (equipoNombre.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+    
+    // Control de visibilidad de torneo según tipo
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.getElementById('tipoPartidoSelect');
+        const torneoDiv = document.getElementById('torneoSelectDiv');
+        
+        function toggleTorneo() {
+            if (tipoSelect.value === 'Amistoso') {
+                torneoDiv.style.display = 'none';
+            } else {
+                torneoDiv.style.display = 'block';
+            }
+        }
+        
+        tipoSelect.addEventListener('change', toggleTorneo);
+        toggleTorneo();
+        
+        // Agregar event listeners a los botones de equipos Local
+        document.querySelectorAll('.equipo-item-local').forEach(button => {
+            button.addEventListener('click', function() {
+                const equipo = this.getAttribute('data-equipo');
+                seleccionarEquipoLocal(equipo);
+            });
+        });
+        
+        // Agregar event listeners a los botones de equipos Visitante
+        document.querySelectorAll('.equipo-item-visitante').forEach(button => {
+            button.addEventListener('click', function() {
+                const equipo = this.getAttribute('data-equipo');
+                seleccionarEquipoVisitante(equipo);
+            });
+        });
+        
+        // Event listener para botón de agregar equipo local
+        const btnAgregarLocal = document.getElementById('btnAgregarEquipoLocal');
+        if (btnAgregarLocal) {
+            btnAgregarLocal.addEventListener('click', seleccionarNuevoEquipoLocal);
+        }
+        
+        // Event listener para botón de agregar equipo visitante
+        const btnAgregarVisitante = document.getElementById('btnAgregarEquipoVisitante');
+        if (btnAgregarVisitante) {
+            btnAgregarVisitante.addEventListener('click', seleccionarNuevoEquipoVisitante);
+        }
+    });
+</script>
 </body>
 </html>

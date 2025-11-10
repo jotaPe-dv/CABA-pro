@@ -233,4 +233,82 @@ public class LiquidacionService {
     public List<Liquidacion> obtenerLiquidacionesPorArbitro(Long arbitroId) {
         return liquidacionRepository.findLiquidacionesByArbitroId(arbitroId);
     }
+    
+    /**
+     * Genera liquidaciones automáticas para todas las asignaciones de un partido.
+     * Este método se llama cuando un partido se marca como completado.
+     * Genera liquidaciones para todas las asignaciones, independientemente de su estado.
+     * Usa REQUIRES_NEW para ejecutarse en una transacción independiente.
+     * 
+     * @param partidoId ID del partido completado
+     * @return Lista de liquidaciones generadas (una por cada árbitro asignado)
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public List<Liquidacion> generarLiquidacionesParaPartido(Long partidoId) {
+        // Buscar todas las asignaciones del partido (sin filtrar por estado)
+        List<Asignacion> asignaciones = asignacionRepository.findAll().stream()
+            .filter(a -> a.getPartido() != null && a.getPartido().getId().equals(partidoId))
+            .toList();
+        
+        if (asignaciones.isEmpty()) {
+            throw new IllegalArgumentException("No hay asignaciones para el partido #" + partidoId);
+        }
+        
+        List<Liquidacion> liquidacionesGeneradas = new java.util.ArrayList<>();
+        
+        for (Asignacion asignacion : asignaciones) {
+            // Verificar si ya existe una liquidación para esta asignación
+            if (asignacion.getLiquidacion() != null) {
+                // Ya existe liquidación, agregarla a la lista
+                liquidacionesGeneradas.add(asignacion.getLiquidacion());
+                continue;
+            }
+            
+            // Calcular el monto según la tarifa y las reglas de negocio
+            BigDecimal monto = calcularMontoLiquidacion(asignacion);
+            
+            // Crear nueva liquidación
+            Liquidacion liquidacion = new Liquidacion(asignacion, monto);
+            liquidacion.setEstado(EstadoLiquidacion.PENDIENTE);
+            liquidacion.setObservaciones("Liquidación generada automáticamente al completar el partido");
+            
+            // Guardar liquidación
+            Liquidacion saved = liquidacionRepository.save(liquidacion);
+            liquidacionesGeneradas.add(saved);
+            
+            // Marcar asignación como COMPLETADA (solo si estaba ACEPTADA, sino dejarla como está)
+            if (asignacion.getEstado() == EstadoAsignacion.ACEPTADA) {
+                asignacion.completar();
+                asignacionRepository.save(asignacion);
+            } else {
+                // Si no estaba aceptada, solo actualizar el estado a COMPLETADA directamente
+                asignacion.setEstado(EstadoAsignacion.COMPLETADA);
+                asignacionRepository.save(asignacion);
+            }
+        }
+        
+        return liquidacionesGeneradas;
+    }
+    
+    /**
+     * Envía las liquidaciones a los árbitros (marca como enviadas)
+     * 
+     * @param liquidacionIds IDs de las liquidaciones a enviar
+     */
+    public void enviarLiquidaciones(List<Long> liquidacionIds) {
+        for (Long id : liquidacionIds) {
+            Optional<Liquidacion> liquidacionOpt = liquidacionRepository.findById(id);
+            if (liquidacionOpt.isPresent()) {
+                Liquidacion liquidacion = liquidacionOpt.get();
+                // Aquí podrías agregar lógica para enviar email, notificación, etc.
+                // Por ahora solo guardamos con observación
+                if (liquidacion.getObservaciones() == null || liquidacion.getObservaciones().isEmpty()) {
+                    liquidacion.setObservaciones("Liquidación enviada al árbitro");
+                } else {
+                    liquidacion.setObservaciones(liquidacion.getObservaciones() + ". Enviada al árbitro.");
+                }
+                liquidacionRepository.save(liquidacion);
+            }
+        }
+    }
 }

@@ -49,20 +49,47 @@ public class ConfiguracionController {
     public ResponseEntity<Map<String, Object>> toggleValidacionArbitros(
             @RequestParam(required = false, defaultValue = "admin@caba.com") String modificadoPor) {
         
-        boolean nuevoValor = configuracionService.toggleConfig(
-                ConfiguracionService.VALIDAR_ARBITROS_SIMULACION,
-                "Validar que todos los árbitros hayan aceptado antes de simular un partido",
-                modificadoPor
-        );
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("ok", true);
-        response.put("nuevoValor", nuevoValor);
-        response.put("mensaje", nuevoValor ? 
-                "✅ Validación activada: Se requiere que todos los árbitros acepten antes de simular" :
-                "⚠️ Validación desactivada: Se puede simular sin aceptación de árbitros");
-        
-        return ResponseEntity.ok(response);
+        try {
+            System.out.println("🔧 DEBUG: Iniciando toggle de validación de árbitros...");
+            
+            // Obtener valor actual ANTES del toggle
+            boolean valorActual = configuracionService.debeValidarArbitrosParaSimulacion();
+            System.out.println("🔧 DEBUG: Valor actual ANTES del toggle: " + valorActual);
+            
+            // Hacer el toggle
+            boolean nuevoValor = configuracionService.toggleConfig(
+                    ConfiguracionService.VALIDAR_ARBITROS_SIMULACION,
+                    "Validar que todos los árbitros hayan aceptado antes de simular un partido",
+                    modificadoPor
+            );
+            
+            System.out.println("🔧 DEBUG: Nuevo valor DESPUÉS del toggle: " + nuevoValor);
+            
+            // Verificar que realmente cambió
+            boolean valorVerificado = configuracionService.debeValidarArbitrosParaSimulacion();
+            System.out.println("🔧 DEBUG: Valor VERIFICADO desde DB: " + valorVerificado);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("ok", true);
+            response.put("nuevoValor", nuevoValor);
+            response.put("mensaje", nuevoValor ? 
+                    "✅ Validación activada: Se requiere que todos los árbitros acepten antes de simular" :
+                    "⚠️ Validación desactivada: Se puede simular sin aceptación de árbitros");
+            
+            System.out.println("🔧 DEBUG: Respuesta enviada: " + response);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.err.println("❌ ERROR en toggleValidacionArbitros: " + e.getMessage());
+            e.printStackTrace();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("ok", false);
+            response.put("mensaje", "Error al actualizar configuración: " + e.getMessage());
+            
+            return ResponseEntity.status(500).body(response);
+        }
     }
     
     /**

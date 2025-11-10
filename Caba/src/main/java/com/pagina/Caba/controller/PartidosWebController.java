@@ -1,18 +1,20 @@
-
 package com.pagina.Caba.controller;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.pagina.Caba.model.Partido;
 import com.pagina.Caba.model.Torneo;
+import com.pagina.Caba.model.Liquidacion;
 import com.pagina.Caba.repository.PartidoRepository;
 import com.pagina.Caba.repository.TorneoRepository;
 import com.pagina.Caba.repository.AsignacionRepository;
 import com.pagina.Caba.model.Administrador;
 import com.pagina.Caba.repository.AdministradorRepository;
+import com.pagina.Caba.service.LiquidacionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.validation.BindingResult;
 import jakarta.validation.Valid;
 import jakarta.annotation.PostConstruct;
@@ -31,6 +33,9 @@ public class PartidosWebController {
     
     @Autowired
     private AsignacionRepository asignacionRepository;
+
+    @Autowired
+    private LiquidacionService liquidacionService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -87,7 +92,37 @@ public class PartidosWebController {
         model.addAttribute("partido", new Partido());
         model.addAttribute("torneos", torneoRepository.findByActivoTrue());
         model.addAttribute("torneoAmistosoId", torneoAmistoso != null ? torneoAmistoso.getId() : null);
+        
+        // Obtener equipos únicos de todos los partidos para sugerencias
+        List<String> equiposUnicos = obtenerEquiposUnicos();
+        model.addAttribute("equiposDisponibles", equiposUnicos);
+        
         return "partidos/nuevo";
+    }
+    
+    /**
+     * Obtiene una lista de equipos únicos que han participado en partidos
+     */
+    private List<String> obtenerEquiposUnicos() {
+        List<Partido> todosPartidos = partidoRepository.findAll();
+        java.util.Set<String> equiposSet = new java.util.HashSet<>();
+        
+        for (Partido p : todosPartidos) {
+            if (p.getEquipoLocal() != null && !p.getEquipoLocal().trim().isEmpty() 
+                && !p.getEquipoLocal().contains("Ganador") && !p.getEquipoLocal().equals("TBD")) {
+                equiposSet.add(p.getEquipoLocal());
+            }
+            if (p.getEquipoVisitante() != null && !p.getEquipoVisitante().trim().isEmpty()
+                && !p.getEquipoVisitante().contains("Ganador") && !p.getEquipoVisitante().equals("TBD")) {
+                equiposSet.add(p.getEquipoVisitante());
+            }
+        }
+        
+        // Convertir a lista y ordenar alfabéticamente
+        java.util.List<String> equipos = new java.util.ArrayList<>(equiposSet);
+        java.util.Collections.sort(equipos);
+        
+        return equipos;
     }
 
     // --- Guardar nuevo partido ---
@@ -181,6 +216,49 @@ public class PartidosWebController {
         } catch (Exception e) {
             System.err.println("Error al eliminar partido: " + e.getMessage());
             return "redirect:/partidos?error=true";
+        }
+    }
+    
+    // --- Completar partido y generar liquidaciones ---
+    @PostMapping("/partidos/completar/{id}")
+    public String completarPartido(
+            @PathVariable Long id,
+            @RequestParam(required = false) Integer marcadorLocal,
+            @RequestParam(required = false) Integer marcadorVisitante,
+            RedirectAttributes redirectAttributes) {
+        try {
+            Partido partido = partidoRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("ID de partido inválido: " + id));
+            
+            // Verificar que el partido no esté ya completado
+            if (partido.estaCompletado()) {
+                redirectAttributes.addFlashAttribute("error", "El partido ya está completado");
+                return "redirect:/partidos";
+            }
+            
+            // Completar el partido con los marcadores (opcionales)
+            if (marcadorLocal != null && marcadorVisitante != null) {
+                partido.completarPartido(marcadorLocal, marcadorVisitante);
+            } else {
+                partido.setCompletado(true);
+            }
+            partidoRepository.save(partido);
+            
+            // Generar liquidaciones automáticamente para los árbitros asignados
+            try {
+                List<Liquidacion> liquidaciones = liquidacionService.generarLiquidacionesParaPartido(id);
+                redirectAttributes.addFlashAttribute("success", 
+                    String.format("Partido completado exitosamente. Se generaron %d liquidaciones.", liquidaciones.size()));
+            } catch (IllegalArgumentException e) {
+                // Si no hay asignaciones aceptadas, igual completamos el partido
+                redirectAttributes.addFlashAttribute("warning", 
+                    "Partido completado, pero no se generaron liquidaciones: " + e.getMessage());
+            }
+            
+            return "redirect:/partidos";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error al completar el partido: " + e.getMessage());
+            return "redirect:/partidos";
         }
     }
 }

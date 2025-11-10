@@ -104,7 +104,24 @@
 			<version>2.3.0</version>
 		</dependency>
 		
-		<!-- PDF Generation (iText) -->
+		<!-- PDF Generation (iText 7 - con soporte para códigos de barras) -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>kernel</artifactId>
+			<version>7.2.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>layout</artifactId>
+			<version>7.2.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>barcodes</artifactId>
+			<version>7.2.5</version>
+		</dependency>
+		
+		<!-- iText 5 (para compatibilidad con código antiguo) -->
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>

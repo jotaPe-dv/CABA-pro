@@ -88,11 +88,19 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <a th:href="@{/arbitro/liquidaciones/{id}(id=${liquidacion.id})}" 
-                                       class="btn btn-sm btn-outline-primary"
-                                       th:title="#{liquidaciones.ver.detalle}">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/arbitro/liquidaciones/{id}(id=${liquidacion.id})}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           th:title="#{liquidaciones.ver.detalle}">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/arbitro/liquidaciones/{id}/pdf(id=${liquidacion.id})}" 
+                                           class="btn btn-sm btn-outline-success"
+                                           th:title="#{liquidaciones.descargar.pdf}"
+                                           download>
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
