@@ -1,10 +1,14 @@
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-
-dotenv.config();
+/**
+ * Middleware de autenticación para Node.js API
+ * 
+ * IMPORTANTE: Este middleware NO valida el token JWT.
+ * Solo extrae el token y lo pasa a Spring Boot.
+ * La validación real del token la hace Spring Boot.
+ */
 
 /**
- * Middleware para validar el token JWT
+ * Middleware para extraer y pasar el token JWT
+ * NO valida el token localmente - eso lo hace Spring Boot
  */
 export const authMiddleware = (req, res, next) => {
     try {
@@ -29,31 +33,14 @@ export const authMiddleware = (req, res, next) => {
 
         const token = parts[1];
 
-        // Verificar el token JWT
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // Agregar información del usuario decodificada a la request
-        req.user = decoded;
+        // NO validamos el token aquí
+        // Solo lo guardamos para pasarlo a Spring Boot en las peticiones
         req.token = token;
 
         next();
     } catch (error) {
-        if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({
-                error: 'Token inválido',
-                message: 'El token proporcionado no es válido'
-            });
-        }
-        
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                error: 'Token expirado',
-                message: 'El token ha expirado. Por favor, inicie sesión nuevamente'
-            });
-        }
-
         return res.status(500).json({
-            error: 'Error al validar token',
+            error: 'Error en el middleware de autenticación',
             message: error.message
         });
     }
@@ -70,8 +57,6 @@ export const optionalAuth = (req, res, next) => {
             const parts = authHeader.split(' ');
             if (parts.length === 2 && parts[0] === 'Bearer') {
                 const token = parts[1];
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                req.user = decoded;
                 req.token = token;
             }
         }
