@@ -1,0 +1,73 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_SPRINGBOOT: caba-springboot-api
+  ECR_REPOSITORY_NODEJS: caba-nodejs-api
+  ECS_CLUSTER: caba-cluster
+  ECS_SERVICE_SPRINGBOOT: caba-springboot-service
+  ECS_SERVICE_NODEJS: caba-nodejs-service
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build Spring Boot Docker image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd Caba
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT:$IMAGE_TAG .
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_SPRINGBOOT:latest
+
+    - name: Build Node.js Docker image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        cd caba-arbitro-api
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_NODEJS:$IMAGE_TAG .
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY_NODEJS:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY_NODEJS:latest
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEJS:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY_NODEJS:latest
+
+    - name: Update ECS service - Spring Boot
+      run: |
+        aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE_SPRINGBOOT }} \
+          --force-new-deployment
+
+    - name: Update ECS service - Node.js
+      run: |
+        aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE_NODEJS }} \
+          --force-new-deployment
+
+    - name: Wait for deployment
+      run: |
+        aws ecs wait services-stable --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE_SPRINGBOOT }} ${{ env.ECS_SERVICE_NODEJS }}

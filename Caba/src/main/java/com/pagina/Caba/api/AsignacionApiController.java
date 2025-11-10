@@ -240,7 +240,7 @@ public class AsignacionApiController {
         dto.setFechaPartido(asignacion.getPartido().getFechaPartido());
         dto.setLugarPartido(asignacion.getPartido().getUbicacion());
         dto.setRolEspecifico(asignacion.getRolEspecifico());
-        dto.setEstado(asignacion.getEstado());
+        dto.setEstado(asignacion.getEstado().name()); // Convertir enum a String
         dto.setMontoCalculado(asignacion.getMontoCalculado());
         dto.setFechaAsignacion(asignacion.getFechaAsignacion());
         dto.setFechaRespuesta(asignacion.getFechaRespuesta());

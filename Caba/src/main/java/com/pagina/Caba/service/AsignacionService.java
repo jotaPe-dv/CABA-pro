@@ -241,6 +241,125 @@ public class AsignacionService {
         return asignacionRepository.save(nuevaAsignacion);
     }
     
+    /**
+     * Obtener asignaciones por árbitro y estado (para API REST)
+     */
+    public List<com.pagina.Caba.dto.AsignacionDto> obtenerPorArbitroYEstado(Long arbitroId, String estado) {
+        List<Asignacion> asignaciones = asignacionRepository.findByArbitroId(arbitroId);
+        
+        EstadoAsignacion estadoEnum;
+        try {
+            estadoEnum = EstadoAsignacion.valueOf(estado.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Estado inválido: " + estado);
+        }
+        
+        return asignaciones.stream()
+            .filter(a -> a.getEstado() == estadoEnum)
+            .map(this::convertirADto)
+            .toList();
+    }
+    
+    /**
+     * Obtener asignaciones por árbitro (para API REST)
+     */
+    public List<com.pagina.Caba.dto.AsignacionDto> obtenerPorArbitro(Long arbitroId) {
+        List<Asignacion> asignaciones = asignacionRepository.findByArbitroId(arbitroId);
+        return asignaciones.stream()
+            .map(this::convertirADto)
+            .toList();
+    }
+    
+    /**
+     * Obtener asignación por ID como DTO (para API REST)
+     */
+    public com.pagina.Caba.dto.AsignacionDto obtenerAsignacionDto(Long id) {
+        Optional<Asignacion> asignacionOpt = asignacionRepository.findById(id);
+        if (asignacionOpt.isEmpty()) {
+            throw new IllegalArgumentException("Asignación no encontrada");
+        }
+        return convertirADto(asignacionOpt.get());
+    }
+    
+    /**
+    /**
+     * Aceptar asignación (para API REST)
+     */
+    public com.pagina.Caba.dto.AsignacionDto aceptarAsignacionDto(Long id) {
+        Optional<Asignacion> asignacionOpt = asignacionRepository.findById(id);
+        if (asignacionOpt.isEmpty()) {
+            throw new IllegalArgumentException("Asignación no encontrada");
+        }
+        
+        Asignacion asignacion = asignacionOpt.get();
+        
+        if (asignacion.getEstado() != EstadoAsignacion.PENDIENTE) {
+            throw new IllegalStateException("Solo se pueden aceptar asignaciones pendientes");
+        }
+        
+        asignacion.aceptar();
+        asignacionRepository.save(asignacion);
+        
+        return convertirADto(asignacion);
+    }
+    
+    /**
+     * Rechazar asignación como DTO (para API REST)
+     */
+    public com.pagina.Caba.dto.AsignacionDto rechazarAsignacionDto(Long id, String comentario) {
+        Optional<Asignacion> asignacionOpt = asignacionRepository.findById(id);
+        if (asignacionOpt.isEmpty()) {
+            throw new IllegalArgumentException("Asignación no encontrada");
+        }
+        
+        Asignacion asignacion = asignacionOpt.get();
+        
+        if (asignacion.getEstado() != EstadoAsignacion.PENDIENTE) {
+            throw new IllegalStateException("Solo se pueden rechazar asignaciones pendientes");
+        }
+        
+        asignacion.rechazar(comentario);
+        asignacionRepository.save(asignacion);
+        
+        return convertirADto(asignacion);
+    }
+    
+    /**
+     * Convertir Asignacion a AsignacionDto
+     */
+    private com.pagina.Caba.dto.AsignacionDto convertirADto(Asignacion asignacion) {
+        com.pagina.Caba.dto.AsignacionDto dto = new com.pagina.Caba.dto.AsignacionDto();
+        dto.setId(asignacion.getId());
+        dto.setRolEspecifico(asignacion.getRolEspecifico());
+        dto.setEstado(asignacion.getEstado().name());
+        dto.setMontoCalculado(asignacion.getMontoCalculado());
+        dto.setFechaAsignacion(asignacion.getFechaAsignacion());
+        dto.setFechaRespuesta(asignacion.getFechaRespuesta());
+        dto.setComentarios(asignacion.getComentarios());
+        
+        // Partido
+        com.pagina.Caba.dto.PartidoDto partidoDto = new com.pagina.Caba.dto.PartidoDto();
+        partidoDto.setId(asignacion.getPartido().getId());
+        partidoDto.setEquipoLocal(asignacion.getPartido().getEquipoLocal());
+        partidoDto.setEquipoVisitante(asignacion.getPartido().getEquipoVisitante());
+        partidoDto.setTipoPartido(asignacion.getPartido().getTipoPartido());
+        partidoDto.setFechaPartido(asignacion.getPartido().getFechaPartido());
+        partidoDto.setUbicacion(asignacion.getPartido().getUbicacion());
+        partidoDto.setCompletado(asignacion.getPartido().getCompletado());
+        dto.setPartido(partidoDto);
+        
+        // Árbitro
+        com.pagina.Caba.dto.ArbitroDto arbitroDto = new com.pagina.Caba.dto.ArbitroDto();
+        arbitroDto.setId(asignacion.getArbitro().getId());
+        arbitroDto.setNombre(asignacion.getArbitro().getNombre());
+        arbitroDto.setApellido(asignacion.getArbitro().getApellido());
+        arbitroDto.setEmail(asignacion.getArbitro().getEmail());
+        arbitroDto.setEspecialidad(asignacion.getArbitro().getEspecialidad());
+        dto.setArbitro(arbitroDto);
+        
+        return dto;
+    }
+    
     // Validaciones privadas
     private void validarAsignacion(Partido partido, Arbitro arbitro) {
         // Verificar que el árbitro esté disponible

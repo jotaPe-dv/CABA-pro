@@ -1,0 +1,548 @@
+{
+	"info": {
+		"_postman_id": "caba-pro-jwt-api",
+		"name": "CABA Pro - JWT API",
+		"description": "Colección de pruebas para la API REST de CABA Pro con autenticación JWT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth - Autenticación",
+			"item": [
+				{
+					"name": "Login - Árbitro Principal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"jwt_token\", jsonData.token);",
+									"    pm.environment.set(\"arbitro_id\", jsonData.arbitro.id);",
+									"    console.log(\"Token guardado: \" + jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"principal@caba.com\",\n    \"password\": \"arbitro123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Árbitro Asistente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"asistente@caba.com\",\n    \"password\": \"arbitro123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@caba.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register - Nuevo Árbitro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"test@caba.com\",\n    \"password\": \"123456\",\n    \"nombre\": \"Test\",\n    \"apellido\": \"User\",\n    \"telefono\": \"3001234567\",\n    \"direccion\": \"Medellín\",\n    \"numeroLicencia\": \"TEST-001\",\n    \"especialidad\": \"Principal\",\n    \"escalafon\": \"Nacional\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "refresh"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "logout"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Árbitros",
+			"item": [
+				{
+					"name": "Listar Todos los Árbitros",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/arbitros",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "arbitros"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Árbitro por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/arbitros/{{arbitro_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "arbitros", "{{arbitro_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Árbitros Disponibles",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/arbitros/disponibles",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "arbitros", "disponibles"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Árbitro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nombre\": \"Nuevo\",\n    \"apellido\": \"Árbitro\",\n    \"email\": \"nuevo@caba.com\",\n    \"password\": \"password123\",\n    \"telefono\": \"3001234567\",\n    \"direccion\": \"Bogotá\",\n    \"numeroLicencia\": \"NEW-001\",\n    \"especialidad\": \"Principal\",\n    \"escalafon\": \"Nacional\",\n    \"tarifaBase\": 150000\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/arbitros",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "arbitros"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Árbitro",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1,\n    \"nombre\": \"Juan\",\n    \"apellido\": \"Pérez\",\n    \"email\": \"principal@caba.com\",\n    \"telefono\": \"3009999999\",\n    \"direccion\": \"Medellín - Actualizado\",\n    \"numeroLicencia\": \"PRIN-001\",\n    \"especialidad\": \"Principal\",\n    \"escalafon\": \"Nacional\",\n    \"tarifaBase\": 180000,\n    \"disponible\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/arbitros/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "arbitros", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Asignaciones",
+			"item": [
+				{
+					"name": "Listar Todas las Asignaciones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/asignaciones",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "asignaciones"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Asignaciones por Árbitro",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/asignaciones/arbitro/{{arbitro_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "asignaciones", "arbitro", "{{arbitro_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Asignaciones por Partido",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/asignaciones/partido/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "asignaciones", "partido", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Liquidaciones",
+			"item": [
+				{
+					"name": "Listar Todas las Liquidaciones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/liquidaciones",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "liquidaciones"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Liquidaciones por Árbitro",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/liquidaciones/arbitro/{{arbitro_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "liquidaciones", "arbitro", "{{arbitro_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Liquidación por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/liquidaciones/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "liquidaciones", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Partidos",
+			"item": [
+				{
+					"name": "Listar Todos los Partidos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/partidos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "partidos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Partido por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/partidos/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "partidos", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Partidos por Torneo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/partidos/torneo/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "partidos", "torneo", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Torneos",
+			"item": [
+				{
+					"name": "Listar Todos los Torneos",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/torneos",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "torneos"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Torneo por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/torneos/1",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "torneos", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Reportes",
+			"item": [
+				{
+					"name": "Reporte General",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/reportes/general",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "reportes", "general"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8081",
+			"type": "default"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "arbitro_id",
+			"value": "1",
+			"type": "default"
+		}
+	]
+}

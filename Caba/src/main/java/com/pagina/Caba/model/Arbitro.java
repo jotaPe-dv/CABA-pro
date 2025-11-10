@@ -86,6 +86,7 @@ public class Arbitro extends Usuario {
     
     public Boolean getDisponible() { return disponible; }
     public void setDisponible(Boolean disponible) { this.disponible = disponible; }
+    public Boolean isDisponible() { return disponible; } // Método adicional para compatibilidad
     
     public Set<Asignacion> getAsignaciones() { return asignaciones; }
     public void setAsignaciones(Set<Asignacion> asignaciones) { this.asignaciones = asignaciones; }

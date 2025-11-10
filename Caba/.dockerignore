@@ -1,0 +1,6 @@
+# Ignorar archivos innecesarios
+target/
+.mvn/wrapper/maven-wrapper.jar
+.idea/
+*.iml
+.DS_Store

@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface AsignacionRepository extends JpaRepository<Asignacion, Long> {
     
     List<Asignacion> findByArbitro(Arbitro arbitro);
+    List<Asignacion> findByArbitroId(Long arbitroId);
     List<Asignacion> findByPartido(Partido partido);
     List<Asignacion> findByEstado(EstadoAsignacion estado);
     List<Asignacion> findByArbitroAndEstado(Arbitro arbitro, EstadoAsignacion estado);

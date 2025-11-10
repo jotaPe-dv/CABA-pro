@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Spring Boot API
+  springboot-api:
+    build:
+      context: ./Caba
+      dockerfile: Dockerfile
+    container_name: caba-springboot-api
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:cabadb
+      - JWT_SECRET=miClaveSecretaSuperSeguraParaJWT2024
+    networks:
+      - caba-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Node.js API
+  nodejs-api:
+    build:
+      context: ./caba-arbitro-api
+      dockerfile: Dockerfile
+    container_name: caba-nodejs-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SPRING_API_URL=http://springboot-api:8081
+      - JWT_SECRET=miClaveSecretaSuperSeguraParaJWT2024
+    depends_on:
+      springboot-api:
+        condition: service_healthy
+    networks:
+      - caba-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  caba-network:
+    driver: bridge

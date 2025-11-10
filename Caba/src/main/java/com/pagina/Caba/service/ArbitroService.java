@@ -221,7 +221,30 @@ public class ArbitroService {
     }
     
     // Búsquedas
+    public Optional<Arbitro> obtenerPorEmail(String email) {
+        return arbitroRepository.findByEmail(email);
+    }
+    
     public List<Arbitro> buscarPorTexto(String texto) {
         return arbitroRepository.findAll(); // Simplificado temporalmente
+    }
+    
+    /**
+     * Convertir Arbitro a ArbitroDto (para API REST)
+     */
+    public com.pagina.Caba.dto.ArbitroDto convertirADto(Arbitro arbitro) {
+        com.pagina.Caba.dto.ArbitroDto dto = new com.pagina.Caba.dto.ArbitroDto();
+        dto.setId(arbitro.getId());
+        dto.setNombre(arbitro.getNombre());
+        dto.setApellido(arbitro.getApellido());
+        dto.setEmail(arbitro.getEmail());
+        dto.setTelefono(arbitro.getTelefono());
+        dto.setDireccion(arbitro.getDireccion());
+        dto.setEspecialidad(arbitro.getEspecialidad());
+        dto.setEscalafon(arbitro.getEscalafon());
+        dto.setDisponible(arbitro.isDisponible());
+        dto.setFotoUrl(arbitro.getFotoUrl());
+        dto.setActivo(arbitro.getActivo());
+        return dto;
     }
 }

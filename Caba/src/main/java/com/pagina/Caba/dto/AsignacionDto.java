@@ -19,11 +19,15 @@ public class AsignacionDto {
     private LocalDateTime fechaPartido;
     private String lugarPartido;
     private String rolEspecifico;
-    private EstadoAsignacion estado;
+    private String estado; // Cambio a String para API REST
     private BigDecimal montoCalculado;
     private LocalDateTime fechaAsignacion;
     private LocalDateTime fechaRespuesta;
     private String comentarios;
+    
+    // Objetos anidados para API REST
+    private PartidoDto partido;
+    private ArbitroDto arbitro;
 
     // Constructor vacío
     public AsignacionDto() {}
@@ -109,11 +113,11 @@ public class AsignacionDto {
         this.rolEspecifico = rolEspecifico;
     }
 
-    public EstadoAsignacion getEstado() {
+    public String getEstado() {
         return estado;
     }
 
-    public void setEstado(EstadoAsignacion estado) {
+    public void setEstado(String estado) {
         this.estado = estado;
     }
 
@@ -147,5 +151,21 @@ public class AsignacionDto {
 
     public void setComentarios(String comentarios) {
         this.comentarios = comentarios;
+    }
+    
+    public PartidoDto getPartido() {
+        return partido;
+    }
+
+    public void setPartido(PartidoDto partido) {
+        this.partido = partido;
+    }
+
+    public ArbitroDto getArbitro() {
+        return arbitro;
+    }
+
+    public void setArbitro(ArbitroDto arbitro) {
+        this.arbitro = arbitro;
     }
 }

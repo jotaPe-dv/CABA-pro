@@ -311,4 +311,42 @@ public class LiquidacionService {
             }
         }
     }
+    
+    /**
+     * Obtener liquidaciones por árbitro y estado (para API REST)
+     */
+    public List<LiquidacionDto> obtenerPorArbitroYEstado(Long arbitroId, String estado) {
+        List<Liquidacion> liquidaciones = liquidacionRepository.findAll().stream()
+            .filter(l -> l.getAsignacion() != null && 
+                        l.getAsignacion().getArbitro() != null && 
+                        l.getAsignacion().getArbitro().getId().equals(arbitroId))
+            .toList();
+        
+        EstadoLiquidacion estadoEnum;
+        try {
+            estadoEnum = EstadoLiquidacion.valueOf(estado.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Estado inválido: " + estado);
+        }
+        
+        return liquidaciones.stream()
+            .filter(l -> l.getEstado() == estadoEnum)
+            .map(this::toDto)
+            .toList();
+    }
+    
+    /**
+     * Obtener liquidaciones por árbitro (para API REST)
+     */
+    public List<LiquidacionDto> obtenerPorArbitro(Long arbitroId) {
+        List<Liquidacion> liquidaciones = liquidacionRepository.findAll().stream()
+            .filter(l -> l.getAsignacion() != null && 
+                        l.getAsignacion().getArbitro() != null && 
+                        l.getAsignacion().getArbitro().getId().equals(arbitroId))
+            .toList();
+        
+        return liquidaciones.stream()
+            .map(this::toDto)
+            .toList();
+    }
 }
