@@ -26,8 +26,17 @@ public class MainController {
     private PartidoService partidoService;
 
     @GetMapping("/")
-    public String home() {
-        return "redirect:/login";
+    public String home(Authentication authentication) {
+        // Si el usuario está autenticado, redirigir a su dashboard
+        if (authentication != null && authentication.isAuthenticated()) {
+            if (authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+                return "redirect:/admin/dashboard";
+            } else if (authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ARBITRO"))) {
+                return "redirect:/arbitro/dashboard";
+            }
+        }
+        // Si no está autenticado, mostrar landing page
+        return "home";
     }
 
     @GetMapping("/login")

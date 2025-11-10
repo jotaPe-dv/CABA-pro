@@ -93,18 +93,38 @@
 			<scope>runtime</scope>
 		</dependency>
 		
-		<!-- ========================================
-		     NUEVAS DEPENDENCIAS - ENTREGABLE #2
-		     ======================================== -->
-		
-		<!-- OpenAPI / Swagger UI para documentación de API REST -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.3.0</version>
-		</dependency>
-		
-		<!-- PDF Generation (iText 7 - con soporte para códigos de barras) -->
+	<!-- ========================================
+	     NUEVAS DEPENDENCIAS - ENTREGABLE #2
+	     ======================================== -->
+	
+	<!-- Flyway - Database Migration Tool -->
+	<dependency>
+		<groupId>org.flywaydb</groupId>
+		<artifactId>flyway-core</artifactId>
+	</dependency>
+	<dependency>
+		<groupId>org.flywaydb</groupId>
+		<artifactId>flyway-mysql</artifactId>
+	</dependency>
+	
+	<!-- AWS SDK v2 - S3 for Image Storage -->
+	<dependency>
+		<groupId>software.amazon.awssdk</groupId>
+		<artifactId>s3</artifactId>
+		<version>2.20.0</version>
+	</dependency>
+	<dependency>
+		<groupId>software.amazon.awssdk</groupId>
+		<artifactId>auth</artifactId>
+		<version>2.20.0</version>
+	</dependency>
+	
+	<!-- OpenAPI / Swagger UI para documentación de API REST -->
+	<dependency>
+		<groupId>org.springdoc</groupId>
+		<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+		<version>2.3.0</version>
+	</dependency>		<!-- PDF Generation (iText 7 - con soporte para códigos de barras) -->
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>kernel</artifactId>

@@ -102,7 +102,14 @@
 
 <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/">
+        <!-- Logo redirige al dashboard según el rol del usuario -->
+        <a class="navbar-brand" 
+           th:href="@{${#authorization.expression('hasRole(''ADMIN'')') ? '/admin/dashboard' : '/arbitro/dashboard'}}"
+           sec:authorize="isAuthenticated()">
+            <i class="bi bi-trophy-fill me-2"></i>CABA Pro
+        </a>
+        <!-- Logo redirige al home si no está autenticado -->
+        <a class="navbar-brand" href="/" sec:authorize="!isAuthenticated()">
             <i class="bi bi-trophy-fill me-2"></i>CABA Pro
         </a>
         

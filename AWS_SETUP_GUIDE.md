@@ -24,6 +24,50 @@ aws ecr create-repository --repository-name caba-nodejs-api --region us-east-1
 
 ## 🗄️ Paso 3: Crear base de datos RDS (MySQL)
 
+### Opción A - AWS Console (Recomendado para primera vez):
+
+1. **Ir a RDS Console:**
+   - https://console.aws.amazon.com/rds
+
+2. **Crear base de datos:**
+   - Click en "Create database"
+   - Método: **Standard create**
+   - Motor: **MySQL 8.0.35**
+   - Plantilla: **Free tier** (si está disponible) o **Dev/Test**
+
+3. **Configuración de la instancia:**
+   - **DB instance identifier**: `caba-db`
+   - **Master username**: `admin`
+   - **Master password**: `CABAPro2025!` (anota esto)
+   - **Confirm password**: `CABAPro2025!`
+
+4. **Configuración de instancia:**
+   - **DB instance class**: `db.t3.micro` (elegible para capa gratuita)
+   - **Storage**: 20 GB (SSD gp2)
+   - **Storage autoscaling**: Deshabilitado (para capa gratuita)
+
+5. **Conectividad:**
+   - **VPC**: (usar la default)
+   - **Public access**: **Yes** (para desarrollo)
+   - **VPC security group**: Crear nuevo → `caba-db-sg`
+
+6. **Configuración adicional:**
+   - **Initial database name**: `caba_pro` ⚠️ **MUY IMPORTANTE**
+   - **Backup retention**: 7 días
+   - **Encryption**: Habilitado
+
+7. **Click en "Create database"**
+   - ⏳ Esperar 5-10 minutos para que se cree
+
+8. **Anotar información importante:**
+   - **Endpoint**: `caba-db.xxxxxxxxxx.us-east-1.rds.amazonaws.com`
+   - **Puerto**: `3306`
+   - **Usuario**: `admin`
+   - **Contraseña**: `CABAPro2025!`
+   - **Database name**: `caba_pro`
+
+### Opción B - AWS CLI:
+
 ```bash
 aws rds create-db-instance \
   --db-instance-identifier caba-db \
@@ -31,19 +75,43 @@ aws rds create-db-instance \
   --engine mysql \
   --engine-version 8.0.35 \
   --master-username admin \
-  --master-user-password TU_PASSWORD_SEGURO \
+  --master-user-password CABAPro2025! \
   --allocated-storage 20 \
+  --db-name caba_pro \
   --vpc-security-group-ids sg-XXXXXXXXX \
-  --db-subnet-group-name default \
   --backup-retention-period 7 \
   --region us-east-1 \
-  --publicly-accessible
+  --publicly-accessible \
+  --no-storage-encrypted
 ```
 
-**Anotar:**
-- Endpoint de la base de datos
-- Puerto (3306)
-- Usuario y contraseña
+### ⚠️ Configurar Security Group de RDS:
+
+Una vez creada la BD, configurar el security group para permitir conexiones:
+
+1. **Ir a EC2 Console → Security Groups**
+2. **Buscar**: `caba-db-sg`
+3. **Editar Inbound Rules**:
+   - **Tipo**: MySQL/Aurora
+   - **Puerto**: 3306
+   - **Source**: 
+     - Para desarrollo: `0.0.0.0/0` (cualquier IP)
+     - Para producción: Solo el security group de ECS
+
+### 🔍 Verificar la conexión (opcional):
+
+Puedes probar la conexión con MySQL Workbench o desde terminal:
+
+```bash
+mysql -h caba-db.xxxxxxxxxx.us-east-1.rds.amazonaws.com -u admin -p
+# Ingresar password: CABAPro2025!
+# Ejecutar: USE caba_pro;
+```
+
+**Anotar para Task Definitions:**
+- SPRING_DATASOURCE_URL: `jdbc:mysql://caba-db.xxxxxxxxxx.us-east-1.rds.amazonaws.com:3306/caba_pro`
+- SPRING_DATASOURCE_USERNAME: `admin`
+- SPRING_DATASOURCE_PASSWORD: `CABAPro2025!`
 
 ## 🌐 Paso 4: Crear VPC y Subnets (si no tienes una)
 
@@ -143,7 +211,15 @@ Crear archivo `springboot-task-definition.json`:
         },
         {
           "name": "SPRING_DATASOURCE_PASSWORD",
-          "value": "TU_PASSWORD"
+          "value": "CABAPro2025!"
+        },
+        {
+          "name": "SPRING_JPA_HIBERNATE_DDL_AUTO",
+          "value": "update"
+        },
+        {
+          "name": "SPRING_JPA_SHOW_SQL",
+          "value": "true"
         },
         {
           "name": "JWT_SECRET",
