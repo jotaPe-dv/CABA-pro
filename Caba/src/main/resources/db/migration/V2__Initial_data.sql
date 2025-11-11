@@ -1,44 +1,74 @@
 -- ============================================
 -- CABA Pro - Initial Data
--- Version: 1.0.1
+-- Version: 2.2 - Datos de torneos y tarifas
 -- Flyway Migration: V2__Initial_data.sql
 -- ============================================
+-- NOTA: Los usuarios (admin y árbitros) se crean automáticamente
+--       en DataLoader.java con BCrypt correcto
+-- Password para login: "123456" para todos los usuarios
+-- ============================================
 
--- Insertar Usuarios y Árbitros de prueba
--- Password: 123456 (bcrypt hash)
-INSERT INTO usuario (nombre, email, password, rol, activo) VALUES
-('Juan Pérez', 'principal@caba.com', '$2a$10$8Z9K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ', 'ARBITRO', TRUE),
-('María González', 'auxiliar1@caba.com', '$2a$10$8Z9K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ', 'ARBITRO', TRUE),
-('Carlos Rodríguez', 'auxiliar2@caba.com', '$2a$10$8Z9K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ', 'ARBITRO', TRUE),
-('Admin Principal', 'admin@caba.com', '$2a$10$8Z9K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ7s8T9uV0wX1yO9Z8K5P6rQ', 'ADMINISTRADOR', TRUE);
+-- ============================================
+-- USUARIOS: Creados automáticamente por DataLoader.java
+-- ============================================
+-- Admin: admin@caba.com / 123456
+-- Árbitro Principal: principal@caba.com / 123456
+-- Árbitro Asistente: asistente@caba.com / 123456
+-- Árbitro Mesa: mesa@caba.com / 123456
+-- ============================================
 
-INSERT INTO arbitro (id, telefono, direccion, escalafon, disponible, total_partidos, total_ingresos) VALUES
-(1, '3001234567', 'Calle 123 #45-67, Bogotá', 'PRINCIPAL', TRUE, 0, 0.00),
-(2, '3009876543', 'Carrera 45 #12-34, Medellín', 'AUXILIAR_1', TRUE, 0, 0.00),
-(3, '3005556789', 'Avenida 68 #23-45, Cali', 'AUXILIAR_2', TRUE, 0, 0.00);
+-- ============================================
+-- TORNEOS
+-- ============================================
+-- NOTA: administrador_id será NULL, se asigna después en la aplicación
+INSERT INTO torneos (nombre, descripcion, fecha_inicio, fecha_fin, activo, administrador_id, fecha_creacion, cerrado) VALUES
+('Liga Profesional 2025', 'Temporada de baloncesto profesional Colombia', '2025-01-15', '2025-06-30', TRUE, NULL, NOW(), FALSE);
 
-INSERT INTO administrador (id, cargo, nivel_acceso) VALUES
-(4, 'Administrador General', 'TOTAL');
+-- ============================================
+-- TARIFAS (12 combinaciones)
+-- ============================================
+INSERT INTO tarifas (escalafon, tipo_partido, monto, descripcion, fecha_creacion, fecha_vigencia_inicio, activa) VALUES
+-- Finales
+('PRINCIPAL', 'Final', 200000.00, 'Árbitro principal - Final', NOW(), NOW(), TRUE),
+('AUXILIAR_1', 'Final', 150000.00, 'Árbitro auxiliar 1 - Final', NOW(), NOW(), TRUE),
+('AUXILIAR_2', 'Final', 120000.00, 'Árbitro auxiliar 2 - Final', NOW(), NOW(), TRUE),
+-- Semifinales
+('PRINCIPAL', 'Semifinal', 170000.00, 'Árbitro principal - Semifinal', NOW(), NOW(), TRUE),
+('AUXILIAR_1', 'Semifinal', 130000.00, 'Árbitro auxiliar 1 - Semifinal', NOW(), NOW(), TRUE),
+('AUXILIAR_2', 'Semifinal', 100000.00, 'Árbitro auxiliar 2 - Semifinal', NOW(), NOW(), TRUE),
+-- Cuartos
+('PRINCIPAL', 'Cuartos', 150000.00, 'Árbitro principal - Cuartos', NOW(), NOW(), TRUE),
+('AUXILIAR_1', 'Cuartos', 110000.00, 'Árbitro auxiliar 1 - Cuartos', NOW(), NOW(), TRUE),
+('AUXILIAR_2', 'Cuartos', 90000.00, 'Árbitro auxiliar 2 - Cuartos', NOW(), NOW(), TRUE),
+-- Regular
+('PRINCIPAL', 'Regular', 130000.00, 'Árbitro principal - Regular', NOW(), NOW(), TRUE),
+('AUXILIAR_1', 'Regular', 100000.00, 'Árbitro auxiliar 1 - Regular', NOW(), NOW(), TRUE),
+('AUXILIAR_2', 'Regular', 80000.00, 'Árbitro auxiliar 2 - Regular', NOW(), NOW(), TRUE);
 
--- Insertar Torneo de prueba
-INSERT INTO torneo (nombre, descripcion, fecha_inicio, fecha_fin, activo) VALUES
-('Liga Nacional 2025', 'Torneo de baloncesto profesional Colombia', '2025-01-15', '2025-12-15', TRUE);
+-- ============================================
+-- PARTIDOS
+-- ============================================
+INSERT INTO partidos (torneo_id, fecha_partido, equipo_local, equipo_visitante, tipo_partido, ubicacion, completado, fecha_creacion, observaciones) VALUES
+(1, '2025-11-15 19:00:00', 'Titanes Barranquilla', 'Búcaros Bucaramanga', 'Regular', 'Coliseo Elías Chegwin', FALSE, NOW(), 'Jornada 1'),
+(1, '2025-11-16 20:00:00', 'Piratas Bogotá', 'Team Cali', 'Regular', 'Coliseo El Salitre', FALSE, NOW(), 'Jornada 2'),
+(1, '2025-11-17 18:30:00', 'Cafeteros Armenia', 'Motilones Norte', 'Regular', 'Coliseo del Café', FALSE, NOW(), 'Jornada 3');
 
--- Insertar Tarifas
-INSERT INTO tarifa (torneo_id, escalafon, monto, vigente) VALUES
-(1, 'PRINCIPAL', 150000.00, TRUE),
-(1, 'AUXILIAR_1', 120000.00, TRUE),
-(1, 'AUXILIAR_2', 100000.00, TRUE),
-(1, 'COMISIONADO', 200000.00, TRUE);
+-- ============================================
+-- ASIGNACIONES
+-- ============================================
+-- Partido 1: Asignación completa (Principal + Asistente + Mesa)
+INSERT INTO asignaciones (partido_id, arbitro_id, tarifa_id, rol_especifico, estado, fecha_asignacion, monto_calculado, comentarios) VALUES
+(1, 2, 10, 'PRINCIPAL', 'ACEPTADA', NOW(), 130000.00, 'Confirmado'),
+(1, 3, 11, 'AUXILIAR_1', 'ACEPTADA', NOW(), 100000.00, 'Confirmado'),
+(1, 4, 12, 'AUXILIAR_2', 'PENDIENTE', NOW(), 80000.00, 'Pendiente confirmación');
 
--- Insertar Partidos de prueba
-INSERT INTO partido (torneo_id, equipo_local, equipo_visitante, fecha_hora, ubicacion, estado) VALUES
-(1, 'Bulls Chicago', 'Lakers Los Angeles', '2025-11-15 19:00:00', 'Arena Bogotá', 'PROGRAMADO'),
-(1, 'Heat Miami', 'Warriors Golden State', '2025-11-16 20:00:00', 'Coliseo Medellín', 'PROGRAMADO'),
-(1, 'Celtics Boston', 'Nets Brooklyn', '2025-11-17 18:30:00', 'Estadio Cali', 'PROGRAMADO');
+-- ============================================
+-- CONFIGURACIONES
+-- ============================================
+INSERT INTO configuraciones (clave, valor, descripcion, modificado_por) VALUES
+('VALIDAR_ARBITROS_SIMULACION', 'true', 'Validar asignaciones antes de simular', 'SYSTEM'),
+('DIAS_ANTICIPO_ASIGNACION', '7', 'Días mínimos de anticipación', 'SYSTEM'),
+('MAX_PARTIDOS_POR_ARBITRO_DIA', '2', 'Máximo de partidos por árbitro/día', 'SYSTEM'),
+('HABILITAR_NOTIFICACIONES_EMAIL', 'true', 'Enviar notificaciones por email', 'SYSTEM'),
+('MONEDA', 'COP', 'Moneda del sistema', 'SYSTEM');
 
--- Insertar Asignaciones de prueba
-INSERT INTO asignacion (arbitro_id, partido_id, estado, monto, comentario) VALUES
-(1, 1, 'PENDIENTE', 150000.00, 'Asignación automática'),
-(2, 1, 'PENDIENTE', 120000.00, 'Asignación automática'),
-(3, 1, 'PENDIENTE', 100000.00, 'Asignación automática');

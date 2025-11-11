@@ -1,6 +1,7 @@
 package com.pagina.Caba.config;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -9,8 +10,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 /**
  * Configuración de AWS S3 para almacenamiento de imágenes
+ * Solo se habilita en perfiles que NO sean 'local'
  */
 @Configuration
+@ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true", matchIfMissing = false)
 public class S3Config {
 
     @Value("${aws.s3.region}")

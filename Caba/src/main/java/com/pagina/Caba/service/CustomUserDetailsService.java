@@ -27,11 +27,21 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         
+        // DEBUG: Mostrar tipo de clase
+        System.out.println("🔍 DEBUG: Usuario encontrado - Email: " + email);
+        System.out.println("🔍 DEBUG: Clase del usuario: " + usuario.getClass().getName());
+        System.out.println("🔍 DEBUG: Es Administrador? " + (usuario instanceof Administrador));
+        System.out.println("🔍 DEBUG: Es Arbitro? " + (usuario instanceof Arbitro));
+        
         // Determinar rol basado en el tipo de usuario
         if (usuario instanceof Administrador) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            System.out.println("✅ DEBUG: Asignado rol ROLE_ADMIN");
         } else if (usuario instanceof Arbitro) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ARBITRO"));
+            System.out.println("✅ DEBUG: Asignado rol ROLE_ARBITRO");
+        } else {
+            System.out.println("⚠️ DEBUG: NO se asignó ningún rol!");
         }
 
         // Verificar que el usuario esté activo (no confundir con disponible)

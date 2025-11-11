@@ -2,7 +2,9 @@ package com.pagina.Caba.service.storage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -14,8 +16,10 @@ import java.util.UUID;
 
 /**
  * Servicio para gestionar la subida y eliminación de imágenes en AWS S3
+ * Solo se habilita cuando aws.s3.enabled=true
  */
 @Service
+@ConditionalOnProperty(name = "aws.s3.enabled", havingValue = "true", matchIfMissing = false)
 public class S3StorageService {
 
     private static final Logger logger = LoggerFactory.getLogger(S3StorageService.class);
@@ -28,6 +32,7 @@ public class S3StorageService {
     @Value("${aws.s3.region}")
     private String region;
 
+    @Autowired
     public S3StorageService(S3Client s3Client) {
         this.s3Client = s3Client;
     }
